@@ -15,10 +15,13 @@
  */
 package poke.client;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
@@ -26,10 +29,15 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.GeneratedMessage;
 
+import eye.Comm.File;
 import eye.Comm.Finger;
 import eye.Comm.Header;
+import eye.Comm.Header.Builder;
+import eye.Comm.Header.Routing;
+import eye.Comm.NameSpace;
 import eye.Comm.Payload;
 import eye.Comm.Request;
 
@@ -114,6 +122,86 @@ public class ClientConnection {
 			logger.warn("Unable to deliver message, queuing");
 		}
 	}
+	
+	public void docAddReq(String nameSpace,String fileName,int fileSize){
+		
+		Header.Builder docAddReqHeader = Header.newBuilder();
+		
+		docAddReqHeader.setRoutingId(Routing.DOCADDREQ);
+		
+		docAddReqHeader.setOriginator("Doc add test");
+		
+		Payload.Builder docAddBodyBuilder = Payload.newBuilder();
+		
+		docAddBodyBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace).build());
+		
+		docAddBodyBuilder.setFile(File.newBuilder().setFileName(fileName).setFileSize(fileSize).build());
+		
+		Request.Builder docAddReqBuilder = Request.newBuilder();
+		
+		docAddReqBuilder.setHeader(docAddReqHeader.build());
+		
+		docAddReqBuilder.setBody(docAddBodyBuilder.build());
+		
+		Request docAddReq = docAddReqBuilder.build();
+		
+		try {
+			// enqueue message
+			outbound.put(docAddReq);
+		} catch (InterruptedException e) {
+			logger.warn("Unable to deliver doc add req message, queuing");
+		}
+	}
+	
+	public void docAdd(String nameSpace , String filePath){
+		
+		Header.Builder docAddReqHeader = Header.newBuilder();
+		
+		docAddReqHeader.setRoutingId(Routing.DOCADD);
+		
+		docAddReqHeader.setOriginator("Doc add test");
+		
+		Payload.Builder docAddBodyBuilder = Payload.newBuilder();
+		
+		docAddBodyBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace).build());
+		
+		String fileExt = FilenameUtils.getExtension(filePath);
+		
+		String fileName = FilenameUtils.getName(filePath);
+				
+		java.io.File file = FileUtils.getFile(filePath);
+		
+		byte[] fileContents = null;
+		
+		try {
+			
+			fileContents = FileUtils.readFileToByteArray(file);
+			
+						
+		} catch (IOException e) {
+			
+			logger.error("Error while reading the specified file "+e.getMessage());
+			return ;
+     	}
+		
+		docAddBodyBuilder.setFile(File.newBuilder().setFileName(fileName).setFileExtension(fileExt).
+				setFileData(ByteString.copyFrom(fileContents)).setFileSize(fileContents.length));
+		
+		Request.Builder docAddReqBuilder = Request.newBuilder();
+		
+		docAddReqBuilder.setHeader(docAddReqHeader);
+		
+		docAddReqBuilder.setBody(docAddBodyBuilder);
+		
+		try {
+			// enqueue message
+			outbound.put(docAddReqBuilder.build());
+		} catch (InterruptedException e) {
+			logger.warn("Unable to deliver doc add message, queuing "+e.getMessage());
+		}
+		
+		
+	}
 
 	private void init() {
 		// the queue to support client-side surging
@@ -194,10 +282,18 @@ public class ClientConnection {
 					// block until a message is enqueued
 					GeneratedMessage msg = conn.outbound.take();
 					if (ch.isWritable()) {
-						ClientHandler handler = conn.connect().getPipeline().get(ClientHandler.class);
-
-						if (!handler.send(msg))
+//						ClientHandler handler = conn.connect().getPipeline().get(ClientHandler.class);
+//
+//						if (!handler.send(msg))
+//							conn.outbound.putFirst(msg);
+						logger.info("Sending message to the server...");
+						ChannelFuture cf = ch.write(msg);
+						if (cf.isDone() && !cf.isSuccess()) {
+							logger.error("failed to poke!");
 							conn.outbound.putFirst(msg);
+						}
+						
+						
 
 					} else
 						conn.outbound.putFirst(msg);

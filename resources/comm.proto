@@ -74,6 +74,7 @@ message Header {
         NAMESPACELIST = 11;
         NAMESPACEUPDATE = 12;
         NAMESPACEREMOVE =13;
+        DOCADDREQ = 19;
         DOCADD = 20;
         DOCFIND = 21;
         DOCUPDATE = 22;
@@ -93,6 +94,15 @@ message Payload {
     optional Finger finger = 1;
     optional Document doc = 2;
     optional NameSpace space = 3;
+    optional File file = 4;
+}
+
+message File{
+	optional string fileName = 1;
+	optional int32 fileId = 2;
+	optional int32 fileSize = 3;
+	optional string fileExtension = 4;
+	optional bytes fileData = 5;
 }
 
 message PayloadReply {

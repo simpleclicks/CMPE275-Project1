@@ -33,9 +33,17 @@ public class ClientPrintListener implements ClientListener {
 
 		if (msg.getHeader().getRoutingId() == Header.Routing.FINGER)
 			ClientUtil.printFinger(msg.getBody().getFinger());
-		else {
+		else if (msg.getHeader().getRoutingId() == Header.Routing.DOCFIND) {
 			for (int i = 0, I = msg.getBody().getDocsCount(); i < I; i++)
 				ClientUtil.printDocument(msg.getBody().getDocs(i));
+		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCADDREQ){
+			
+			System.out.println("Server response to document add request "+msg.getHeader().getReplyCode().name());
+			
+		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCADD){
+			
+			System.out.println("Server response to document add "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
+			
 		}
 	}
 }

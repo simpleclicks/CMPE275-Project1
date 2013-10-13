@@ -29,7 +29,7 @@ public class ClientUtil {
 			return;
 		}
 
-		System.out.println("Poke: " + f.getTag() + " - " + f.getNumber());
+		System.out.println("Poke: received from server " + f.getTag() + " - " + f.getNumber());
 	}
 
 	public static void printHeader(Header h) {

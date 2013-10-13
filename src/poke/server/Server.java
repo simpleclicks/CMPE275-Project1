@@ -112,7 +112,15 @@ public class Server {
 
 		// communication - internal (UDP)
 //		mgmtCF = new NioDatagramChannelFactory(Executors.newCachedThreadPool(), 1);
-//		mgmtCF.newChannel(new ServerDecoderPipeline().getPipeline())
+//		try {
+//			 Channel cf = mgmtCF.newChannel(new ServerDecoderPipeline().getPipeline());
+//			 
+//			 
+//			
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 
 		 //internal using TCP - a better option
 		mgmtCF = new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newFixedThreadPool(2));
