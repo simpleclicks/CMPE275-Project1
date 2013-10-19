@@ -84,7 +84,7 @@ public class DocumentResource implements Resource {
 
 	private Response docAddValidate(Header docAddValidateHeader , Payload docAddValidateBody){
 		
-		int reqFileSize = docAddValidateBody.getFile().getFileSize();
+		long reqFileSize = docAddValidateBody.getDoc().getDocSize();
 		
 		Response.Builder docAddValidateResponseBuilder = Response.newBuilder();
 		
@@ -117,7 +117,7 @@ public class DocumentResource implements Resource {
 		
 		String nameSpace = docAddBody.getSpace().getName();
 		
-		String fileName = docAddBody.getFile().getFileName();
+		String fileName = docAddBody.getDoc().getDocName();
 		
 		logger.info("Received file "+fileName);
 		
@@ -137,7 +137,7 @@ public class DocumentResource implements Resource {
 			
 			logger.info("Creating file with name "+fileName+" and woritng the content sent by client to it" );
 			
-			FileUtils.writeByteArrayToFile(file, docAddBody.getFile().getFileData().toByteArray(), true);
+			FileUtils.writeByteArrayToFile(file, docAddBody.getDoc().getChunkContent().toByteArray(), true);
 			
 			
 		

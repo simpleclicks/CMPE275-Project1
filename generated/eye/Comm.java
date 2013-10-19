@@ -2098,18 +2098,38 @@ public final class Comm {
   public interface DocumentOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
     
-    // optional string name_space = 1;
-    boolean hasNameSpace();
-    String getNameSpace();
+    // optional string docName = 1;
+    boolean hasDocName();
+    String getDocName();
     
     // optional int64 id = 2;
     boolean hasId();
     long getId();
     
-    // required .NameValueSet document = 3;
+    // optional .NameValueSet document = 3;
     boolean hasDocument();
     eye.Comm.NameValueSet getDocument();
     eye.Comm.NameValueSetOrBuilder getDocumentOrBuilder();
+    
+    // optional bytes chunkContent = 4;
+    boolean hasChunkContent();
+    com.google.protobuf.ByteString getChunkContent();
+    
+    // optional int64 chunkId = 5;
+    boolean hasChunkId();
+    long getChunkId();
+    
+    // optional int64 totalChunk = 6;
+    boolean hasTotalChunk();
+    long getTotalChunk();
+    
+    // optional int64 docSize = 7;
+    boolean hasDocSize();
+    long getDocSize();
+    
+    // optional string docExtension = 8;
+    boolean hasDocExtension();
+    String getDocExtension();
   }
   public static final class Document extends
       com.google.protobuf.GeneratedMessage
@@ -2140,14 +2160,14 @@ public final class Comm {
     }
     
     private int bitField0_;
-    // optional string name_space = 1;
-    public static final int NAME_SPACE_FIELD_NUMBER = 1;
-    private java.lang.Object nameSpace_;
-    public boolean hasNameSpace() {
+    // optional string docName = 1;
+    public static final int DOCNAME_FIELD_NUMBER = 1;
+    private java.lang.Object docName_;
+    public boolean hasDocName() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
-    public String getNameSpace() {
-      java.lang.Object ref = nameSpace_;
+    public String getDocName() {
+      java.lang.Object ref = docName_;
       if (ref instanceof String) {
         return (String) ref;
       } else {
@@ -2155,17 +2175,17 @@ public final class Comm {
             (com.google.protobuf.ByteString) ref;
         String s = bs.toStringUtf8();
         if (com.google.protobuf.Internal.isValidUtf8(bs)) {
-          nameSpace_ = s;
+          docName_ = s;
         }
         return s;
       }
     }
-    private com.google.protobuf.ByteString getNameSpaceBytes() {
-      java.lang.Object ref = nameSpace_;
+    private com.google.protobuf.ByteString getDocNameBytes() {
+      java.lang.Object ref = docName_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8((String) ref);
-        nameSpace_ = b;
+        docName_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -2182,7 +2202,7 @@ public final class Comm {
       return id_;
     }
     
-    // required .NameValueSet document = 3;
+    // optional .NameValueSet document = 3;
     public static final int DOCUMENT_FIELD_NUMBER = 3;
     private eye.Comm.NameValueSet document_;
     public boolean hasDocument() {
@@ -2195,23 +2215,98 @@ public final class Comm {
       return document_;
     }
     
+    // optional bytes chunkContent = 4;
+    public static final int CHUNKCONTENT_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString chunkContent_;
+    public boolean hasChunkContent() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    public com.google.protobuf.ByteString getChunkContent() {
+      return chunkContent_;
+    }
+    
+    // optional int64 chunkId = 5;
+    public static final int CHUNKID_FIELD_NUMBER = 5;
+    private long chunkId_;
+    public boolean hasChunkId() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    public long getChunkId() {
+      return chunkId_;
+    }
+    
+    // optional int64 totalChunk = 6;
+    public static final int TOTALCHUNK_FIELD_NUMBER = 6;
+    private long totalChunk_;
+    public boolean hasTotalChunk() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    public long getTotalChunk() {
+      return totalChunk_;
+    }
+    
+    // optional int64 docSize = 7;
+    public static final int DOCSIZE_FIELD_NUMBER = 7;
+    private long docSize_;
+    public boolean hasDocSize() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    public long getDocSize() {
+      return docSize_;
+    }
+    
+    // optional string docExtension = 8;
+    public static final int DOCEXTENSION_FIELD_NUMBER = 8;
+    private java.lang.Object docExtension_;
+    public boolean hasDocExtension() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    public String getDocExtension() {
+      java.lang.Object ref = docExtension_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          docExtension_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getDocExtensionBytes() {
+      java.lang.Object ref = docExtension_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        docExtension_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
     private void initFields() {
-      nameSpace_ = "";
+      docName_ = "";
       id_ = 0L;
       document_ = eye.Comm.NameValueSet.getDefaultInstance();
+      chunkContent_ = com.google.protobuf.ByteString.EMPTY;
+      chunkId_ = 0L;
+      totalChunk_ = 0L;
+      docSize_ = 0L;
+      docExtension_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized != -1) return isInitialized == 1;
       
-      if (!hasDocument()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!getDocument().isInitialized()) {
-        memoizedIsInitialized = 0;
-        return false;
+      if (hasDocument()) {
+        if (!getDocument().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
       }
       memoizedIsInitialized = 1;
       return true;
@@ -2221,13 +2316,28 @@ public final class Comm {
                         throws java.io.IOException {
       getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getNameSpaceBytes());
+        output.writeBytes(1, getDocNameBytes());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeInt64(2, id_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeMessage(3, document_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, chunkContent_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeInt64(5, chunkId_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeInt64(6, totalChunk_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeInt64(7, docSize_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeBytes(8, getDocExtensionBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -2240,7 +2350,7 @@ public final class Comm {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getNameSpaceBytes());
+          .computeBytesSize(1, getDocNameBytes());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -2249,6 +2359,26 @@ public final class Comm {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, document_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, chunkContent_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(5, chunkId_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(6, totalChunk_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(7, docSize_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(8, getDocExtensionBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -2375,7 +2505,7 @@ public final class Comm {
       
       public Builder clear() {
         super.clear();
-        nameSpace_ = "";
+        docName_ = "";
         bitField0_ = (bitField0_ & ~0x00000001);
         id_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -2385,6 +2515,16 @@ public final class Comm {
           documentBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000004);
+        chunkContent_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        chunkId_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        totalChunk_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        docSize_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        docExtension_ = "";
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
       
@@ -2426,7 +2566,7 @@ public final class Comm {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.nameSpace_ = nameSpace_;
+        result.docName_ = docName_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
@@ -2439,6 +2579,26 @@ public final class Comm {
         } else {
           result.document_ = documentBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.chunkContent_ = chunkContent_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.chunkId_ = chunkId_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.totalChunk_ = totalChunk_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.docSize_ = docSize_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.docExtension_ = docExtension_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2455,8 +2615,8 @@ public final class Comm {
       
       public Builder mergeFrom(eye.Comm.Document other) {
         if (other == eye.Comm.Document.getDefaultInstance()) return this;
-        if (other.hasNameSpace()) {
-          setNameSpace(other.getNameSpace());
+        if (other.hasDocName()) {
+          setDocName(other.getDocName());
         }
         if (other.hasId()) {
           setId(other.getId());
@@ -2464,18 +2624,31 @@ public final class Comm {
         if (other.hasDocument()) {
           mergeDocument(other.getDocument());
         }
+        if (other.hasChunkContent()) {
+          setChunkContent(other.getChunkContent());
+        }
+        if (other.hasChunkId()) {
+          setChunkId(other.getChunkId());
+        }
+        if (other.hasTotalChunk()) {
+          setTotalChunk(other.getTotalChunk());
+        }
+        if (other.hasDocSize()) {
+          setDocSize(other.getDocSize());
+        }
+        if (other.hasDocExtension()) {
+          setDocExtension(other.getDocExtension());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
       
       public final boolean isInitialized() {
-        if (!hasDocument()) {
-          
-          return false;
-        }
-        if (!getDocument().isInitialized()) {
-          
-          return false;
+        if (hasDocument()) {
+          if (!getDocument().isInitialized()) {
+            
+            return false;
+          }
         }
         return true;
       }
@@ -2505,7 +2678,7 @@ public final class Comm {
             }
             case 10: {
               bitField0_ |= 0x00000001;
-              nameSpace_ = input.readBytes();
+              docName_ = input.readBytes();
               break;
             }
             case 16: {
@@ -2522,45 +2695,70 @@ public final class Comm {
               setDocument(subBuilder.buildPartial());
               break;
             }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              chunkContent_ = input.readBytes();
+              break;
+            }
+            case 40: {
+              bitField0_ |= 0x00000010;
+              chunkId_ = input.readInt64();
+              break;
+            }
+            case 48: {
+              bitField0_ |= 0x00000020;
+              totalChunk_ = input.readInt64();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              docSize_ = input.readInt64();
+              break;
+            }
+            case 66: {
+              bitField0_ |= 0x00000080;
+              docExtension_ = input.readBytes();
+              break;
+            }
           }
         }
       }
       
       private int bitField0_;
       
-      // optional string name_space = 1;
-      private java.lang.Object nameSpace_ = "";
-      public boolean hasNameSpace() {
+      // optional string docName = 1;
+      private java.lang.Object docName_ = "";
+      public boolean hasDocName() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
-      public String getNameSpace() {
-        java.lang.Object ref = nameSpace_;
+      public String getDocName() {
+        java.lang.Object ref = docName_;
         if (!(ref instanceof String)) {
           String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-          nameSpace_ = s;
+          docName_ = s;
           return s;
         } else {
           return (String) ref;
         }
       }
-      public Builder setNameSpace(String value) {
+      public Builder setDocName(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        nameSpace_ = value;
+        docName_ = value;
         onChanged();
         return this;
       }
-      public Builder clearNameSpace() {
+      public Builder clearDocName() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        nameSpace_ = getDefaultInstance().getNameSpace();
+        docName_ = getDefaultInstance().getDocName();
         onChanged();
         return this;
       }
-      void setNameSpace(com.google.protobuf.ByteString value) {
+      void setDocName(com.google.protobuf.ByteString value) {
         bitField0_ |= 0x00000001;
-        nameSpace_ = value;
+        docName_ = value;
         onChanged();
       }
       
@@ -2585,7 +2783,7 @@ public final class Comm {
         return this;
       }
       
-      // required .NameValueSet document = 3;
+      // optional .NameValueSet document = 3;
       private eye.Comm.NameValueSet document_ = eye.Comm.NameValueSet.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           eye.Comm.NameValueSet, eye.Comm.NameValueSet.Builder, eye.Comm.NameValueSetOrBuilder> documentBuilder_;
@@ -2673,6 +2871,129 @@ public final class Comm {
           document_ = null;
         }
         return documentBuilder_;
+      }
+      
+      // optional bytes chunkContent = 4;
+      private com.google.protobuf.ByteString chunkContent_ = com.google.protobuf.ByteString.EMPTY;
+      public boolean hasChunkContent() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      public com.google.protobuf.ByteString getChunkContent() {
+        return chunkContent_;
+      }
+      public Builder setChunkContent(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        chunkContent_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearChunkContent() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        chunkContent_ = getDefaultInstance().getChunkContent();
+        onChanged();
+        return this;
+      }
+      
+      // optional int64 chunkId = 5;
+      private long chunkId_ ;
+      public boolean hasChunkId() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      public long getChunkId() {
+        return chunkId_;
+      }
+      public Builder setChunkId(long value) {
+        bitField0_ |= 0x00000010;
+        chunkId_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearChunkId() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        chunkId_ = 0L;
+        onChanged();
+        return this;
+      }
+      
+      // optional int64 totalChunk = 6;
+      private long totalChunk_ ;
+      public boolean hasTotalChunk() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      public long getTotalChunk() {
+        return totalChunk_;
+      }
+      public Builder setTotalChunk(long value) {
+        bitField0_ |= 0x00000020;
+        totalChunk_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearTotalChunk() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        totalChunk_ = 0L;
+        onChanged();
+        return this;
+      }
+      
+      // optional int64 docSize = 7;
+      private long docSize_ ;
+      public boolean hasDocSize() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      public long getDocSize() {
+        return docSize_;
+      }
+      public Builder setDocSize(long value) {
+        bitField0_ |= 0x00000040;
+        docSize_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearDocSize() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        docSize_ = 0L;
+        onChanged();
+        return this;
+      }
+      
+      // optional string docExtension = 8;
+      private java.lang.Object docExtension_ = "";
+      public boolean hasDocExtension() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      public String getDocExtension() {
+        java.lang.Object ref = docExtension_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          docExtension_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setDocExtension(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        docExtension_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearDocExtension() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        docExtension_ = getDefaultInstance().getDocExtension();
+        onChanged();
+        return this;
+      }
+      void setDocExtension(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000080;
+        docExtension_ = value;
+        onChanged();
       }
       
       // @@protoc_insertion_point(builder_scope:Document)
@@ -4300,6 +4621,10 @@ public final class Comm {
     // optional string toNode = 8;
     boolean hasToNode();
     String getToNode();
+    
+    // optional int64 remainingHopCount = 9;
+    boolean hasRemainingHopCount();
+    long getRemainingHopCount();
   }
   public static final class Header extends
       com.google.protobuf.GeneratedMessage
@@ -4337,11 +4662,13 @@ public final class Comm {
       NAMESPACELIST(3, 11),
       NAMESPACEUPDATE(4, 12),
       NAMESPACEREMOVE(5, 13),
-      DOCADDREQ(6, 19),
-      DOCADD(7, 20),
-      DOCFIND(8, 21),
-      DOCUPDATE(9, 22),
-      DOCREMOVE(10, 23),
+      DOCREPLICATEREQ(6, 18),
+      DOCREPLICATE(7, 19),
+      DOCADD(8, 20),
+      DOCFIND(9, 21),
+      DOCUPDATE(10, 22),
+      DOCREMOVE(11, 23),
+      DOCADDHANDSHAKE(12, 24),
       ;
       
       public static final int FINGER_VALUE = 2;
@@ -4350,11 +4677,13 @@ public final class Comm {
       public static final int NAMESPACELIST_VALUE = 11;
       public static final int NAMESPACEUPDATE_VALUE = 12;
       public static final int NAMESPACEREMOVE_VALUE = 13;
-      public static final int DOCADDREQ_VALUE = 19;
+      public static final int DOCREPLICATEREQ_VALUE = 18;
+      public static final int DOCREPLICATE_VALUE = 19;
       public static final int DOCADD_VALUE = 20;
       public static final int DOCFIND_VALUE = 21;
       public static final int DOCUPDATE_VALUE = 22;
       public static final int DOCREMOVE_VALUE = 23;
+      public static final int DOCADDHANDSHAKE_VALUE = 24;
       
       
       public final int getNumber() { return value; }
@@ -4367,11 +4696,13 @@ public final class Comm {
           case 11: return NAMESPACELIST;
           case 12: return NAMESPACEUPDATE;
           case 13: return NAMESPACEREMOVE;
-          case 19: return DOCADDREQ;
+          case 18: return DOCREPLICATEREQ;
+          case 19: return DOCREPLICATE;
           case 20: return DOCADD;
           case 21: return DOCFIND;
           case 22: return DOCUPDATE;
           case 23: return DOCREMOVE;
+          case 24: return DOCADDHANDSHAKE;
           default: return null;
         }
       }
@@ -4402,7 +4733,7 @@ public final class Comm {
       }
       
       private static final Routing[] VALUES = {
-        FINGER, STATS, NAMESPACEADD, NAMESPACELIST, NAMESPACEUPDATE, NAMESPACEREMOVE, DOCADDREQ, DOCADD, DOCFIND, DOCUPDATE, DOCREMOVE, 
+        FINGER, STATS, NAMESPACEADD, NAMESPACELIST, NAMESPACEUPDATE, NAMESPACEREMOVE, DOCREPLICATEREQ, DOCREPLICATE, DOCADD, DOCFIND, DOCUPDATE, DOCREMOVE, DOCADDHANDSHAKE, 
       };
       
       public static Routing valueOf(
@@ -4683,6 +5014,16 @@ public final class Comm {
       }
     }
     
+    // optional int64 remainingHopCount = 9;
+    public static final int REMAININGHOPCOUNT_FIELD_NUMBER = 9;
+    private long remainingHopCount_;
+    public boolean hasRemainingHopCount() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    public long getRemainingHopCount() {
+      return remainingHopCount_;
+    }
+    
     private void initFields() {
       routingId_ = eye.Comm.Header.Routing.FINGER;
       originator_ = "";
@@ -4692,6 +5033,7 @@ public final class Comm {
       replyMsg_ = "";
       path_ = java.util.Collections.emptyList();
       toNode_ = "";
+      remainingHopCount_ = 0L;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -4743,6 +5085,9 @@ public final class Comm {
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeBytes(8, getToNodeBytes());
       }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeInt64(9, remainingHopCount_);
+      }
       getUnknownFields().writeTo(output);
     }
     
@@ -4783,6 +5128,10 @@ public final class Comm {
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(8, getToNodeBytes());
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(9, remainingHopCount_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -4929,6 +5278,8 @@ public final class Comm {
         }
         toNode_ = "";
         bitField0_ = (bitField0_ & ~0x00000080);
+        remainingHopCount_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
       
@@ -5004,6 +5355,10 @@ public final class Comm {
           to_bitField0_ |= 0x00000040;
         }
         result.toNode_ = toNode_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.remainingHopCount_ = remainingHopCount_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -5066,6 +5421,9 @@ public final class Comm {
         }
         if (other.hasToNode()) {
           setToNode(other.getToNode());
+        }
+        if (other.hasRemainingHopCount()) {
+          setRemainingHopCount(other.getRemainingHopCount());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -5163,6 +5521,11 @@ public final class Comm {
             case 66: {
               bitField0_ |= 0x00000080;
               toNode_ = input.readBytes();
+              break;
+            }
+            case 72: {
+              bitField0_ |= 0x00000100;
+              remainingHopCount_ = input.readInt64();
               break;
             }
           }
@@ -5570,6 +5933,27 @@ public final class Comm {
         onChanged();
       }
       
+      // optional int64 remainingHopCount = 9;
+      private long remainingHopCount_ ;
+      public boolean hasRemainingHopCount() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      public long getRemainingHopCount() {
+        return remainingHopCount_;
+      }
+      public Builder setRemainingHopCount(long value) {
+        bitField0_ |= 0x00000100;
+        remainingHopCount_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearRemainingHopCount() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        remainingHopCount_ = 0L;
+        onChanged();
+        return this;
+      }
+      
       // @@protoc_insertion_point(builder_scope:Header)
     }
     
@@ -5598,11 +5982,6 @@ public final class Comm {
     boolean hasSpace();
     eye.Comm.NameSpace getSpace();
     eye.Comm.NameSpaceOrBuilder getSpaceOrBuilder();
-    
-    // optional .File file = 4;
-    boolean hasFile();
-    eye.Comm.File getFile();
-    eye.Comm.FileOrBuilder getFileOrBuilder();
   }
   public static final class Payload extends
       com.google.protobuf.GeneratedMessage
@@ -5672,24 +6051,10 @@ public final class Comm {
       return space_;
     }
     
-    // optional .File file = 4;
-    public static final int FILE_FIELD_NUMBER = 4;
-    private eye.Comm.File file_;
-    public boolean hasFile() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
-    }
-    public eye.Comm.File getFile() {
-      return file_;
-    }
-    public eye.Comm.FileOrBuilder getFileOrBuilder() {
-      return file_;
-    }
-    
     private void initFields() {
       finger_ = eye.Comm.Finger.getDefaultInstance();
       doc_ = eye.Comm.Document.getDefaultInstance();
       space_ = eye.Comm.NameSpace.getDefaultInstance();
-      file_ = eye.Comm.File.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -5730,9 +6095,6 @@ public final class Comm {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeMessage(3, space_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeMessage(4, file_);
-      }
       getUnknownFields().writeTo(output);
     }
     
@@ -5753,10 +6115,6 @@ public final class Comm {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, space_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(4, file_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -5877,7 +6235,6 @@ public final class Comm {
           getFingerFieldBuilder();
           getDocFieldBuilder();
           getSpaceFieldBuilder();
-          getFileFieldBuilder();
         }
       }
       private static Builder create() {
@@ -5904,12 +6261,6 @@ public final class Comm {
           spaceBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000004);
-        if (fileBuilder_ == null) {
-          file_ = eye.Comm.File.getDefaultInstance();
-        } else {
-          fileBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
       
@@ -5972,14 +6323,6 @@ public final class Comm {
         } else {
           result.space_ = spaceBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
-        }
-        if (fileBuilder_ == null) {
-          result.file_ = file_;
-        } else {
-          result.file_ = fileBuilder_.build();
-        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6004,9 +6347,6 @@ public final class Comm {
         }
         if (other.hasSpace()) {
           mergeSpace(other.getSpace());
-        }
-        if (other.hasFile()) {
-          mergeFile(other.getFile());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -6082,15 +6422,6 @@ public final class Comm {
               }
               input.readMessage(subBuilder, extensionRegistry);
               setSpace(subBuilder.buildPartial());
-              break;
-            }
-            case 34: {
-              eye.Comm.File.Builder subBuilder = eye.Comm.File.newBuilder();
-              if (hasFile()) {
-                subBuilder.mergeFrom(getFile());
-              }
-              input.readMessage(subBuilder, extensionRegistry);
-              setFile(subBuilder.buildPartial());
               break;
             }
           }
@@ -6369,96 +6700,6 @@ public final class Comm {
         return spaceBuilder_;
       }
       
-      // optional .File file = 4;
-      private eye.Comm.File file_ = eye.Comm.File.getDefaultInstance();
-      private com.google.protobuf.SingleFieldBuilder<
-          eye.Comm.File, eye.Comm.File.Builder, eye.Comm.FileOrBuilder> fileBuilder_;
-      public boolean hasFile() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
-      }
-      public eye.Comm.File getFile() {
-        if (fileBuilder_ == null) {
-          return file_;
-        } else {
-          return fileBuilder_.getMessage();
-        }
-      }
-      public Builder setFile(eye.Comm.File value) {
-        if (fileBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          file_ = value;
-          onChanged();
-        } else {
-          fileBuilder_.setMessage(value);
-        }
-        bitField0_ |= 0x00000008;
-        return this;
-      }
-      public Builder setFile(
-          eye.Comm.File.Builder builderForValue) {
-        if (fileBuilder_ == null) {
-          file_ = builderForValue.build();
-          onChanged();
-        } else {
-          fileBuilder_.setMessage(builderForValue.build());
-        }
-        bitField0_ |= 0x00000008;
-        return this;
-      }
-      public Builder mergeFile(eye.Comm.File value) {
-        if (fileBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
-              file_ != eye.Comm.File.getDefaultInstance()) {
-            file_ =
-              eye.Comm.File.newBuilder(file_).mergeFrom(value).buildPartial();
-          } else {
-            file_ = value;
-          }
-          onChanged();
-        } else {
-          fileBuilder_.mergeFrom(value);
-        }
-        bitField0_ |= 0x00000008;
-        return this;
-      }
-      public Builder clearFile() {
-        if (fileBuilder_ == null) {
-          file_ = eye.Comm.File.getDefaultInstance();
-          onChanged();
-        } else {
-          fileBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000008);
-        return this;
-      }
-      public eye.Comm.File.Builder getFileBuilder() {
-        bitField0_ |= 0x00000008;
-        onChanged();
-        return getFileFieldBuilder().getBuilder();
-      }
-      public eye.Comm.FileOrBuilder getFileOrBuilder() {
-        if (fileBuilder_ != null) {
-          return fileBuilder_.getMessageOrBuilder();
-        } else {
-          return file_;
-        }
-      }
-      private com.google.protobuf.SingleFieldBuilder<
-          eye.Comm.File, eye.Comm.File.Builder, eye.Comm.FileOrBuilder> 
-          getFileFieldBuilder() {
-        if (fileBuilder_ == null) {
-          fileBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-              eye.Comm.File, eye.Comm.File.Builder, eye.Comm.FileOrBuilder>(
-                  file_,
-                  getParentForChildren(),
-                  isClean());
-          file_ = null;
-        }
-        return fileBuilder_;
-      }
-      
       // @@protoc_insertion_point(builder_scope:Payload)
     }
     
@@ -6468,649 +6709,6 @@ public final class Comm {
     }
     
     // @@protoc_insertion_point(class_scope:Payload)
-  }
-  
-  public interface FileOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
-    
-    // optional string fileName = 1;
-    boolean hasFileName();
-    String getFileName();
-    
-    // optional int32 fileId = 2;
-    boolean hasFileId();
-    int getFileId();
-    
-    // optional int32 fileSize = 3;
-    boolean hasFileSize();
-    int getFileSize();
-    
-    // optional string fileExtension = 4;
-    boolean hasFileExtension();
-    String getFileExtension();
-    
-    // optional bytes fileData = 5;
-    boolean hasFileData();
-    com.google.protobuf.ByteString getFileData();
-  }
-  public static final class File extends
-      com.google.protobuf.GeneratedMessage
-      implements FileOrBuilder {
-    // Use File.newBuilder() to construct.
-    private File(Builder builder) {
-      super(builder);
-    }
-    private File(boolean noInit) {}
-    
-    private static final File defaultInstance;
-    public static File getDefaultInstance() {
-      return defaultInstance;
-    }
-    
-    public File getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-    
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return eye.Comm.internal_static_File_descriptor;
-    }
-    
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return eye.Comm.internal_static_File_fieldAccessorTable;
-    }
-    
-    private int bitField0_;
-    // optional string fileName = 1;
-    public static final int FILENAME_FIELD_NUMBER = 1;
-    private java.lang.Object fileName_;
-    public boolean hasFileName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    public String getFileName() {
-      java.lang.Object ref = fileName_;
-      if (ref instanceof String) {
-        return (String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
-        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
-          fileName_ = s;
-        }
-        return s;
-      }
-    }
-    private com.google.protobuf.ByteString getFileNameBytes() {
-      java.lang.Object ref = fileName_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
-        fileName_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    
-    // optional int32 fileId = 2;
-    public static final int FILEID_FIELD_NUMBER = 2;
-    private int fileId_;
-    public boolean hasFileId() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    public int getFileId() {
-      return fileId_;
-    }
-    
-    // optional int32 fileSize = 3;
-    public static final int FILESIZE_FIELD_NUMBER = 3;
-    private int fileSize_;
-    public boolean hasFileSize() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
-    }
-    public int getFileSize() {
-      return fileSize_;
-    }
-    
-    // optional string fileExtension = 4;
-    public static final int FILEEXTENSION_FIELD_NUMBER = 4;
-    private java.lang.Object fileExtension_;
-    public boolean hasFileExtension() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
-    }
-    public String getFileExtension() {
-      java.lang.Object ref = fileExtension_;
-      if (ref instanceof String) {
-        return (String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
-        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
-          fileExtension_ = s;
-        }
-        return s;
-      }
-    }
-    private com.google.protobuf.ByteString getFileExtensionBytes() {
-      java.lang.Object ref = fileExtension_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
-        fileExtension_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    
-    // optional bytes fileData = 5;
-    public static final int FILEDATA_FIELD_NUMBER = 5;
-    private com.google.protobuf.ByteString fileData_;
-    public boolean hasFileData() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
-    }
-    public com.google.protobuf.ByteString getFileData() {
-      return fileData_;
-    }
-    
-    private void initFields() {
-      fileName_ = "";
-      fileId_ = 0;
-      fileSize_ = 0;
-      fileExtension_ = "";
-      fileData_ = com.google.protobuf.ByteString.EMPTY;
-    }
-    private byte memoizedIsInitialized = -1;
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
-      
-      memoizedIsInitialized = 1;
-      return true;
-    }
-    
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getFileNameBytes());
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeInt32(2, fileId_);
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeInt32(3, fileSize_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeBytes(4, getFileExtensionBytes());
-      }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeBytes(5, fileData_);
-      }
-      getUnknownFields().writeTo(output);
-    }
-    
-    private int memoizedSerializedSize = -1;
-    public int getSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-    
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getFileNameBytes());
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, fileId_);
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(3, fileSize_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, getFileExtensionBytes());
-      }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(5, fileData_);
-      }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
-      return size;
-    }
-    
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
-    }
-    
-    public static eye.Comm.File parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data).buildParsed();
-    }
-    public static eye.Comm.File parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data, extensionRegistry)
-               .buildParsed();
-    }
-    public static eye.Comm.File parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data).buildParsed();
-    }
-    public static eye.Comm.File parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data, extensionRegistry)
-               .buildParsed();
-    }
-    public static eye.Comm.File parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input).buildParsed();
-    }
-    public static eye.Comm.File parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input, extensionRegistry)
-               .buildParsed();
-    }
-    public static eye.Comm.File parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      Builder builder = newBuilder();
-      if (builder.mergeDelimitedFrom(input)) {
-        return builder.buildParsed();
-      } else {
-        return null;
-      }
-    }
-    public static eye.Comm.File parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      Builder builder = newBuilder();
-      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
-        return builder.buildParsed();
-      } else {
-        return null;
-      }
-    }
-    public static eye.Comm.File parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input).buildParsed();
-    }
-    public static eye.Comm.File parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input, extensionRegistry)
-               .buildParsed();
-    }
-    
-    public static Builder newBuilder() { return Builder.create(); }
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(eye.Comm.File prototype) {
-      return newBuilder().mergeFrom(prototype);
-    }
-    public Builder toBuilder() { return newBuilder(this); }
-    
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements eye.Comm.FileOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return eye.Comm.internal_static_File_descriptor;
-      }
-      
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return eye.Comm.internal_static_File_fieldAccessorTable;
-      }
-      
-      // Construct using eye.Comm.File.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-      
-      private Builder(BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-        }
-      }
-      private static Builder create() {
-        return new Builder();
-      }
-      
-      public Builder clear() {
-        super.clear();
-        fileName_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
-        fileId_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        fileSize_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000004);
-        fileExtension_ = "";
-        bitField0_ = (bitField0_ & ~0x00000008);
-        fileData_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000010);
-        return this;
-      }
-      
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
-      }
-      
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return eye.Comm.File.getDescriptor();
-      }
-      
-      public eye.Comm.File getDefaultInstanceForType() {
-        return eye.Comm.File.getDefaultInstance();
-      }
-      
-      public eye.Comm.File build() {
-        eye.Comm.File result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-      
-      private eye.Comm.File buildParsed()
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        eye.Comm.File result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(
-            result).asInvalidProtocolBufferException();
-        }
-        return result;
-      }
-      
-      public eye.Comm.File buildPartial() {
-        eye.Comm.File result = new eye.Comm.File(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.fileName_ = fileName_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.fileId_ = fileId_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-          to_bitField0_ |= 0x00000004;
-        }
-        result.fileSize_ = fileSize_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
-        }
-        result.fileExtension_ = fileExtension_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000010;
-        }
-        result.fileData_ = fileData_;
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-      
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof eye.Comm.File) {
-          return mergeFrom((eye.Comm.File)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-      
-      public Builder mergeFrom(eye.Comm.File other) {
-        if (other == eye.Comm.File.getDefaultInstance()) return this;
-        if (other.hasFileName()) {
-          setFileName(other.getFileName());
-        }
-        if (other.hasFileId()) {
-          setFileId(other.getFileId());
-        }
-        if (other.hasFileSize()) {
-          setFileSize(other.getFileSize());
-        }
-        if (other.hasFileExtension()) {
-          setFileExtension(other.getFileExtension());
-        }
-        if (other.hasFileData()) {
-          setFileData(other.getFileData());
-        }
-        this.mergeUnknownFields(other.getUnknownFields());
-        return this;
-      }
-      
-      public final boolean isInitialized() {
-        return true;
-      }
-      
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder(
-            this.getUnknownFields());
-        while (true) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              this.setUnknownFields(unknownFields.build());
-              onChanged();
-              return this;
-            default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
-                this.setUnknownFields(unknownFields.build());
-                onChanged();
-                return this;
-              }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              fileName_ = input.readBytes();
-              break;
-            }
-            case 16: {
-              bitField0_ |= 0x00000002;
-              fileId_ = input.readInt32();
-              break;
-            }
-            case 24: {
-              bitField0_ |= 0x00000004;
-              fileSize_ = input.readInt32();
-              break;
-            }
-            case 34: {
-              bitField0_ |= 0x00000008;
-              fileExtension_ = input.readBytes();
-              break;
-            }
-            case 42: {
-              bitField0_ |= 0x00000010;
-              fileData_ = input.readBytes();
-              break;
-            }
-          }
-        }
-      }
-      
-      private int bitField0_;
-      
-      // optional string fileName = 1;
-      private java.lang.Object fileName_ = "";
-      public boolean hasFileName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      public String getFileName() {
-        java.lang.Object ref = fileName_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-          fileName_ = s;
-          return s;
-        } else {
-          return (String) ref;
-        }
-      }
-      public Builder setFileName(String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        fileName_ = value;
-        onChanged();
-        return this;
-      }
-      public Builder clearFileName() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        fileName_ = getDefaultInstance().getFileName();
-        onChanged();
-        return this;
-      }
-      void setFileName(com.google.protobuf.ByteString value) {
-        bitField0_ |= 0x00000001;
-        fileName_ = value;
-        onChanged();
-      }
-      
-      // optional int32 fileId = 2;
-      private int fileId_ ;
-      public boolean hasFileId() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      public int getFileId() {
-        return fileId_;
-      }
-      public Builder setFileId(int value) {
-        bitField0_ |= 0x00000002;
-        fileId_ = value;
-        onChanged();
-        return this;
-      }
-      public Builder clearFileId() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        fileId_ = 0;
-        onChanged();
-        return this;
-      }
-      
-      // optional int32 fileSize = 3;
-      private int fileSize_ ;
-      public boolean hasFileSize() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
-      }
-      public int getFileSize() {
-        return fileSize_;
-      }
-      public Builder setFileSize(int value) {
-        bitField0_ |= 0x00000004;
-        fileSize_ = value;
-        onChanged();
-        return this;
-      }
-      public Builder clearFileSize() {
-        bitField0_ = (bitField0_ & ~0x00000004);
-        fileSize_ = 0;
-        onChanged();
-        return this;
-      }
-      
-      // optional string fileExtension = 4;
-      private java.lang.Object fileExtension_ = "";
-      public boolean hasFileExtension() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
-      }
-      public String getFileExtension() {
-        java.lang.Object ref = fileExtension_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-          fileExtension_ = s;
-          return s;
-        } else {
-          return (String) ref;
-        }
-      }
-      public Builder setFileExtension(String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000008;
-        fileExtension_ = value;
-        onChanged();
-        return this;
-      }
-      public Builder clearFileExtension() {
-        bitField0_ = (bitField0_ & ~0x00000008);
-        fileExtension_ = getDefaultInstance().getFileExtension();
-        onChanged();
-        return this;
-      }
-      void setFileExtension(com.google.protobuf.ByteString value) {
-        bitField0_ |= 0x00000008;
-        fileExtension_ = value;
-        onChanged();
-      }
-      
-      // optional bytes fileData = 5;
-      private com.google.protobuf.ByteString fileData_ = com.google.protobuf.ByteString.EMPTY;
-      public boolean hasFileData() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
-      }
-      public com.google.protobuf.ByteString getFileData() {
-        return fileData_;
-      }
-      public Builder setFileData(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000010;
-        fileData_ = value;
-        onChanged();
-        return this;
-      }
-      public Builder clearFileData() {
-        bitField0_ = (bitField0_ & ~0x00000010);
-        fileData_ = getDefaultInstance().getFileData();
-        onChanged();
-        return this;
-      }
-      
-      // @@protoc_insertion_point(builder_scope:File)
-    }
-    
-    static {
-      defaultInstance = new File(true);
-      defaultInstance.initFields();
-    }
-    
-    // @@protoc_insertion_point(class_scope:File)
   }
   
   public interface PayloadReplyOrBuilder
@@ -11095,11 +10693,6 @@ public final class Comm {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_Payload_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_File_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_File_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_PayloadReply_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -11145,42 +10738,44 @@ public final class Comm {
       "\224\001\n\014NameValueSet\022)\n\tnode_type\030\001 \002(\0162\026.Na" +
       "meValueSet.NodeType\022\014\n\004name\030\002 \001(\t\022\r\n\005val" +
       "ue\030\003 \001(\t\022\033\n\004node\030\004 \003(\0132\r.NameValueSet\"\037\n" +
-      "\010NodeType\022\010\n\004NODE\020\001\022\t\n\005VALUE\020\002\"K\n\010Docume" +
-      "nt\022\022\n\nname_space\030\001 \001(\t\022\n\n\002id\030\002 \001(\003\022\037\n\010do" +
-      "cument\030\003 \002(\0132\r.NameValueSet\"+\n\013DocumentS",
-      "et\022\034\n\tdocuments\030\001 \003(\0132\t.Document\"*\n\014Name" +
-      "SpaceSet\022\032\n\006spaces\030\001 \003(\0132\n.NameSpace\")\n\013" +
-      "RoutingPath\022\014\n\004node\030\001 \002(\t\022\014\n\004time\030\002 \002(\003\"" +
-      "\323\003\n\006Header\022#\n\nrouting_id\030\001 \002(\0162\017.Header." +
-      "Routing\022\022\n\noriginator\030\002 \002(\t\022\013\n\003tag\030\003 \001(\t" +
-      "\022\014\n\004time\030\004 \001(\003\022\'\n\nreply_code\030\005 \001(\0162\023.Hea" +
-      "der.ReplyStatus\022\021\n\treply_msg\030\006 \001(\t\022\032\n\004pa" +
-      "th\030\007 \003(\0132\014.RoutingPath\022\016\n\006toNode\030\010 \001(\t\"\265" +
-      "\001\n\007Routing\022\n\n\006FINGER\020\002\022\t\n\005STATS\020\003\022\020\n\014NAM" +
-      "ESPACEADD\020\n\022\021\n\rNAMESPACELIST\020\013\022\023\n\017NAMESP",
-      "ACEUPDATE\020\014\022\023\n\017NAMESPACEREMOVE\020\r\022\r\n\tDOCA" +
-      "DDREQ\020\023\022\n\n\006DOCADD\020\024\022\013\n\007DOCFIND\020\025\022\r\n\tDOCU" +
-      "PDATE\020\026\022\r\n\tDOCREMOVE\020\027\"U\n\013ReplyStatus\022\013\n" +
-      "\007SUCCESS\020\001\022\013\n\007FAILURE\020\002\022\n\n\006NOAUTH\020\003\022\016\n\nM" +
-      "ISSINGARG\020\004\022\020\n\014NOCONNECTION\020\005\"j\n\007Payload" +
-      "\022\027\n\006finger\030\001 \001(\0132\007.Finger\022\026\n\003doc\030\002 \001(\0132\t" +
-      ".Document\022\031\n\005space\030\003 \001(\0132\n.NameSpace\022\023\n\004" +
-      "file\030\004 \001(\0132\005.File\"c\n\004File\022\020\n\010fileName\030\001 " +
-      "\001(\t\022\016\n\006fileId\030\002 \001(\005\022\020\n\010fileSize\030\003 \001(\005\022\025\n" +
-      "\rfileExtension\030\004 \001(\t\022\020\n\010fileData\030\005 \001(\014\"v",
-      "\n\014PayloadReply\022\027\n\006finger\030\001 \001(\0132\007.Finger\022" +
-      "\027\n\004docs\030\002 \003(\0132\t.Document\022\032\n\006spaces\030\003 \003(\013" +
-      "2\n.NameSpace\022\030\n\005stats\030\004 \001(\0132\t.Document\":" +
-      "\n\007Request\022\027\n\006header\030\001 \002(\0132\007.Header\022\026\n\004bo" +
-      "dy\030\002 \002(\0132\010.Payload\"@\n\010Response\022\027\n\006header" +
-      "\030\001 \002(\0132\007.Header\022\033\n\004body\030\002 \002(\0132\r.PayloadR" +
-      "eply\",\n\tHeartbeat\022\016\n\006nodeId\030\001 \002(\t\022\017\n\007tim" +
-      "eRef\030\002 \002(\003\"\225\001\n\007Network\022\016\n\006nodeId\030\001 \002(\t\022\037" +
-      "\n\006action\030\002 \002(\0162\017.Network.Action\"Y\n\006Actio" +
-      "n\022\014\n\010NODEJOIN\020\001\022\r\n\tNODELEAVE\020\002\022\014\n\010NODEDE",
-      "AD\020\003\022\007\n\003MAP\0207\022\014\n\010ANNOUNCE\0208\022\r\n\010SHUTDOWN\020" +
-      "\347\007\"?\n\nManagement\022\027\n\005graph\030\001 \001(\0132\010.Networ" +
-      "k\022\030\n\004beat\030\002 \001(\0132\n.HeartbeatB\007\n\003eyeH\001"
+      "\010NodeType\022\010\n\004NODE\020\001\022\t\n\005VALUE\020\002\"\252\001\n\010Docum" +
+      "ent\022\017\n\007docName\030\001 \001(\t\022\n\n\002id\030\002 \001(\003\022\037\n\010docu" +
+      "ment\030\003 \001(\0132\r.NameValueSet\022\024\n\014chunkConten",
+      "t\030\004 \001(\014\022\017\n\007chunkId\030\005 \001(\003\022\022\n\ntotalChunk\030\006" +
+      " \001(\003\022\017\n\007docSize\030\007 \001(\003\022\024\n\014docExtension\030\010 " +
+      "\001(\t\"+\n\013DocumentSet\022\034\n\tdocuments\030\001 \003(\0132\t." +
+      "Document\"*\n\014NameSpaceSet\022\032\n\006spaces\030\001 \003(\013" +
+      "2\n.NameSpace\")\n\013RoutingPath\022\014\n\004node\030\001 \002(" +
+      "\t\022\014\n\004time\030\002 \002(\003\"\233\004\n\006Header\022#\n\nrouting_id" +
+      "\030\001 \002(\0162\017.Header.Routing\022\022\n\noriginator\030\002 " +
+      "\002(\t\022\013\n\003tag\030\003 \001(\t\022\014\n\004time\030\004 \001(\003\022\'\n\nreply_" +
+      "code\030\005 \001(\0162\023.Header.ReplyStatus\022\021\n\treply" +
+      "_msg\030\006 \001(\t\022\032\n\004path\030\007 \003(\0132\014.RoutingPath\022\016",
+      "\n\006toNode\030\010 \001(\t\022\031\n\021remainingHopCount\030\t \001(" +
+      "\003\"\342\001\n\007Routing\022\n\n\006FINGER\020\002\022\t\n\005STATS\020\003\022\020\n\014" +
+      "NAMESPACEADD\020\n\022\021\n\rNAMESPACELIST\020\013\022\023\n\017NAM" +
+      "ESPACEUPDATE\020\014\022\023\n\017NAMESPACEREMOVE\020\r\022\023\n\017D" +
+      "OCREPLICATEREQ\020\022\022\020\n\014DOCREPLICATE\020\023\022\n\n\006DO" +
+      "CADD\020\024\022\013\n\007DOCFIND\020\025\022\r\n\tDOCUPDATE\020\026\022\r\n\tDO" +
+      "CREMOVE\020\027\022\023\n\017DOCADDHANDSHAKE\020\030\"U\n\013ReplyS" +
+      "tatus\022\013\n\007SUCCESS\020\001\022\013\n\007FAILURE\020\002\022\n\n\006NOAUT" +
+      "H\020\003\022\016\n\nMISSINGARG\020\004\022\020\n\014NOCONNECTION\020\005\"U\n" +
+      "\007Payload\022\027\n\006finger\030\001 \001(\0132\007.Finger\022\026\n\003doc",
+      "\030\002 \001(\0132\t.Document\022\031\n\005space\030\003 \001(\0132\n.NameS" +
+      "pace\"v\n\014PayloadReply\022\027\n\006finger\030\001 \001(\0132\007.F" +
+      "inger\022\027\n\004docs\030\002 \003(\0132\t.Document\022\032\n\006spaces" +
+      "\030\003 \003(\0132\n.NameSpace\022\030\n\005stats\030\004 \001(\0132\t.Docu" +
+      "ment\":\n\007Request\022\027\n\006header\030\001 \002(\0132\007.Header" +
+      "\022\026\n\004body\030\002 \002(\0132\010.Payload\"@\n\010Response\022\027\n\006" +
+      "header\030\001 \002(\0132\007.Header\022\033\n\004body\030\002 \002(\0132\r.Pa" +
+      "yloadReply\",\n\tHeartbeat\022\016\n\006nodeId\030\001 \002(\t\022" +
+      "\017\n\007timeRef\030\002 \002(\003\"\225\001\n\007Network\022\016\n\006nodeId\030\001" +
+      " \002(\t\022\037\n\006action\030\002 \002(\0162\017.Network.Action\"Y\n",
+      "\006Action\022\014\n\010NODEJOIN\020\001\022\r\n\tNODELEAVE\020\002\022\014\n\010" +
+      "NODEDEAD\020\003\022\007\n\003MAP\0207\022\014\n\010ANNOUNCE\0208\022\r\n\010SHU" +
+      "TDOWN\020\347\007\"?\n\nManagement\022\027\n\005graph\030\001 \001(\0132\010." +
+      "Network\022\030\n\004beat\030\002 \001(\0132\n.HeartbeatB\007\n\003eye" +
+      "H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -11216,7 +10811,7 @@ public final class Comm {
           internal_static_Document_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Document_descriptor,
-              new java.lang.String[] { "NameSpace", "Id", "Document", },
+              new java.lang.String[] { "DocName", "Id", "Document", "ChunkContent", "ChunkId", "TotalChunk", "DocSize", "DocExtension", },
               eye.Comm.Document.class,
               eye.Comm.Document.Builder.class);
           internal_static_DocumentSet_descriptor =
@@ -11248,7 +10843,7 @@ public final class Comm {
           internal_static_Header_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Header_descriptor,
-              new java.lang.String[] { "RoutingId", "Originator", "Tag", "Time", "ReplyCode", "ReplyMsg", "Path", "ToNode", },
+              new java.lang.String[] { "RoutingId", "Originator", "Tag", "Time", "ReplyCode", "ReplyMsg", "Path", "ToNode", "RemainingHopCount", },
               eye.Comm.Header.class,
               eye.Comm.Header.Builder.class);
           internal_static_Payload_descriptor =
@@ -11256,19 +10851,11 @@ public final class Comm {
           internal_static_Payload_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Payload_descriptor,
-              new java.lang.String[] { "Finger", "Doc", "Space", "File", },
+              new java.lang.String[] { "Finger", "Doc", "Space", },
               eye.Comm.Payload.class,
               eye.Comm.Payload.Builder.class);
-          internal_static_File_descriptor =
-            getDescriptor().getMessageTypes().get(9);
-          internal_static_File_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_File_descriptor,
-              new java.lang.String[] { "FileName", "FileId", "FileSize", "FileExtension", "FileData", },
-              eye.Comm.File.class,
-              eye.Comm.File.Builder.class);
           internal_static_PayloadReply_descriptor =
-            getDescriptor().getMessageTypes().get(10);
+            getDescriptor().getMessageTypes().get(9);
           internal_static_PayloadReply_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_PayloadReply_descriptor,
@@ -11276,7 +10863,7 @@ public final class Comm {
               eye.Comm.PayloadReply.class,
               eye.Comm.PayloadReply.Builder.class);
           internal_static_Request_descriptor =
-            getDescriptor().getMessageTypes().get(11);
+            getDescriptor().getMessageTypes().get(10);
           internal_static_Request_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Request_descriptor,
@@ -11284,7 +10871,7 @@ public final class Comm {
               eye.Comm.Request.class,
               eye.Comm.Request.Builder.class);
           internal_static_Response_descriptor =
-            getDescriptor().getMessageTypes().get(12);
+            getDescriptor().getMessageTypes().get(11);
           internal_static_Response_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Response_descriptor,
@@ -11292,7 +10879,7 @@ public final class Comm {
               eye.Comm.Response.class,
               eye.Comm.Response.Builder.class);
           internal_static_Heartbeat_descriptor =
-            getDescriptor().getMessageTypes().get(13);
+            getDescriptor().getMessageTypes().get(12);
           internal_static_Heartbeat_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Heartbeat_descriptor,
@@ -11300,7 +10887,7 @@ public final class Comm {
               eye.Comm.Heartbeat.class,
               eye.Comm.Heartbeat.Builder.class);
           internal_static_Network_descriptor =
-            getDescriptor().getMessageTypes().get(14);
+            getDescriptor().getMessageTypes().get(13);
           internal_static_Network_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Network_descriptor,
@@ -11308,7 +10895,7 @@ public final class Comm {
               eye.Comm.Network.class,
               eye.Comm.Network.Builder.class);
           internal_static_Management_descriptor =
-            getDescriptor().getMessageTypes().get(15);
+            getDescriptor().getMessageTypes().get(14);
           internal_static_Management_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Management_descriptor,

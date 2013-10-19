@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.GeneratedMessage;
 
-import eye.Comm.File;
+import eye.Comm.Document;
 import eye.Comm.Finger;
 import eye.Comm.Header;
 import eye.Comm.Header.Builder;
@@ -127,7 +127,7 @@ public class ClientConnection {
 		
 		Header.Builder docAddReqHeader = Header.newBuilder();
 		
-		docAddReqHeader.setRoutingId(Routing.DOCADDREQ);
+		docAddReqHeader.setRoutingId(Routing.DOCADDHANDSHAKE);
 		
 		docAddReqHeader.setOriginator("Doc add test");
 		
@@ -135,7 +135,7 @@ public class ClientConnection {
 		
 		docAddBodyBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace).build());
 		
-		docAddBodyBuilder.setFile(File.newBuilder().setFileName(fileName).setFileSize(fileSize).build());
+		docAddBodyBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocSize(fileSize).build());
 		
 		Request.Builder docAddReqBuilder = Request.newBuilder();
 		
@@ -184,8 +184,8 @@ public class ClientConnection {
 			return ;
      	}
 		
-		docAddBodyBuilder.setFile(File.newBuilder().setFileName(fileName).setFileExtension(fileExt).
-				setFileData(ByteString.copyFrom(fileContents)).setFileSize(fileContents.length));
+		docAddBodyBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocExtension(fileExt).
+				setChunkContent(ByteString.copyFrom(fileContents)).setDocSize(fileContents.length).setTotalChunk(1));
 		
 		Request.Builder docAddReqBuilder = Request.newBuilder();
 		
