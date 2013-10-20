@@ -46,7 +46,7 @@ import poke.server.queue.QueueFactory;
  * 
  */
 public class ServerHandler extends SimpleChannelUpstreamHandler {
-	protected static Logger logger = LoggerFactory.getLogger("server");
+	protected static Logger logger = LoggerFactory.getLogger("ServerHandler");
 
 	private ChannelQueue queue;
 
@@ -119,6 +119,8 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
 			// them into a separate bucket for possible client re-connection
 			// otherwise discard after some set period. This is a weakness of a
 			// connection-required communication design.
+			
+			logger.info("Connection has been closed by the client: Shutting down the queue");
 
 			if (sq != null)
 				sq.shutdown(true);

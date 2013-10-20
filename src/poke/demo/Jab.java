@@ -37,9 +37,12 @@ public class Jab {
 			cc.poke(tag, count);
 		}
 	
-		cc.docAddReq("Hello", "Kau.txt", 1198170);
+		cc.docAddReq("", "abc.txt", 1198170);
 		
-		cc.docAdd("Kaustubh1", "E://protoc-2.5.0-win32-2.zip");
+		//cc.docAdd("Kaustubh1", "E://protoc-2.5.0-win32-2.zip");
+		
+		cc.docRemove("", "Kaustubh1");
+	
 	}
 
 	public static void main(String[] args) {

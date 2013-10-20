@@ -20,6 +20,8 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileSystemUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.monitor.FileEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,149 +37,372 @@ import eye.Comm.Response;
 import eye.Comm.Header.ReplyStatus;
 
 public class DocumentResource implements Resource {
-	
+
 	protected static Logger logger = LoggerFactory.getLogger("DocumentResource");
 
-	@Override
+	private static final String HOMEDIR = "home";
+
+	private static final String VISITORDIR = "away";
+
+	private static final String FILEADDSUCCESSMSG = "File has been uploaded successfully";
+
+	private static final String FILEADDREQMISSINGPARAMMSG = "Fail to validate document upload request : Document name/size (mandatory) has not been provided.";
+	
+	private static final String FILEREQMISSINGPARAMMSG = "Fail to validate document find/delete request : Document name (mandatory) has not been provided.";
+
+	private static final String INTERNALSERVERERRORMSG ="Failed to serve the request: Internal Server Error";
+	
+	private static final String FILEADDREQDUPLICATEFILEMSG ="Can not upload the file: File already exists: Use docUpdate";
+	
+	private static final String FILETOOLARGETOSAVEMSG ="Can not upload the file: File is too large to save";
+	
+	private static final String FILEUPLOADREQVALIDATEDMSG ="Valid file upload request: File can be uploaded";
+	
+	private static final String NAMESPACEINEXISTENTMSG = " Supplied namespacce does not exist: Please suppy valid namespace";
+	
+	private static final String FILEINEXISTENTMSG = " Requested file does not exist: Please suppy valid filename";
+	
+	private static final String FILEDELETESUCCESSFULMSG = "Requested file has been deleted successfully";
+	
+	private static final String OPERATIONNOTALLOWEDMSG = "Requested Operation is not allowed with the 'request' type ";
+
+	private static final File homeDir = new File(HOMEDIR);
+	
+		@Override
 	public Response process(Request request) {
-		
+
 		int opChoice = 0;
-		
+
 		Response docOpResponse = null;
-		
+
 		Header docOpHeader = request.getHeader();
-		
+
 		Payload docOpBody =  request.getBody();
-		
+
 		opChoice = docOpHeader.getRoutingId().getNumber();
-		
+
 		switch(opChoice){
-		
-		case 19:
+
+		case 24:
 			docOpResponse = docAddValidate(docOpHeader , docOpBody);
 			break;
-		
+
 		case 20:
 			docOpResponse = docAdd(docOpHeader , docOpBody);
 			break;
-		
+
 		case 21:
 			docOpResponse = docFind(docOpHeader, docOpBody);
 			break;
-		
+
 		case 22:
 			docOpResponse = docUpdate(docOpHeader, docOpBody);
 			break;
-		
+
 		case 23:
 			docOpResponse = docRemove(docOpHeader, docOpBody);
 			break;
-		
+
 		default:
 			System.out.println("DpcumentResource: No matching doc op id found");
-		
-		
+
+
 		}
-		
+
 		return docOpResponse;
 	}
 
 	private Response docAddValidate(Header docAddValidateHeader , Payload docAddValidateBody){
-		
+
 		long reqFileSize = docAddValidateBody.getDoc().getDocSize();
-		
+
+		String newFileName = docAddValidateBody.getDoc().getDocName();
+
+		String nameSpece = docAddValidateBody.getSpace().getName();
+
 		Response.Builder docAddValidateResponseBuilder = Response.newBuilder();
-		
+
+		docAddValidateResponseBuilder.setBody(PayloadReply.newBuilder().build());
+
 		long spacceAvailable = 0;
-		
-		try {
-			spacceAvailable = FileSystemUtils.freeSpaceKb()*1024;
-			
-			System.out.println("DocumentResource: Free Space available " + spacceAvailable);
-		} catch (IOException e) {
-			System.out.println("DpcumentResource:docAddValidate IOException while calculating free space");
-			e.printStackTrace();
+
+		long  bufferredLimit = 0;
+
+		if((newFileName == null || newFileName.length() ==0) || reqFileSize ==0){
+
+			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQMISSINGPARAMMSG));
+
+			return docAddValidateResponseBuilder.build();
 		}
-		
-		if(reqFileSize < (spacceAvailable - 102400)){
+
+		if(nameSpece != null && nameSpece.length() > 0){
 			
-			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.SUCCESS, null));
+			
+			
+			String effNS = HOMEDIR+File.separator+nameSpece; 
+			
+			File targetNS = new File (effNS);
+
+			try {
+				
+				boolean nsCheck = FileUtils.directoryContains(homeDir, targetNS);
+
+				if(nsCheck){
+					
+					System.out.println("Target NS exists");
+
+					File targetFileName = new File (effNS+File.separator+newFileName);
+
+					boolean fileCheck = FileUtils.directoryContains(targetNS, targetFileName);
+
+					if(fileCheck){
+
+						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+
+						return docAddValidateResponseBuilder.build();
 						
+					}
+
+				}
+
+			} catch (IOException e) {
+
+				logger.error("Document Response: IO Exception while validating file add request "+e.getMessage());
+
+				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
+				return docAddValidateResponseBuilder.build();
+
+			}
+
 		}else{
 			
-			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, null));
-		}
+			try {
+			
+				boolean fileCheck = FileUtils.directoryContains(homeDir, new File(HOMEDIR+File.separator+newFileName));
+				
+				if(fileCheck){
+					
+					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+
+					return docAddValidateResponseBuilder.build();
+				}
 		
-		docAddValidateResponseBuilder.setBody(PayloadReply.newBuilder().build());
+			} catch (IOException e) {
+				
+				logger.error("Document Response: IO Exception while validating file add request "+e.getMessage());
+
+				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
+				return docAddValidateResponseBuilder.build();
+			}
+		}
+
+		try {
+			spacceAvailable = FileSystemUtils.freeSpaceKb()*1024;
+
+			bufferredLimit = spacceAvailable - 10240000;
+
+			logger.info("DocumentResource: Free Space available " + spacceAvailable);
+			
+		} catch (IOException e) {
+
+			System.out.println("DpcumentResource:docAddValidate IOException while calculating free space");
+
+			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
+			return docAddValidateResponseBuilder.build();
+		}
+
+		if(reqFileSize > bufferredLimit){
+
+			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILETOOLARGETOSAVEMSG));
+			
+		}else{
+			
+			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.SUCCESS, FILEUPLOADREQVALIDATEDMSG));
+		}
+
 		return docAddValidateResponseBuilder.build();
 	}
-	
-	
+
+
 	private Response docAdd(Header docAddHeader , Payload docAddBody){
-		
+
 		String nameSpace = docAddBody.getSpace().getName();
-		
+
 		String fileName = docAddBody.getDoc().getDocName();
-		
+
 		logger.info("Received file "+fileName);
-		
+
 		logger.info("Creating namespace "+nameSpace);
-		
+
 		//File nameDir = new File(nameSpace);
-		
+
 		File file = new File(nameSpace+"//"+fileName);
-		
+
 		Header.Builder docAddHeaderBuilder = Header.newBuilder(docAddHeader);
-		
+
 		try {
-		
+
 			logger.info("Creating directory with name "+nameSpace );
-			
+
 			//FileUtils.forceMkdir(nameDir);
-			
+
 			logger.info("Creating file with name "+fileName+" and woritng the content sent by client to it" );
-			
+
 			FileUtils.writeByteArrayToFile(file, docAddBody.getDoc().getChunkContent().toByteArray(), true);
-			
-			
-		
+
+
+
 		} catch (IOException e) {
-			
+
 			logger.info("Exception while creating the file and/or writing the content to it "+e.getMessage());
-			
+
 			docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.FAILURE);
-			
+
 			docAddHeaderBuilder.setReplyMsg("Server Exception while uploading a file");
-			
+
 			e.printStackTrace();
 		}
-		
+
 		docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);
-		
+
 		docAddHeaderBuilder.setReplyMsg("File Uploaded Successfully");
-		
+
 		Response.Builder docAddRespBuilder = Response.newBuilder();
-		
+
 		docAddRespBuilder.setHeader(docAddHeaderBuilder);
-		
+
 		docAddRespBuilder.setBody(PayloadReply.newBuilder().build());
-		
+
 		return docAddRespBuilder.build();
 	}
-	
+
 	private Response docFind(Header docFindHeader , Payload docFindBody){
-		
+
 		return null;
 	}
-	
+
 	private Response docUpdate(Header docUpdateHeader , Payload docUpdateBody){
-		
+
 		return null;
 	}
-	
+
 	private Response docRemove(Header docRemoveHeader , Payload docRemoveBody){
+
+		String fileToBeDeleted = docRemoveBody.getDoc().getDocName();
+
+		String nameSpece = docRemoveBody.getSpace().getName();
 		
-		return null;
+		logger.info("docRemove Client data file to be delted: "+fileToBeDeleted+" namespace: "+nameSpece);
+		
+		File targetFile = null;
+
+		Response.Builder fileRemoveResponseBuilder = Response.newBuilder();
+
+		fileRemoveResponseBuilder.setBody(PayloadReply.newBuilder().build());
+
+		if(fileToBeDeleted == null || fileToBeDeleted.length() ==0){
+
+			fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEREQMISSINGPARAMMSG));
+
+			return fileRemoveResponseBuilder.build();
+		}
+
+		if(nameSpece != null && nameSpece.length() > 0){
+			
+			String effNS = HOMEDIR+File.separator+nameSpece;
+
+			File targetNS = new File (effNS);
+			
+			targetFile = new File(effNS+File.separator+fileToBeDeleted);
+			
+
+			try {
+				
+				boolean nsCheck = FileUtils.directoryContains(homeDir, targetNS);
+				
+				if(nsCheck){
+
+					boolean fileCheck = FileUtils.directoryContains(targetNS, targetFile);
+
+					if(fileCheck){
+						
+						if(targetFile.isDirectory()){
+							
+							fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, OPERATIONNOTALLOWEDMSG+"Supplied file is directory"));
+
+							return fileRemoveResponseBuilder.build();
+						}
+
+						FileUtils.forceDelete(targetFile);
+						
+					}else{
+						
+						fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEINEXISTENTMSG));
+
+						return fileRemoveResponseBuilder.build();
+					}
+
+				}else{
+					
+					fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, NAMESPACEINEXISTENTMSG));
+
+					return fileRemoveResponseBuilder.build();
+					
+				}
+
+			} catch (IOException e) {
+
+				logger.error("Document Response: IO Exception while processing file delete request "+e.getMessage());
+
+				fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
+				return fileRemoveResponseBuilder.build();
+
+			}
+		
+		} else{
+			
+			try {
+			
+				targetFile = new File(HOMEDIR+File.separator+fileToBeDeleted);
+				
+				boolean fileCheck = FileUtils.directoryContains(homeDir, targetFile);
+				
+				if(fileCheck){
+					
+					if(targetFile.isDirectory()){
+						
+						fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, OPERATIONNOTALLOWEDMSG+"Requested file is directory"));
+
+						return fileRemoveResponseBuilder.build();
+					}
+					
+					FileUtils.forceDelete(targetFile);
+									
+				}else{
+					
+					fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEINEXISTENTMSG));
+
+					return fileRemoveResponseBuilder.build();
+					
+				}
+		
+			} catch (IOException e) {
+				
+				logger.error("Document Response: IO Exception while processing file delete request w/o namespace "+e.getMessage());
+				
+				fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
+				return fileRemoveResponseBuilder.build();
+			}
+			
+		}
+		
+		fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.SUCCESS, FILEDELETESUCCESSFULMSG));
+		
+		return fileRemoveResponseBuilder.build();
 	}
-	
 }

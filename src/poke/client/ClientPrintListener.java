@@ -38,11 +38,15 @@ public class ClientPrintListener implements ClientListener {
 				ClientUtil.printDocument(msg.getBody().getDocs(i));
 		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCADDHANDSHAKE){
 			
-			System.out.println("Server response to document add request "+msg.getHeader().getReplyCode().name());
+			System.out.println("Server response to document add request "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
 			
 		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCADD){
 			
 			System.out.println("Server response to document add "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
+			
+		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCREMOVE){
+			
+			System.out.println("Server response to document remove "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
 			
 		}
 	}

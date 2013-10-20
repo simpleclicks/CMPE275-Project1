@@ -57,6 +57,7 @@ public class ClientConnection {
 	ClientDecoderPipeline clientPipeline;
 	private LinkedBlockingDeque<com.google.protobuf.GeneratedMessage> outbound;
 	private OutboundWorker worker;
+	private static boolean firstTimeConnect = true; 
 
 	protected ClientConnection(String host, int port) {
 		this.host = host;
@@ -199,9 +200,38 @@ public class ClientConnection {
 		} catch (InterruptedException e) {
 			logger.warn("Unable to deliver doc add message, queuing "+e.getMessage());
 		}
+}
+	public void docRemove(String nameSpace , String fileName){
+	
+		Header.Builder docRemoveReqHeader = Header.newBuilder();
 		
+		docRemoveReqHeader.setRoutingId(Routing.DOCREMOVE);
 		
+		docRemoveReqHeader.setOriginator("Doc remove test");
+		
+		Payload.Builder docRemoveBodyBuilder = Payload.newBuilder();
+		
+		if(nameSpace !=null && nameSpace.length() > 0)
+			docRemoveBodyBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace).build());
+		
+		docRemoveBodyBuilder.setDoc(Document.newBuilder().setDocName(fileName));
+		
+		Request.Builder docRemoveReqBuilder = Request.newBuilder();
+		
+		docRemoveReqBuilder.setBody(docRemoveBodyBuilder.build());
+		
+		docRemoveReqBuilder.setHeader(docRemoveReqHeader.build());
+		
+		try {
+			
+			outbound.put(docRemoveReqBuilder.build());
+		
+		} catch (InterruptedException e) {
+			logger.warn("Unable to deliver doc remove message, queuing "+e.getMessage());
+		}
+	
 	}
+	
 
 	private void init() {
 		// the queue to support client-side surging
@@ -268,7 +298,15 @@ public class ClientConnection {
 
 		@Override
 		public void run() {
-			Channel ch = conn.connect();
+			
+			Channel ch = null;
+			
+			if(firstTimeConnect){
+			
+				ch = conn.connect();
+				firstTimeConnect = false;
+		
+			}
 			if (ch == null || !ch.isOpen()) {
 				ClientConnection.logger.error("connection missing, no outbound communication");
 				return;
