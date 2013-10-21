@@ -230,16 +230,18 @@ public class DocumentResource implements Resource {
 	private Response docAdd(Header docAddHeader , Payload docAddBody){
 
 		String nameSpace = docAddBody.getSpace().getName();
+		
+		String effNS = HOMEDIR+File.separator+nameSpace;
 
 		String fileName = docAddBody.getDoc().getDocName();
 
-		logger.info("Received file "+fileName);
+		logger.info("DocAdd: Received file "+fileName);
 
-		logger.info("Creating namespace "+nameSpace);
+		logger.info("effective namespace "+effNS);
 
-		//File nameDir = new File(nameSpace);
+		File nameDir = new File(effNS);
 
-		File file = new File(nameSpace+"//"+fileName);
+		File file = new File(effNS+File.separator+fileName);
 
 		Header.Builder docAddHeaderBuilder = Header.newBuilder(docAddHeader);
 
@@ -247,9 +249,9 @@ public class DocumentResource implements Resource {
 
 			logger.info("Creating directory with name "+nameSpace );
 
-			//FileUtils.forceMkdir(nameDir);
+			FileUtils.forceMkdir(nameDir);
 
-			logger.info("Creating file with name "+fileName+" and woritng the content sent by client to it" );
+			logger.info("Creating file with name "+fileName+" and writing the content sent by client to it" );
 
 			FileUtils.writeByteArrayToFile(file, docAddBody.getDoc().getChunkContent().toByteArray(), true);
 
@@ -275,6 +277,8 @@ public class DocumentResource implements Resource {
 		docAddRespBuilder.setHeader(docAddHeaderBuilder);
 
 		docAddRespBuilder.setBody(PayloadReply.newBuilder().build());
+		
+		System.gc();
 
 		return docAddRespBuilder.build();
 	}
