@@ -18,7 +18,13 @@ package poke.server;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -237,6 +243,48 @@ public class Server {
 		conn.start();
 
 		logger.info("Server ready");
+		
+		
+		int bport = Integer.parseInt(conf.getServer().getProperty("port.broadcast"));
+		
+		broadcastAvailability(bport);
+		
+		logger.info("Broadcasting availability");
+		
+		BroadcastHandler.intialize(bport, conf);
+		BroadcastHandler broadcastThread = BroadcastHandler.getInstance(); 
+		broadcastThread.start();
+		logger.info("Broadcast listener started");
+		
+	}
+	
+	private void broadcastAvailability(int broadcastport) {
+		
+		DatagramSocket broadcastSocket = null;
+		try {
+			broadcastSocket = new DatagramSocket();
+			broadcastSocket.setBroadcast(true);
+			
+			byte[] sendData = ("NETWORK_DISCOVERY_"+conf.getServer().getProperty("node.id")).getBytes();
+
+			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("192.168.0.255"), broadcastport);
+		    broadcastSocket.send(sendPacket);
+
+		    logger.info("Broadcast Sent");
+		    
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			broadcastSocket.close();
+		}
+		
 	}
 
 	/**
@@ -256,5 +304,7 @@ public class Server {
 
 		Server svr = new Server(cfg);
 		svr.run();
+		
+		
 	}
 }
