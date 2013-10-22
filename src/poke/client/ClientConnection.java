@@ -71,7 +71,7 @@ public class ClientConnection {
 	
 	private OutboundWorker worker;
 	
-	private static final long MAX_UNCHUNKED_FILE_SIZE = 52428800L;
+	private static final long MAX_UNCHUNKED_FILE_SIZE = 26214400L;
 	 
 	
 	public ChannelFuture getChanneluture() {
@@ -274,9 +274,9 @@ public class ClientConnection {
 				
 				do{
 					
-				byte[] chunckContents = new byte[52428800];
+				byte[] chunckContents = new byte[26214400];
 								
-				 bytesRead= IOUtils.read(chunkeFIS, chunckContents , 0 , 52428800);
+				 bytesRead= IOUtils.read(chunkeFIS, chunckContents , 0 , 26214400);
 				 
 				 logger.info("Total number of bytes read for chunk "+chunkId+": "+bytesRead);
 				 
@@ -296,6 +296,10 @@ public class ClientConnection {
 						
 						logger.warn("Unable to deliver doc add (chunked) message, queuing "+e.getMessage());
 					}
+					
+					chunckContents = null;
+					
+					System.gc();
 					
 					chunkId++;
 				

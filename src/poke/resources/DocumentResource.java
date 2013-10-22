@@ -25,6 +25,8 @@ import org.apache.commons.io.monitor.FileEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.protobuf.ByteString;
+
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
 import poke.server.storage.jdbc.SpaceMapper;
@@ -247,6 +249,10 @@ public class DocumentResource implements Resource {
 		File file = new File(effNS+File.separator+fileName);
 
 		Header.Builder docAddHeaderBuilder = Header.newBuilder(docAddHeader);
+		
+		Document recivedFile = docAddBody.getDoc();
+		
+		Document toBesent= null;
 
 		try {
 
@@ -256,9 +262,9 @@ public class DocumentResource implements Resource {
 
 			logger.info("Creating file with name "+fileName+" and writing the content sent by client to it" );
 
-			FileUtils.writeByteArrayToFile(file, docAddBody.getDoc().getChunkContent().toByteArray(), true);
-
-
+			FileUtils.writeByteArrayToFile(file, recivedFile.getChunkContent().toByteArray(), true);
+			
+			toBesent = recivedFile.toBuilder().clearChunkContent().build();
 
 		} catch (IOException e) {
 
@@ -271,15 +277,21 @@ public class DocumentResource implements Resource {
 			e.printStackTrace();
 		}
 
+		System.gc();
+		
 		docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);
 
 		docAddHeaderBuilder.setReplyMsg("File Uploaded Successfully");
-
+		
 		Response.Builder docAddRespBuilder = Response.newBuilder();
 
 		docAddRespBuilder.setHeader(docAddHeaderBuilder);
 
-		docAddRespBuilder.setBody(PayloadReply.newBuilder().build());
+		System.gc();
+		
+	//	logger.info("Size of the chunk content to be sent  "+toBesent.getChunkContent().size());
+		
+		docAddRespBuilder.setBody(PayloadReply.newBuilder().addDocs(toBesent));
 		
 		System.gc();
 
