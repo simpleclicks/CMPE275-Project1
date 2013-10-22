@@ -94,7 +94,7 @@ public class ClientHandler extends SimpleChannelUpstreamHandler {
 
 	@Override
 	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
-		logger.info("Received response from the server");
+		//logger.info("Received response from the server");
 		handleMessage((eye.Comm.Response) e.getMessage(), e.getChannel());
 		
 	}

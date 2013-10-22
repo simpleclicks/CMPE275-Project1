@@ -291,7 +291,7 @@ public class DocumentResource implements Resource {
 		
 	//	logger.info("Size of the chunk content to be sent  "+toBesent.getChunkContent().size());
 		
-		docAddRespBuilder.setBody(PayloadReply.newBuilder().addDocs(toBesent));
+		docAddRespBuilder.setBody(PayloadReply.newBuilder().addDocs(toBesent).addSpaces(docAddBody.getSpace()));
 		
 		System.gc();
 
