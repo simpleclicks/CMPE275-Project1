@@ -53,13 +53,16 @@ public class ClientHandler extends SimpleChannelUpstreamHandler {
 		return true;
 	}
 
-	public void handleMessage(eye.Comm.Response msg) {
+	public void handleMessage(eye.Comm.Response msg , Channel serverChannel) {
 		for (String id : listeners.keySet()) {
-			ClientListener cl = listeners.get(id);
-
-			// TODO this may need to be delegated to a thread pool to allow
-			// async processing of replies
-			cl.onMessage(msg);
+//			ClientListener cl = listeners.get(id);
+//			// TODO this may need to be delegated to a thread pool to allow
+//			// async processing of replies
+//			cl.onMessage(msg);
+			
+			ClientResponseAction clientResponsehandler = new ClientResponseAction(serverChannel);
+			clientResponsehandler.enqueueRecievedResponse(msg);
+			
 		}
 	}
 
@@ -91,12 +94,14 @@ public class ClientHandler extends SimpleChannelUpstreamHandler {
 
 	@Override
 	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
-		handleMessage((eye.Comm.Response) e.getMessage());
+		logger.info("Received response from the server");
+		handleMessage((eye.Comm.Response) e.getMessage(), e.getChannel());
+		
 	}
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-		logger.error("Handler exception, closing channel", e);
+		logger.error("Handler exception, closing channel", e.getCause());
 
 		// TODO do we really want to do this? try to re-connect?
 		e.getChannel().close();

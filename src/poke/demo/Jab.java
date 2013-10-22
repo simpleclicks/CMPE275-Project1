@@ -33,17 +33,17 @@ public class Jab {
 		ClientListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);
 
-		for (int i = 0; i < 3; i++) {
-			count++;
-			System.out.println("Poke 1"+count);
-			cc.poke(tag, count);
-		}
+//		for (int i = 0; i < 3; i++) {
+//			count++;
+//			System.out.println("Poke 1"+count);
+//			cc.poke(tag, count);
+//		}
 	
-		cc.docAddReq("Kau", "abc.txt", 1198170);
+		cc.docAddReq("Kau", "E://RSA4WS_SETUP.rar");
 		
-		cc.docAdd("Kaustubh3", "E://RSA4WS_SETUP.rar");
+		//cc.docAdd("Kaustubh3", "E://test3.txt");
 		
-		cc.docRemove("", "Kaustubh1");
+		//cc.docRemove("", "Kaustubh1");
 	
 	}
 

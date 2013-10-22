@@ -15,6 +15,7 @@
  */
 package poke.client;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -154,19 +155,32 @@ public class ClientConnection {
 		}
 	}
 	
-	public void docAddReq(String nameSpace,String fileName,int fileSize){
+	public void docAddReq(String nameSpace,String filePath){
 		
 		Header.Builder docAddReqHeader = Header.newBuilder();
+		
+		String fileName = FilenameUtils.getName(filePath);
+		
+		logger.info("File to be uploaded to the server "+fileName);
+		
+		File fts = new File(filePath);
+		
+		long fileSize = FileUtils.sizeOf(fts);
+		
+		logger.info("Size of the file to be uploaded to the server "+fileSize);
 		
 		docAddReqHeader.setRoutingId(Routing.DOCADDHANDSHAKE);
 		
 		docAddReqHeader.setOriginator("Doc add test");
 		
+		//docAddReqHeader.setTag(filePath);
+		
 		Payload.Builder docAddBodyBuilder = Payload.newBuilder();
 		
+		if(nameSpace !=null && nameSpace.length()>0)
 		docAddBodyBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace).build());
 		
-		docAddBodyBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocSize(fileSize).build());
+		docAddBodyBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocSize(fileSize).setDocExtension(filePath));
 		
 		Request.Builder docAddReqBuilder = Request.newBuilder();
 		

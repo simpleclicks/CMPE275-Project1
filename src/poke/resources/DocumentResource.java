@@ -29,6 +29,7 @@ import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
 import poke.server.storage.jdbc.SpaceMapper;
 import eye.Comm;
+import eye.Comm.Document;
 import eye.Comm.Header;
 import eye.Comm.Payload;
 import eye.Comm.PayloadReply;
@@ -114,15 +115,17 @@ public class DocumentResource implements Resource {
 
 	private Response docAddValidate(Header docAddValidateHeader , Payload docAddValidateBody){
 
-		long reqFileSize = docAddValidateBody.getDoc().getDocSize();
+		Document repDoc = docAddValidateBody.getDoc();
+		
+		long reqFileSize = repDoc.getDocSize();
 
-		String newFileName = docAddValidateBody.getDoc().getDocName();
+		String newFileName = repDoc.getDocName();
 
 		String nameSpece = docAddValidateBody.getSpace().getName();
 
 		Response.Builder docAddValidateResponseBuilder = Response.newBuilder();
-
-		docAddValidateResponseBuilder.setBody(PayloadReply.newBuilder().build());
+		
+		docAddValidateResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(repDoc).addSpaces(docAddValidateBody.getSpace()));
 
 		long spacceAvailable = 0;
 
