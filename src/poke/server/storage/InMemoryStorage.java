@@ -35,8 +35,8 @@ public class InMemoryStorage implements Storage {
 	private HashMap<Long, DataNameSpace> data = new HashMap<Long, DataNameSpace>();
 
 	@Override
-	public boolean addDocument(String namespace, File doc) {
-		/*if (doc == null)
+	public boolean addDocument(String namespace, Document doc) {
+		if (doc == null)
 			return false;
 		DataNameSpace dns = null;
 		if (namespace == null) {
@@ -65,8 +65,7 @@ public class InMemoryStorage implements Storage {
 			doc = bldr.build();
 		}
 
-		return dns.add(key, doc);*/
-		return false;
+		return dns.add(key, doc);
 	}
 
 	@Override
@@ -84,8 +83,7 @@ public class InMemoryStorage implements Storage {
 
 	@Override
 	public boolean updateDocument(String namespace, Document doc) {
-		File d = null;
-		return addDocument(namespace, d);
+		return addDocument(namespace, doc);
 	}
 
 	@Override

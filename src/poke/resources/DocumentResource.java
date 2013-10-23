@@ -24,11 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import poke.server.resources.Resource;
-import poke.server.resources.ResourceFactory;
 import poke.server.resources.ResourceUtil;
 import poke.server.storage.jdbc.DatabaseStorage;
-import poke.server.storage.jdbc.SpaceMapper;
-import eye.Comm;
 import eye.Comm.Header;
 import eye.Comm.Payload;
 import eye.Comm.PayloadReply;
@@ -142,7 +139,7 @@ public class DocumentResource implements Resource {
 			
 			FileUtils.writeByteArrayToFile(file, docAddBody.getFile().getFileData().toByteArray(), true);
 			
-			dbInst.addDocument(nameSpace, docAddBody.getFile());
+			dbInst.addDocument(nameSpace, docAddBody.getDoc());
 		
 		} catch (IOException e) {
 			

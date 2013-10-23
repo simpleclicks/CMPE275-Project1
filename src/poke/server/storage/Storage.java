@@ -36,7 +36,7 @@ public interface Storage {
 
 	boolean removeNameSpace(long spaceId);
 
-	boolean addDocument(String namespace, File file);
+	boolean addDocument(String namespace, Document doc);
 
 	boolean removeDocument(String namespace, long docId);
 

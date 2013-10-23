@@ -32,7 +32,6 @@ import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
 
 import eye.Comm.Document;
-import eye.Comm.File;
 import eye.Comm.NameSpace;
 
 public class DatabaseStorage implements Storage {
@@ -190,11 +189,11 @@ public class DatabaseStorage implements Storage {
 	}
 
 	@Override
-	public boolean addDocument(String namespace, File doc) {
+	public boolean addDocument(String namespace, Document doc) {
 		try {
 			java.sql.Statement stmt = this.cpool.getConnection()
 					.createStatement();
-			String query = "INSERT INTO `thunderbolts`.`document` (`DocumentName`, `NamespaceID`, `OwnerNodeID`, `DocumentExtension`, `DocumentSize`, `ReplicationCount`) VALUES ('"+doc.getFileName()+"', 1, 'Server0', '"+doc.getFileExtension()+"', "+doc.getFileSize()+", '0')";
+			String query = "INSERT INTO `Document`(`DocumentID`, `DocumentName`, `NamespaceName`, `NodeID`, `ReplicationCount`) VALUES (DEFAULT,'"+doc.getDocument().getName()+"','"+doc.getNameSpace()+"','"+doc.getDocument().getNodeCount()+"',0)";
 			stmt.executeUpdate(query);
 			return true;
 		} catch (SQLException e) {

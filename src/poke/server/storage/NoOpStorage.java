@@ -25,7 +25,7 @@ import eye.Comm.NameSpace;
 public class NoOpStorage implements Storage {
 
 	@Override
-	public boolean addDocument(String namespace, File doc) {
+	public boolean addDocument(String namespace, Document doc) {
 		// TODO Auto-generated method stub
 		return true;
 	}
