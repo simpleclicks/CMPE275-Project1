@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Properties;
 
 import eye.Comm.Document;
+import eye.Comm.File;
 import eye.Comm.NameSpace;
 
 /**
@@ -34,8 +35,8 @@ public class InMemoryStorage implements Storage {
 	private HashMap<Long, DataNameSpace> data = new HashMap<Long, DataNameSpace>();
 
 	@Override
-	public boolean addDocument(String namespace, Document doc) {
-		if (doc == null)
+	public boolean addDocument(String namespace, File doc) {
+		/*if (doc == null)
 			return false;
 		DataNameSpace dns = null;
 		if (namespace == null) {
@@ -52,7 +53,7 @@ public class InMemoryStorage implements Storage {
 
 		if (dns == null)
 			throw new RuntimeException("Unknown namspace: " + namespace);
-
+		
 		Long key = null;
 		if (doc.hasId())
 			key = doc.getId();
@@ -64,7 +65,8 @@ public class InMemoryStorage implements Storage {
 			doc = bldr.build();
 		}
 
-		return dns.add(key, doc);
+		return dns.add(key, doc);*/
+		return false;
 	}
 
 	@Override
@@ -82,7 +84,8 @@ public class InMemoryStorage implements Storage {
 
 	@Override
 	public boolean updateDocument(String namespace, Document doc) {
-		return addDocument(namespace, doc);
+		File d = null;
+		return addDocument(namespace, d);
 	}
 
 	@Override

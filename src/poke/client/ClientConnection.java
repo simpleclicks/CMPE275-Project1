@@ -35,7 +35,6 @@ import com.google.protobuf.GeneratedMessage;
 import eye.Comm.File;
 import eye.Comm.Finger;
 import eye.Comm.Header;
-import eye.Comm.Header.Builder;
 import eye.Comm.Header.Routing;
 import eye.Comm.NameSpace;
 import eye.Comm.Payload;

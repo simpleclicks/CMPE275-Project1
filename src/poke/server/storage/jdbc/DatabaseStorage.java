@@ -17,6 +17,9 @@ package poke.server.storage.jdbc;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import com.mysql.jdbc.Driver;
+import com.mysql.jdbc.Statement;
+
 import java.util.List;
 import java.util.Properties;
 
@@ -29,6 +32,7 @@ import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
 
 import eye.Comm.Document;
+import eye.Comm.File;
 import eye.Comm.NameSpace;
 
 public class DatabaseStorage implements Storage {
@@ -57,15 +61,16 @@ public class DatabaseStorage implements Storage {
 		this.cfg = cfg;
 
 		try {
+			System.out.println("In DatbaseStorage");
 			Class.forName(cfg.getProperty(sDriver));
 			BoneCPConfig config = new BoneCPConfig();
 			config.setJdbcUrl(cfg.getProperty(sUrl));
-			config.setUsername(cfg.getProperty(sUser, "sa"));
-			config.setPassword(cfg.getProperty(sPass, ""));
+			config.setUsername(cfg.getProperty(sUser));
+			config.setPassword(cfg.getProperty(sPass));
 			config.setMinConnectionsPerPartition(5);
 			config.setMaxConnectionsPerPartition(10);
 			config.setPartitionCount(1);
-
+			System.out.println("Got the configuration : " + config.toString());
 			cpool = new BoneCP(config);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -185,9 +190,19 @@ public class DatabaseStorage implements Storage {
 	}
 
 	@Override
-	public boolean addDocument(String namespace, Document doc) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean addDocument(String namespace, File doc) {
+		try {
+			java.sql.Statement stmt = this.cpool.getConnection()
+					.createStatement();
+			String query = "INSERT INTO `thunderbolts`.`document` (`DocumentName`, `NamespaceID`, `OwnerNodeID`, `DocumentExtension`, `DocumentSize`, `ReplicationCount`) VALUES ('"+doc.getFileName()+"', 1, 'Server0', '"+doc.getFileExtension()+"', "+doc.getFileSize()+", '0')";
+			stmt.executeUpdate(query);
+			return true;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		
 	}
 
 	@Override

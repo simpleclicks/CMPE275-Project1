@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import poke.server.resources.Resource;
+import poke.server.storage.jdbc.DatabaseStorage;
 import eye.Comm.Request;
 import eye.Comm.Response;
 
@@ -26,7 +27,7 @@ public class NameSpaceResource implements Resource {
 	protected static Logger logger = LoggerFactory.getLogger("server");
 
 	@Override
-	public Response process(Request request) {
+	public Response process(Request request, DatabaseStorage dbInstance) {
 		// TODO Auto-generated method stub
 		return null;
 	}

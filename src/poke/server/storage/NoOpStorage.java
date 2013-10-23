@@ -19,12 +19,13 @@ import java.util.List;
 import java.util.Properties;
 
 import eye.Comm.Document;
+import eye.Comm.File;
 import eye.Comm.NameSpace;
 
 public class NoOpStorage implements Storage {
 
 	@Override
-	public boolean addDocument(String namespace, Document doc) {
+	public boolean addDocument(String namespace, File doc) {
 		// TODO Auto-generated method stub
 		return true;
 	}

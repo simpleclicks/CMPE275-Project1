@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Properties;
 
 import eye.Comm.Document;
+import eye.Comm.File;
 import eye.Comm.NameSpace;
 
 public interface Storage {
@@ -35,7 +36,7 @@ public interface Storage {
 
 	boolean removeNameSpace(long spaceId);
 
-	boolean addDocument(String namespace, Document doc);
+	boolean addDocument(String namespace, File file);
 
 	boolean removeDocument(String namespace, long docId);
 

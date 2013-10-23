@@ -18,10 +18,12 @@ package poke.server;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.Properties;
 
 import org.jboss.netty.bootstrap.Bootstrap;
 import org.jboss.netty.bootstrap.ServerBootstrap;
@@ -46,6 +48,7 @@ import poke.server.management.ManagementDecoderPipeline;
 import poke.server.management.ManagementQueue;
 import poke.server.resources.ResourceFactory;
 import poke.server.routing.ServerDecoderPipeline;
+import poke.server.storage.jdbc.DatabaseStorage;
 
 /**
  * Note high surges of messages can close down the channel if the handler cannot
@@ -67,6 +70,7 @@ public class Server {
 	protected ChannelFactory cf, mgmtCF;
 	protected ServerConf conf;
 	protected HeartbeatManager hbMgr;
+	protected DatabaseStorage dbConn;
 
 	/**
 	 * static because we need to get a handle to the factory from the shutdown
@@ -102,7 +106,15 @@ public class Server {
 			br = new BufferedInputStream(new FileInputStream(cfg));
 			br.read(raw);
 			conf = JsonUtil.decode(new String(raw), ServerConf.class);
-			ResourceFactory.initialize(conf);
+			// storage initialization
+			// TODO storage setup (e.g., connection to a database)
+			Properties dbConf = new Properties();
+			File f = new File("F:/SJSU-SE/CMPE275-Project1/resources/database.properties");
+			InputStream is = new FileInputStream(f);
+			dbConf.load(is);
+			dbConn = new DatabaseStorage(dbConf);
+
+			ResourceFactory.initialize(conf,dbConn);
 		} catch (Exception e) {
 		}
 
@@ -144,7 +156,7 @@ public class Server {
 		ServerBootstrap bs = new ServerBootstrap(cf);
 
 		// Set up the pipeline factory.
-		bs.setPipelineFactory(new ServerDecoderPipeline());
+		bs.setPipelineFactory(new ServerDecoderPipeline(dbConn));
 
 		// tweak for performance
 		bs.setOption("child.tcpNoDelay", true);
@@ -200,6 +212,7 @@ public class Server {
 	 * 
 	 */
 	public void run() {
+		try{
 		String str = conf.getServer().getProperty("port");
 		if (str == null) {
 			// TODO if multiple servers can be ran per node, assigning a default
@@ -213,9 +226,7 @@ public class Server {
 		str = conf.getServer().getProperty("port.mgmt");
 		int mport = Integer.parseInt(str);
 
-		// storage initialization
-		// TODO storage setup (e.g., connection to a database)
-
+		
 		// start communication
 		createPublicBoot(port);
 		createManagementBoot(mport);
@@ -237,6 +248,10 @@ public class Server {
 		conn.start();
 
 		logger.info("Server ready");
+		}
+		catch(Exception ex){
+			logger.error(ex.getMessage());
+		}
 	}
 
 	/**

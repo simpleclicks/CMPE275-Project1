@@ -24,7 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import poke.server.resources.Resource;
+import poke.server.resources.ResourceFactory;
 import poke.server.resources.ResourceUtil;
+import poke.server.storage.jdbc.DatabaseStorage;
 import poke.server.storage.jdbc.SpaceMapper;
 import eye.Comm;
 import eye.Comm.Header;
@@ -37,10 +39,11 @@ import eye.Comm.Header.ReplyStatus;
 public class DocumentResource implements Resource {
 	
 	protected static Logger logger = LoggerFactory.getLogger("DocumentResource");
+	protected static DatabaseStorage dbInst;
 
 	@Override
-	public Response process(Request request) {
-		
+	public Response process(Request request, DatabaseStorage dbInstance) {
+		dbInst = dbInstance;
 		int opChoice = 0;
 		
 		Response docOpResponse = null;
@@ -139,7 +142,7 @@ public class DocumentResource implements Resource {
 			
 			FileUtils.writeByteArrayToFile(file, docAddBody.getFile().getFileData().toByteArray(), true);
 			
-			
+			dbInst.addDocument(nameSpace, docAddBody.getFile());
 		
 		} catch (IOException e) {
 			
