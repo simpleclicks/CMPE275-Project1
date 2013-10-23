@@ -96,9 +96,16 @@ public class InboundMgmtWorker extends Thread {
 							SocketAddress socka = msg.channel.getLocalAddress();
 							if (socka != null) {
 								InetSocketAddress isa = (InetSocketAddress) socka;
-								logger.info("NODEJOIN: " + isa.getHostName() + ", " + isa.getPort()); // probably we need to take the remote address instead of local
+								//logger.info("NODEJOIN: " + isa.getHostName() + ", " + isa.getPort()); // probably we need to take the remote address instead of local
+								//HeartbeatManager.getInstance().addOutgoingChannel(n.getNodeId(), isa.getHostName(),
+								//		isa.getPort(), msg.channel, msg.sa);
+								logger.info("NODEJOIN: " + msg.channel.getLocalAddress() + ", " + msg.channel.getRemoteAddress()); // probably we need to take the remote address instead of local
 								HeartbeatManager.getInstance().addOutgoingChannel(n.getNodeId(), isa.getHostName(),
 										isa.getPort(), msg.channel, msg.sa);
+								//HeartbeatData heart = new HeartbeatData(n.getNodeId(), n.ge, null, mgmtport);
+								//HeartbeatConnector.getInstance().addConnectToThisNode(node);
+								
+								
 							}
 						} else
 							logger.warn(n.getNodeId() + " not writable");

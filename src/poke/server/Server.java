@@ -241,7 +241,7 @@ public class Server {
 		// manage hbMgr connections
 		HeartbeatConnector conn = HeartbeatConnector.getInstance();
 		conn.start();
-
+		
 		logger.info("Server ready");
 		
 		
@@ -265,9 +265,14 @@ public class Server {
 			broadcastSocket = new DatagramSocket();
 			broadcastSocket.setBroadcast(true);
 			
-			byte[] sendData = ("NETWORK_DISCOVERY_"+conf.getServer().getProperty("node.id")).getBytes();
+			String sendNodeId = conf.getServer().getProperty("node.id");
+			String sendPort = conf.getServer().getProperty("port");
+			String sendMgmtPort = conf.getServer().getProperty("port.mgmt");
+			
+			//done for testing - change this later to read from own config
+			byte[] sendData = ("NETWORK_DISCOVERY_"+sendNodeId+"_"+sendPort+"_"+sendMgmtPort).getBytes();
 
-			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("192.168.0.255"), broadcastport);
+			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("192.168.0.255"), 5684);
 		    broadcastSocket.send(sendPacket);
 
 		    logger.info("Broadcast Sent");

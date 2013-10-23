@@ -71,29 +71,52 @@ public class HeartbeatConnector extends Thread {
 		HeartMonitor hm = new HeartMonitor(node.getHost(), node.getMgmtport(), handler);
 		monitors.add(hm);
 	}
+	
+	public void addMonitor(HeartbeatData node) {
+		// null data is not allowed
+		if (node == null || node.getNodeId() == null)
+			throw new RuntimeException("Null nodes or IDs are not allowed");
+
+		// register the node to the manager that is used to determine if a
+		// connection is usable by the public messaging
+		//HeartbeatManager.getInstance().addNearestNode(node);
+
+		// this class will monitor this channel/connection and together with the
+		// manager, we create the circuit breaker pattern to separate
+		// health-status from usage.
+		logger.info(" adding node to monitor");
+		HeartbeatListener hbmon = new HeartbeatListener(node);
+		MonitorHandler handler = new MonitorHandler();
+		handler.addListener(hbmon);
+		HeartMonitor hm = new HeartMonitor(node.getHost(), 5675, handler);
+		monitors.add(hm);
+	}
 
 	@Override
 	public void run() {
-		if (monitors.size() == 0) {
-			logger.info("HB connection monitor not started, no connections to establish");
-			return;
-		} else
-			logger.info("HB connection monitor starting, node has " + monitors.size() + " connections");
 
 		while (forever) {
 			try {
-				Thread.sleep(sConnectRate);
+				if (monitors.size() == 0) {
+					logger.info("HB connection monitor not started, no connections to establish");
+					Thread.sleep(sConnectRate);
+				} 
+				else {
+					logger.info("HB connection monitor starting, node has " + monitors.size() + " connections");
 
-				// try to establish connections to our nearest nodes
-				for (HeartMonitor hb : monitors) {
-					if (!hb.isConnected()) {
-						try {
-							logger.info("attempting to connect to node: " + hb.getNodeInfo());
-							hb.initiateHeartbeat();
-						} catch (Exception ie) {
-							// do nothing
+					Thread.sleep(sConnectRate);
+					// try to establish connections to our nearest nodes
+					for (HeartMonitor hb : monitors) {
+						if (!hb.isConnected()) {
+							try {
+								logger.info("attempting to connect to node: " + hb.getNodeInfo());
+								hb.initiateHeartbeat();
+							} catch (Exception ie) {
+								// do nothing
+							}
 						}
 					}
+
 				}
 			} catch (InterruptedException e) {
 				logger.error("Unexpected HB connector failure", e);

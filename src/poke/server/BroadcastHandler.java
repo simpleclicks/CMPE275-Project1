@@ -47,7 +47,7 @@ public class BroadcastHandler extends Thread {
 
 		try {
 
-			recieveSocket = new DatagramSocket(recievePort, InetAddress.getByName("localhost"));
+			recieveSocket = new DatagramSocket(recievePort, InetAddress.getByName("192.168.0.181"));
 			recieveSocket.setBroadcast(true);
 
 			while (true) {
@@ -61,15 +61,22 @@ public class BroadcastHandler extends Thread {
 
 				if (message.contains("NETWORK_DISCOVERY")) {
 
+					//System.out.println(message.toString());
 					String nodeId = message.split("_")[2];
+					
 					String hostAddress = packet.getAddress().getHostAddress();
-					int port = Integer.valueOf(broadcastConf.getServer().getProperty("port"));
-					int mgmtPort = Integer.valueOf(broadcastConf.getServer().getProperty("port.mgmt"));
+					System.out.println("host Address: "+hostAddress);
+					
+					//done for testing - change this later to read from own config
+					int port = Integer.valueOf(message.split("_")[3]);
+					int mgmtPort = Integer.valueOf(message.split("_")[4]);
 					
 					logger.info("Broadcast recieved");
 					HeartbeatData node = new HeartbeatData(nodeId, hostAddress, port, mgmtPort);
 					HeartbeatConnector.getInstance().addConnectToThisNode(node);
 					
+					
+					//HeartbeatConnector.getInstance().start();
 				}
 
 			}
