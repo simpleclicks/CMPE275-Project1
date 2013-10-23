@@ -272,7 +272,7 @@ public class Server {
 			//done for testing - change this later to read from own config
 			byte[] sendData = ("NETWORK_DISCOVERY_"+sendNodeId+"_"+sendPort+"_"+sendMgmtPort).getBytes();
 
-			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("192.168.0.255"), 5684);
+			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("192.168.0.255"), broadcastport);
 		    broadcastSocket.send(sendPacket);
 
 		    logger.info("Broadcast Sent");

@@ -120,7 +120,7 @@ public class HeartbeatManager extends Thread {
 			// when the channel closes, remove it from the outgoingHB
 			ch.getCloseFuture().addListener(new CloseHeartListener(heart));
 			
-			HeartbeatConnector.getInstance().addConnectToThisNode(heart);
+			//HeartbeatConnector.getInstance().addConnectToThisNode(heart);
 		} else {
 			logger.error("Received a HB connection unknown to the server, node ID = ", nodeId);  // node already in outgoing channel
 			// TODO actions?

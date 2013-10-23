@@ -55,6 +55,7 @@ public class BroadcastHandler extends Thread {
 				byte[] recvBuf = new byte[15000];
 
 				packet = new DatagramPacket(recvBuf, recvBuf.length);
+				
 
 				recieveSocket.receive(packet);
 				String message = new String(packet.getData()).trim();

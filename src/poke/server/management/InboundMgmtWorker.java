@@ -102,8 +102,8 @@ public class InboundMgmtWorker extends Thread {
 								logger.info("NODEJOIN: " + msg.channel.getLocalAddress() + ", " + msg.channel.getRemoteAddress()); // probably we need to take the remote address instead of local
 								HeartbeatManager.getInstance().addOutgoingChannel(n.getNodeId(), isa.getHostName(),
 										isa.getPort(), msg.channel, msg.sa);
-								//HeartbeatData heart = new HeartbeatData(n.getNodeId(), n.ge, null, mgmtport);
-								//HeartbeatConnector.getInstance().addConnectToThisNode(node);
+								HeartbeatData heart = new HeartbeatData(n.getNodeId(), msg.channel.getRemoteAddress().toString().split(":")[0], null, isa.getPort());
+								HeartbeatConnector.getInstance().addConnectToThisNode(heart);
 								
 								
 							}
