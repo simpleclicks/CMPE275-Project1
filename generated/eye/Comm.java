@@ -9528,6 +9528,10 @@ public final class Comm {
     // required .Network.Action action = 2;
     boolean hasAction();
     eye.Comm.Network.Action getAction();
+    
+    // required string originId = 3;
+    boolean hasOriginId();
+    String getOriginId();
   }
   public static final class Network extends
       com.google.protobuf.GeneratedMessage
@@ -9681,9 +9685,42 @@ public final class Comm {
       return action_;
     }
     
+    // required string originId = 3;
+    public static final int ORIGINID_FIELD_NUMBER = 3;
+    private java.lang.Object originId_;
+    public boolean hasOriginId() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    public String getOriginId() {
+      java.lang.Object ref = originId_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          originId_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getOriginIdBytes() {
+      java.lang.Object ref = originId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        originId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
     private void initFields() {
       nodeId_ = "";
       action_ = eye.Comm.Network.Action.NODEJOIN;
+      originId_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -9695,6 +9732,10 @@ public final class Comm {
         return false;
       }
       if (!hasAction()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasOriginId()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -9710,6 +9751,9 @@ public final class Comm {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeEnum(2, action_.getNumber());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getOriginIdBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -9727,6 +9771,10 @@ public final class Comm {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(2, action_.getNumber());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getOriginIdBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -9856,6 +9904,8 @@ public final class Comm {
         bitField0_ = (bitField0_ & ~0x00000001);
         action_ = eye.Comm.Network.Action.NODEJOIN;
         bitField0_ = (bitField0_ & ~0x00000002);
+        originId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
       
@@ -9902,6 +9952,10 @@ public final class Comm {
           to_bitField0_ |= 0x00000002;
         }
         result.action_ = action_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.originId_ = originId_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -9924,6 +9978,9 @@ public final class Comm {
         if (other.hasAction()) {
           setAction(other.getAction());
         }
+        if (other.hasOriginId()) {
+          setOriginId(other.getOriginId());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -9934,6 +9991,10 @@ public final class Comm {
           return false;
         }
         if (!hasAction()) {
+          
+          return false;
+        }
+        if (!hasOriginId()) {
           
           return false;
         }
@@ -9977,6 +10038,11 @@ public final class Comm {
                 bitField0_ |= 0x00000002;
                 action_ = value;
               }
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              originId_ = input.readBytes();
               break;
             }
           }
@@ -10043,6 +10109,42 @@ public final class Comm {
         action_ = eye.Comm.Network.Action.NODEJOIN;
         onChanged();
         return this;
+      }
+      
+      // required string originId = 3;
+      private java.lang.Object originId_ = "";
+      public boolean hasOriginId() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      public String getOriginId() {
+        java.lang.Object ref = originId_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          originId_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setOriginId(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        originId_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearOriginId() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        originId_ = getDefaultInstance().getOriginId();
+        onChanged();
+        return this;
+      }
+      void setOriginId(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000004;
+        originId_ = value;
+        onChanged();
       }
       
       // @@protoc_insertion_point(builder_scope:Network)
@@ -10769,13 +10871,13 @@ public final class Comm {
       "\022\026\n\004body\030\002 \002(\0132\010.Payload\"@\n\010Response\022\027\n\006" +
       "header\030\001 \002(\0132\007.Header\022\033\n\004body\030\002 \002(\0132\r.Pa" +
       "yloadReply\",\n\tHeartbeat\022\016\n\006nodeId\030\001 \002(\t\022" +
-      "\017\n\007timeRef\030\002 \002(\003\"\225\001\n\007Network\022\016\n\006nodeId\030\001" +
-      " \002(\t\022\037\n\006action\030\002 \002(\0162\017.Network.Action\"Y\n",
-      "\006Action\022\014\n\010NODEJOIN\020\001\022\r\n\tNODELEAVE\020\002\022\014\n\010" +
-      "NODEDEAD\020\003\022\007\n\003MAP\0207\022\014\n\010ANNOUNCE\0208\022\r\n\010SHU" +
-      "TDOWN\020\347\007\"?\n\nManagement\022\027\n\005graph\030\001 \001(\0132\010." +
-      "Network\022\030\n\004beat\030\002 \001(\0132\n.HeartbeatB\007\n\003eye" +
-      "H\001"
+      "\017\n\007timeRef\030\002 \002(\003\"\247\001\n\007Network\022\016\n\006nodeId\030\001" +
+      " \002(\t\022\037\n\006action\030\002 \002(\0162\017.Network.Action\022\020\n",
+      "\010originId\030\003 \002(\t\"Y\n\006Action\022\014\n\010NODEJOIN\020\001\022" +
+      "\r\n\tNODELEAVE\020\002\022\014\n\010NODEDEAD\020\003\022\007\n\003MAP\0207\022\014\n" +
+      "\010ANNOUNCE\0208\022\r\n\010SHUTDOWN\020\347\007\"?\n\nManagement" +
+      "\022\027\n\005graph\030\001 \001(\0132\010.Network\022\030\n\004beat\030\002 \001(\0132" +
+      "\n.HeartbeatB\007\n\003eyeH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -10891,7 +10993,7 @@ public final class Comm {
           internal_static_Network_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Network_descriptor,
-              new java.lang.String[] { "NodeId", "Action", },
+              new java.lang.String[] { "NodeId", "Action", "OriginId", },
               eye.Comm.Network.class,
               eye.Comm.Network.Builder.class);
           internal_static_Management_descriptor =

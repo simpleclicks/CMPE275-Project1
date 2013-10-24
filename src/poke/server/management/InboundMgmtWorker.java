@@ -105,11 +105,11 @@ public class InboundMgmtWorker extends Thread {
 										isa.getPort(), msg.channel, msg.sa);
 								//HeartbeatData heart = new HeartbeatData(n.getNodeId(), "192.168.0.182", 5575, 5675);
 								//msg.channel.getRemoteAddress().toString().split(":")[0].substring(1);
-								/*if(n.getNodeId() == "four")
-								{
-								HeartbeatData heart = new HeartbeatData(, msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5575, 5675);
+								//if(n.getNodeId() == "four")
+								//{
+								HeartbeatData heart = new HeartbeatData(n.getOriginId(), msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5575, 5675);
 								HeartbeatConnector.getInstance().addConnectToThisNode(heart);
-								}
+								/*}
 								if(n.getNodeId() == "five")
 								{
 								HeartbeatData heart = new HeartbeatData(n.getNodeId(), msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5574, 5674);

@@ -275,13 +275,13 @@ public class Server {
 			//done for testing - change this later to read from own config
 			byte[] sendData = ("NETWORK_DISCOVERY_"+sendNodeId+"_"+sendPort+"_"+sendMgmtPort).getBytes();
 
-			NetworkInterface ni = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
-		    String broadcastAddress = ni.getInterfaceAddresses().get(0).getBroadcast().toString().substring(1);
+			//NetworkInterface ni = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
+		    //String broadcastAddress = ni.getInterfaceAddresses().get(0).getBroadcast().toString().substring(1);
 		    
-			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(broadcastAddress), 5684);
+			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("192.168.0.255"), 5685);
 		    broadcastSocket.send(sendPacket);
 		    
-		    logger.info("Broadcast Sent : " + broadcastAddress +","+InetAddress.getLocalHost());
+		  //  logger.info("Broadcast Sent : " + broadcastAddress +","+InetAddress.getLocalHost());
 		    
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
