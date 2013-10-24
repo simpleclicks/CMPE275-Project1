@@ -57,16 +57,15 @@ public class DatabaseStorage implements Storage {
 		this.cfg = cfg;
 
 		try {
-			System.out.println("In DatbaseStorage");
 			Class.forName(cfg.getProperty(sDriver));
 			BoneCPConfig config = new BoneCPConfig();
 			config.setJdbcUrl(cfg.getProperty(sUrl));
-			config.setUsername(cfg.getProperty(sUser));
-			config.setPassword(cfg.getProperty(sPass));
+			config.setUsername(cfg.getProperty(sUser, "sa"));
+			config.setPassword(cfg.getProperty(sPass, ""));
 			config.setMinConnectionsPerPartition(5);
 			config.setMaxConnectionsPerPartition(10);
 			config.setPartitionCount(1);
-			System.out.println("Got the configuration : " + config.toString());
+
 			cpool = new BoneCP(config);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -187,17 +186,8 @@ public class DatabaseStorage implements Storage {
 
 	@Override
 	public boolean addDocument(String namespace, Document doc) {
-		try {
-			java.sql.Statement stmt = this.cpool.getConnection()
-					.createStatement();
-			String query = "INSERT INTO `Document`(`DocumentID`, `DocumentName`, `NamespaceName`, `NodeID`, `ReplicationCount`) VALUES (DEFAULT,'"+doc.getDocName()+"','"+namespace+"','"+doc.getDocument().getNodeCount()+"',0)";
-			stmt.executeUpdate(query);
-			return true;
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	@Override

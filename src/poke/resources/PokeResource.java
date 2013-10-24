@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
-import poke.server.storage.jdbc.DatabaseStorage;
 import eye.Comm.Finger;
 import eye.Comm.Header.ReplyStatus;
 import eye.Comm.PayloadReply;
@@ -38,7 +37,7 @@ public class PokeResource implements Resource {
 	 * 
 	 * @see poke.server.resources.Resource#process(eye.Comm.Finger)
 	 */
-	public Response process(Request request, DatabaseStorage dbInstance) {
+	public Response process(Request request) {
 		// TODO add code to process the message/event received
 		logger.info("poke: " + request.getBody().getFinger().getTag());
 
