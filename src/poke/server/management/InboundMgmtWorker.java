@@ -107,9 +107,9 @@ public class InboundMgmtWorker extends Thread {
 								//msg.channel.getRemoteAddress().toString().split(":")[0].substring(1);
 								//if(n.getNodeId() == "four")
 								//{
-<<<<<<< HEAD
+
 								//if(!HeartbeatManager.getInstance().incomingHB.contains(n.getOriginId())){
-								HeartbeatData heart = new HeartbeatData(n.getOriginId(), msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5575, 5675);
+								HeartbeatData heart = new HeartbeatData(n.getNodeId(), msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5575, 5675);
 								HeartbeatConnector.getInstance().addConnectToThisNode(heart);
 								//}
 								//}
@@ -118,18 +118,8 @@ public class InboundMgmtWorker extends Thread {
 								//HeartbeatData heart = new HeartbeatData(n.getNodeId(), msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5574, 5674);
 								//HeartbeatConnector.getInstance().addConnectToThisNode(heart);
 								//}
-=======
-							//	if(!HeartbeatManager.getInstance().incomingHB.contains(n.getOriginId())){
-								HeartbeatData heart = new HeartbeatData(n.getOriginId(), msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5575, 5675);
-								HeartbeatConnector.getInstance().addConnectToThisNode(heart);
-								//}
-								/*}
-								if(n.getNodeId() == "five")
-								{
-								HeartbeatData heart = new HeartbeatData(n.getNodeId(), msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5574, 5674);
-								HeartbeatConnector.getInstance().addConnectToThisNode(heart);
-								}*/
->>>>>>> cba056778ac7d442b9b93a0b0ee16b4dd3072366
+
+							
 								
 								
 							}

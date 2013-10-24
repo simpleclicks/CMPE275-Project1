@@ -187,7 +187,7 @@ public class HeartMonitor {
 			Channel ch = connect();
 			Network.Builder n = Network.newBuilder();
 			n.setOriginId(HeartbeatManager.getInstance().getNodeId());
-			n.setNodeId("monitor");
+			n.setNodeId(HeartbeatManager.getInstance().getNodeId());
 			n.setAction(Action.NODEJOIN);
 			Management.Builder m = Management.newBuilder();
 			m.setGraph(n.build());
