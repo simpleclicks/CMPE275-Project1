@@ -60,6 +60,14 @@ public class HeartbeatManager extends Thread {
 		return instance.get();
 	}
 
+	public String getNodeId() {
+		return nodeId;
+	}
+
+	public void setNodeId(String nodeId) {
+		this.nodeId = nodeId;
+	}
+
 	public static HeartbeatManager getInstance() {
 		return instance.get();
 	}

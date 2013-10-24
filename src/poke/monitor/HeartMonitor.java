@@ -27,6 +27,8 @@ import org.jboss.netty.channel.socket.nio.NioDatagramChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import poke.server.Server;
+import poke.server.management.HeartbeatManager;
 import eye.Comm.Management;
 import eye.Comm.Network;
 import eye.Comm.Network.Action;
@@ -181,7 +183,7 @@ public class HeartMonitor {
 			System.out.println("Tracing code flow 1 : HeartMonitor.java intiateHeartbeat");
 			Channel ch = connect();
 			Network.Builder n = Network.newBuilder();
-			
+			n.setOriginId(HeartbeatManager.getInstance().getNodeId());
 			n.setNodeId("monitor");
 			n.setAction(Action.NODEJOIN);
 			Management.Builder m = Management.newBuilder();
