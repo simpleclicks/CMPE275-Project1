@@ -19,6 +19,8 @@ import java.net.SocketAddress;
 
 import org.jboss.netty.channel.Channel;
 
+import poke.monitor.HeartMonitor;
+
 /**
  * This class contains a node's connection information and status. The
  * connection information is used to establish a connect to the specified
@@ -283,4 +285,6 @@ public class HeartbeatData {
 	public enum BeatStatus {
 		Unknown, Init, Active, Weak, Failed
 	}
+	
+	
 }

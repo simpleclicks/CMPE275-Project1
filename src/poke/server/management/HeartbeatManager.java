@@ -122,8 +122,8 @@ public class HeartbeatManager extends Thread {
 			heart.setConnection(ch, sa);
 			outgoingHB.put(ch, heart);
 			
-			if(outgoingHB.size() >= 2)
-			System.out.println("Random HB Status "+incomingHB.values().iterator().next().getStatus());
+			//if(outgoingHB.size() >= 2)
+			//System.out.println("Random HB Status "+incomingHB.values().iterator().next().getStatus());
 
 			// when the channel closes, remove it from the outgoingHB
 			ch.getCloseFuture().addListener(new CloseHeartListener(heart));

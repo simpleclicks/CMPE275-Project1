@@ -15,6 +15,7 @@
  */
 package poke.server.management;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -37,7 +38,8 @@ public class HeartbeatConnector extends Thread {
 	protected static Logger logger = LoggerFactory.getLogger("management");
 	protected static AtomicReference<HeartbeatConnector> instance = new AtomicReference<HeartbeatConnector>();
 
-	private ConcurrentLinkedQueue<HeartMonitor> monitors = new ConcurrentLinkedQueue<HeartMonitor>();
+	//private ConcurrentLinkedQueue<HeartMonitor> monitors = new ConcurrentLinkedQueue<HeartMonitor>();
+	private ConcurrentHashMap<String, HeartMonitor> monitors = new ConcurrentHashMap<String, HeartMonitor>();
 	private int sConnectRate = 2000; // msec
 	private boolean forever = true;
 
@@ -58,21 +60,24 @@ public class HeartbeatConnector extends Thread {
 		if (node == null || node.getNodeId() == null)
 			throw new RuntimeException("Null nodes or IDs are not allowed");
 
-		// register the node to the manager that is used to determine if a
-		// connection is usable by the public messaging
-		HeartbeatManager.getInstance().addNearestNode(node);
 
-		// this class will monitor this channel/connection and together with the
-		// manager, we create the circuit breaker pattern to separate
-		// health-status from usage.
-		HeartbeatListener hbmon = new HeartbeatListener(node);
-		MonitorHandler handler = new MonitorHandler();
-		handler.addListener(hbmon);
-		HeartMonitor hm = new HeartMonitor(node.getHost(), node.getMgmtport(), handler);
-		
-		monitors.add(hm);
+		if(!monitors.containsKey(node.getNodeId())) {
+			// register the node to the manager that is used to determine if a
+			// connection is usable by the public messaging
+			HeartbeatManager.getInstance().addNearestNode(node);
+
+			// this class will monitor this channel/connection and together with the
+			// manager, we create the circuit breaker pattern to separate
+			// health-status from usage.
+			HeartbeatListener hbmon = new HeartbeatListener(node);
+			MonitorHandler handler = new MonitorHandler();
+			handler.addListener(hbmon);
+			HeartMonitor hm = new HeartMonitor(node.getHost(), node.getMgmtport(), handler);
+
+			monitors.put(node.getNodeId(),hm);
+		}
 	}
-	
+
 	/*public void addMonitor(HeartbeatData node) {
 		// null data is not allowed
 		if (node == null || node.getNodeId() == null)
@@ -92,7 +97,7 @@ public class HeartbeatConnector extends Thread {
 		HeartMonitor hm = new HeartMonitor(node.getHost(), node.getMgmtport(), handler);
 		monitors.add(hm);
 	}
-*/
+	 */
 	@Override
 	public void run() {
 
@@ -107,7 +112,7 @@ public class HeartbeatConnector extends Thread {
 
 					Thread.sleep(sConnectRate);
 					// try to establish connections to our nearest nodes
-					for (HeartMonitor hb : monitors) {
+					for (HeartMonitor hb : monitors.values()) {
 						if (!hb.isConnected()) {
 							try {
 								logger.info("attempting to connect to node: " + hb.getNodeInfo());
