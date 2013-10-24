@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Properties;
 
 import eye.Comm.Document;
+import eye.Comm.File;
 import eye.Comm.NameSpace;
 
 /**
@@ -52,7 +53,7 @@ public class InMemoryStorage implements Storage {
 
 		if (dns == null)
 			throw new RuntimeException("Unknown namspace: " + namespace);
-
+		
 		Long key = null;
 		if (doc.hasId())
 			key = doc.getId();

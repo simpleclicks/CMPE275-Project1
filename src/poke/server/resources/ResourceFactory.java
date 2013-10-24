@@ -45,11 +45,11 @@ import eye.Comm.Header;
  */
 public class ResourceFactory {
 	protected static Logger logger = LoggerFactory.getLogger("server");
-	public static DatabaseStorage dbInstance;
 
 	private static ServerConf cfg;
 	private static AtomicReference<ResourceFactory> factory = new AtomicReference<ResourceFactory>();
-
+	public static DatabaseStorage dbInstance;
+	
 	public static void initialize(ServerConf cfg, DatabaseStorage dbConn) {
 		try {
 			ResourceFactory.cfg = cfg;
@@ -64,7 +64,7 @@ public class ResourceFactory {
 		ResourceFactory rf = factory.get();
 		if (rf == null)
 			throw new RuntimeException("Server not intialized");
-
+		
 		return rf;
 	}
 

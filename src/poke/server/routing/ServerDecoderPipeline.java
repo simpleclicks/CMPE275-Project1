@@ -23,9 +23,14 @@ import org.jboss.netty.handler.codec.frame.LengthFieldPrepender;
 import org.jboss.netty.handler.codec.protobuf.ProtobufDecoder;
 import org.jboss.netty.handler.codec.protobuf.ProtobufEncoder;
 
-public class ServerDecoderPipeline implements ChannelPipelineFactory {
+import poke.server.storage.jdbc.DatabaseStorage;
 
-	public ServerDecoderPipeline() {
+public class ServerDecoderPipeline implements ChannelPipelineFactory {
+	
+	private DatabaseStorage db;
+
+	public ServerDecoderPipeline(DatabaseStorage dbConn) {
+		db = dbConn;
 	}
 
 	public ChannelPipeline getPipeline() throws Exception {

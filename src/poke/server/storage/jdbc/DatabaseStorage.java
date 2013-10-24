@@ -17,6 +17,9 @@ package poke.server.storage.jdbc;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import com.mysql.jdbc.Driver;
+import com.mysql.jdbc.Statement;
+
 import java.util.List;
 import java.util.Properties;
 
@@ -190,7 +193,7 @@ public class DatabaseStorage implements Storage {
 		try {
 			java.sql.Statement stmt = this.cpool.getConnection()
 					.createStatement();
-			String query = "INSERT INTO `Document`(`DocumentID`, `DocumentName`, `NamespaceName`, `NodeID`, `ReplicationCount`) VALUES (DEFAULT,'"+doc.getDocName()+"','"+namespace+"','"+doc.getDocument().getNodeCount()+"',0)";
+			String query = "INSERT INTO `Document`(`DocumentID`, `DocumentName`, `NamespaceName`, `NodeID`, `ReplicationCount`) VALUES (DEFAULT,'"+doc.getDocument().getName()+"','"+doc.getNameSpace()+"','"+doc.getDocument().getNodeCount()+"',0)";
 			stmt.executeUpdate(query);
 			return true;
 		} catch (SQLException e) {
@@ -198,6 +201,7 @@ public class DatabaseStorage implements Storage {
 			e.printStackTrace();
 			return false;
 		}
+		
 	}
 
 	@Override

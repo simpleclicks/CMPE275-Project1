@@ -247,7 +247,7 @@ public class PerChannelQueue implements ChannelQueue {
 							reply = ResourceUtil.buildError(req.getHeader(), ReplyStatus.FAILURE,
 									"Request not processed");
 						} else
-							reply = rsc.process(req, ResourceFactory.dbInstance);
+							reply = rsc.process(req,ResourceFactory.dbInstance);
 
 						sq.enqueueResponse(reply);
 					}
