@@ -112,7 +112,10 @@ public class HeartbeatManager extends Thread {
 		if (!outgoingHB.containsKey(ch)) {
 			HeartbeatData heart = new HeartbeatData(nodeId, host, null, mgmtport);
 			heart.setConnection(ch, sa);
+			heart.setStatus(BeatStatus.Init);  // added by Kaustubh
 			outgoingHB.put(ch, heart);
+			
+			//this.addNearestNodeChannel(nodeId,ch,sa); // added by Kaustubh
 			
 			if(outgoingHB.size() >= 2)
 			System.out.println("Random HB Status "+incomingHB.values().iterator().next().getStatus());
