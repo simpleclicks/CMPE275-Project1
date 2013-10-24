@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Properties;
 
 import eye.Comm.Document;
-import eye.Comm.File;
 import eye.Comm.NameSpace;
 
 public class NoOpStorage implements Storage {

@@ -198,10 +198,6 @@ public class ClientConnection {
 		}
 	}
 	
-	public void docFind(String nameSpace, String fileName){
-		
-	}
-	
 	public void docAdd(String nameSpace , String filePath){
 		
 		Header.Builder docAddReqHeader = Header.newBuilder();
@@ -329,7 +325,6 @@ public class ClientConnection {
 		logger.info("DocAdd: File Send activity complete ");
 
 	}
-
 	public void docRemove(String nameSpace , String fileName){
 	
 		Header.Builder docRemoveReqHeader = Header.newBuilder();

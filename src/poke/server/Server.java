@@ -21,9 +21,9 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.Properties;
 
 import org.jboss.netty.bootstrap.Bootstrap;
 import org.jboss.netty.bootstrap.ServerBootstrap;
@@ -106,10 +106,8 @@ public class Server {
 			br = new BufferedInputStream(new FileInputStream(cfg));
 			br.read(raw);
 			conf = JsonUtil.decode(new String(raw), ServerConf.class);
-			// storage initialization
-			// TODO storage setup (e.g., connection to a database)
 			Properties dbConf = new Properties();
-			File f = new File("F:/SJSU-SE/CMPE275-Project1/resources/database.properties");
+			File f = new File("F:/SJSU-SE/Thunderbolts-Repo/resources/database.properties");
 			InputStream is = new FileInputStream(f);
 			dbConf.load(is);
 			dbConn = new DatabaseStorage(dbConf);
@@ -156,7 +154,7 @@ public class Server {
 		ServerBootstrap bs = new ServerBootstrap(cf);
 
 		// Set up the pipeline factory.
-		bs.setPipelineFactory(new ServerDecoderPipeline(dbConn));
+		bs.setPipelineFactory(new ServerDecoderPipeline());
 
 		// tweak for performance
 		bs.setOption("child.tcpNoDelay", true);
@@ -212,7 +210,6 @@ public class Server {
 	 * 
 	 */
 	public void run() {
-		try{
 		String str = conf.getServer().getProperty("port");
 		if (str == null) {
 			// TODO if multiple servers can be ran per node, assigning a default
@@ -226,7 +223,9 @@ public class Server {
 		str = conf.getServer().getProperty("port.mgmt");
 		int mport = Integer.parseInt(str);
 
-		
+		// storage initialization
+		// TODO storage setup (e.g., connection to a database)
+
 		// start communication
 		createPublicBoot(port);
 		createManagementBoot(mport);
@@ -248,10 +247,6 @@ public class Server {
 		conn.start();
 
 		logger.info("Server ready");
-		}
-		catch(Exception ex){
-			logger.error(ex.getMessage());
-		}
 	}
 
 	/**
