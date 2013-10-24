@@ -107,8 +107,10 @@ public class InboundMgmtWorker extends Thread {
 								//msg.channel.getRemoteAddress().toString().split(":")[0].substring(1);
 								//if(n.getNodeId() == "four")
 								//{
+								if(!HeartbeatManager.getInstance().incomingHB.contains(n.getNodeId())){
 								HeartbeatData heart = new HeartbeatData(n.getOriginId(), msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5575, 5675);
 								HeartbeatConnector.getInstance().addConnectToThisNode(heart);
+								}
 								/*}
 								if(n.getNodeId() == "five")
 								{
