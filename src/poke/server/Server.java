@@ -18,8 +18,10 @@ package poke.server;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -46,6 +48,7 @@ import poke.server.management.ManagementDecoderPipeline;
 import poke.server.management.ManagementQueue;
 import poke.server.resources.ResourceFactory;
 import poke.server.routing.ServerDecoderPipeline;
+import poke.server.storage.jdbc.DatabaseStorage;
 
 /**
  * Note high surges of messages can close down the channel if the handler cannot
@@ -67,6 +70,7 @@ public class Server {
 	protected ChannelFactory cf, mgmtCF;
 	protected ServerConf conf;
 	protected HeartbeatManager hbMgr;
+	protected DatabaseStorage dbConn;
 
 	/**
 	 * static because we need to get a handle to the factory from the shutdown
@@ -102,7 +106,13 @@ public class Server {
 			br = new BufferedInputStream(new FileInputStream(cfg));
 			br.read(raw);
 			conf = JsonUtil.decode(new String(raw), ServerConf.class);
-			ResourceFactory.initialize(conf);
+			Properties dbConf = new Properties();
+			File f = new File("F:/SJSU-SE/Thunderbolts-Repo/resources/database.properties");
+			InputStream is = new FileInputStream(f);
+			dbConf.load(is);
+			dbConn = new DatabaseStorage(dbConf);
+
+			ResourceFactory.initialize(conf,dbConn);
 		} catch (Exception e) {
 		}
 

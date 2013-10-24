@@ -29,6 +29,7 @@ import com.google.protobuf.ByteString;
 
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
+import poke.server.storage.jdbc.DatabaseStorage;
 import poke.server.storage.jdbc.SpaceMapper;
 import eye.Comm;
 import eye.Comm.Document;
@@ -42,7 +43,9 @@ import eye.Comm.Header.ReplyStatus;
 public class DocumentResource implements Resource {
 
 	protected static Logger logger = LoggerFactory.getLogger("DocumentResource");
-
+	
+	private static DatabaseStorage dbInst;
+	
 	private static final String HOMEDIR = "home";
 
 	private static final String VISITORDIR = "away";
@@ -72,7 +75,7 @@ public class DocumentResource implements Resource {
 	private static final File homeDir = new File(HOMEDIR);
 	
 		@Override
-	public Response process(Request request) {
+	public Response process(Request request, DatabaseStorage dbInstance) {
 
 		int opChoice = 0;
 
@@ -83,6 +86,8 @@ public class DocumentResource implements Resource {
 		Payload docOpBody =  request.getBody();
 
 		opChoice = docOpHeader.getRoutingId().getNumber();
+		
+		dbInst = dbInstance;
 
 		switch(opChoice){
 
@@ -163,7 +168,9 @@ public class DocumentResource implements Resource {
 					if(fileCheck){
 
 						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
-
+						
+						dbInst.addDocument(nameSpece, repDoc);
+						
 						return docAddValidateResponseBuilder.build();
 						
 					}
@@ -189,7 +196,7 @@ public class DocumentResource implements Resource {
 				if(fileCheck){
 					
 					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
-
+					dbInst.addDocument(nameSpece, repDoc);
 					return docAddValidateResponseBuilder.build();
 				}
 		
@@ -278,6 +285,8 @@ public class DocumentResource implements Resource {
 		}
 
 		System.gc();
+		
+		dbInst.addDocument(nameSpace,docAddBody.getDoc());
 		
 		docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);
 
