@@ -93,17 +93,28 @@ public class InboundMgmtWorker extends Thread {
 						if (msg.channel.isOpen()) {
 							System.out.println("Tracing code flow 3: InboundMgmtWorker received the node join req from "+msg.sa);
 							//can i cast socka?
-							SocketAddress socka = msg.channel.getLocalAddress();
+							SocketAddress socka = msg.channel.getRemoteAddress();
 							if (socka != null) {
 								InetSocketAddress isa = (InetSocketAddress) socka;
 								//logger.info("NODEJOIN: " + isa.getHostName() + ", " + isa.getPort()); // probably we need to take the remote address instead of local
 								//HeartbeatManager.getInstance().addOutgoingChannel(n.getNodeId(), isa.getHostName(),
 								//		isa.getPort(), msg.channel, msg.sa);
-								logger.info("NODEJOIN: " + msg.channel.getLocalAddress() + ", " + msg.channel.getRemoteAddress()); // probably we need to take the remote address instead of local
+								//String remoteAddress = String.vmsg.channel.getRemoteAddress();
+								logger.info("NODEJOIN: " +msg.channel.getRemoteAddress() +", " +n.getNodeId() + ", "+ msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0]); // probably we need to take the remote address instead of local
 								HeartbeatManager.getInstance().addOutgoingChannel(n.getNodeId(), isa.getHostName(),
 										isa.getPort(), msg.channel, msg.sa);
-								HeartbeatData heart = new HeartbeatData(n.getNodeId(), msg.channel.getRemoteAddress().toString().split(":")[0], null, isa.getPort());
+								//HeartbeatData heart = new HeartbeatData(n.getNodeId(), "192.168.0.182", 5575, 5675);
+								//msg.channel.getRemoteAddress().toString().split(":")[0].substring(1);
+								/*if(n.getNodeId() == "four")
+								{
+								HeartbeatData heart = new HeartbeatData(, msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5575, 5675);
 								HeartbeatConnector.getInstance().addConnectToThisNode(heart);
+								}
+								if(n.getNodeId() == "five")
+								{
+								HeartbeatData heart = new HeartbeatData(n.getNodeId(), msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5574, 5674);
+								HeartbeatConnector.getInstance().addConnectToThisNode(heart);
+								}*/
 								
 								
 							}

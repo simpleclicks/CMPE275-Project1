@@ -181,6 +181,7 @@ public class HeartMonitor {
 			System.out.println("Tracing code flow 1 : HeartMonitor.java intiateHeartbeat");
 			Channel ch = connect();
 			Network.Builder n = Network.newBuilder();
+			
 			n.setNodeId("monitor");
 			n.setAction(Action.NODEJOIN);
 			Management.Builder m = Management.newBuilder();

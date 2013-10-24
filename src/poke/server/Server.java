@@ -23,8 +23,11 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -272,10 +275,13 @@ public class Server {
 			//done for testing - change this later to read from own config
 			byte[] sendData = ("NETWORK_DISCOVERY_"+sendNodeId+"_"+sendPort+"_"+sendMgmtPort).getBytes();
 
-			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("192.168.0.255"), broadcastport);
+			NetworkInterface ni = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
+		    String broadcastAddress = ni.getInterfaceAddresses().get(0).getBroadcast().toString().substring(1);
+		    
+			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(broadcastAddress), 5684);
 		    broadcastSocket.send(sendPacket);
-
-		    logger.info("Broadcast Sent");
+		    
+		    logger.info("Broadcast Sent : " + broadcastAddress +","+InetAddress.getLocalHost());
 		    
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block

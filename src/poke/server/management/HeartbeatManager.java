@@ -217,6 +217,7 @@ public class HeartbeatManager extends Thread {
 						// only generate the message if needed
 						if (msg == null)
 							msg = generateHB();
+							
 
 						try { 
 							hd.channel.write(msg, hd.sa);   				//TODO writing to remoteAddress (SocketAddress) initially passed by ManagementHandler  

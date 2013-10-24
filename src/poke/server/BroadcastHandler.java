@@ -47,7 +47,7 @@ public class BroadcastHandler extends Thread {
 
 		try {
 
-			recieveSocket = new DatagramSocket(recievePort, InetAddress.getByName("192.168.0.181"));
+			recieveSocket = new DatagramSocket(recievePort, InetAddress.getLocalHost());
 			recieveSocket.setBroadcast(true);
 
 			while (true) {

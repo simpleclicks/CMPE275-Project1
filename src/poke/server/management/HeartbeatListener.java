@@ -58,6 +58,7 @@ public class HeartbeatListener implements MonitorListener {
 		} else if (msg.hasBeat() && msg.getBeat().getNodeId().equals(data.getNodeId())) {
 			logger.info("Tracing code flow 2: HeartbeatLisner Received HB response from " + msg.getBeat().getNodeId());
 			data.setLastBeat(System.currentTimeMillis());
+			//HeartbeatManager.getInstance().addNearestNodeChannel(msg.getBeat().getNodeId(), data.channel, data.sa);
 		} else
 			logger.error("Received hbMgr from on wrong channel or unknown host: " + msg.getBeat().getNodeId());
 	}

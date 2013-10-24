@@ -69,10 +69,11 @@ public class HeartbeatConnector extends Thread {
 		MonitorHandler handler = new MonitorHandler();
 		handler.addListener(hbmon);
 		HeartMonitor hm = new HeartMonitor(node.getHost(), node.getMgmtport(), handler);
+		
 		monitors.add(hm);
 	}
 	
-	public void addMonitor(HeartbeatData node) {
+	/*public void addMonitor(HeartbeatData node) {
 		// null data is not allowed
 		if (node == null || node.getNodeId() == null)
 			throw new RuntimeException("Null nodes or IDs are not allowed");
@@ -88,10 +89,10 @@ public class HeartbeatConnector extends Thread {
 		HeartbeatListener hbmon = new HeartbeatListener(node);
 		MonitorHandler handler = new MonitorHandler();
 		handler.addListener(hbmon);
-		HeartMonitor hm = new HeartMonitor(node.getHost(), 5675, handler);
+		HeartMonitor hm = new HeartMonitor(node.getHost(), node.getMgmtport(), handler);
 		monitors.add(hm);
 	}
-
+*/
 	@Override
 	public void run() {
 
