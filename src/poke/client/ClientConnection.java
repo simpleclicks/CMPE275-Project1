@@ -15,6 +15,9 @@
  */
 package poke.client;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
@@ -22,6 +25,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
@@ -50,14 +54,41 @@ import eye.Comm.Request;
 public class ClientConnection {
 
 	protected static Logger logger = LoggerFactory.getLogger("client");
+	
 	private String host;
+	
 	private int port;
-	private ChannelFuture channel; // do not use directly call connect()!
+	
+	private ChannelFuture channeluture; // do not use directly call connect()!
+	
+	private Channel channel;
+	
 	private ClientBootstrap bootstrap;
-	ClientDecoderPipeline clientPipeline;
+	
+	private ClientDecoderPipeline clientPipeline;
+	
 	private LinkedBlockingDeque<com.google.protobuf.GeneratedMessage> outbound;
+	
 	private OutboundWorker worker;
-	private static boolean firstTimeConnect = true; 
+	
+	private static final long MAX_UNCHUNKED_FILE_SIZE = 26214400L;
+	 
+	
+	public ChannelFuture getChanneluture() {
+		return channeluture;
+	}
+
+	public void setChanneluture(ChannelFuture channeluture) {
+		this.channeluture = channeluture;
+	}
+
+	public Channel getChannel() {
+		return channel;
+	}
+
+	public void setChannel(Channel channel) {
+		this.channel = channel;
+	}
 
 	protected ClientConnection(String host, int port) {
 		this.host = host;
@@ -124,19 +155,32 @@ public class ClientConnection {
 		}
 	}
 	
-	public void docAddReq(String nameSpace,String fileName,int fileSize){
+	public void docAddReq(String nameSpace,String filePath){
 		
 		Header.Builder docAddReqHeader = Header.newBuilder();
+		
+		String fileName = FilenameUtils.getName(filePath);
+		
+		logger.info("File to be uploaded to the server "+fileName);
+		
+		File fts = new File(filePath);
+		
+		long fileSize = FileUtils.sizeOf(fts);
+		
+		logger.info("Size of the file to be uploaded to the server "+fileSize);
 		
 		docAddReqHeader.setRoutingId(Routing.DOCADDHANDSHAKE);
 		
 		docAddReqHeader.setOriginator("Doc add test");
 		
+		//docAddReqHeader.setTag(filePath);
+		
 		Payload.Builder docAddBodyBuilder = Payload.newBuilder();
 		
+		if(nameSpace !=null && nameSpace.length()>0)
 		docAddBodyBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace).build());
 		
-		docAddBodyBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocSize(fileSize).build());
+		docAddBodyBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocSize(fileSize).setDocExtension(filePath));
 		
 		Request.Builder docAddReqBuilder = Request.newBuilder();
 		
@@ -162,9 +206,14 @@ public class ClientConnection {
 		
 		docAddReqHeader.setOriginator("Doc add test");
 		
-		Payload.Builder docAddBodyBuilder = Payload.newBuilder();
+		Request.Builder docAddReqBuilder = Request.newBuilder();
 		
-		docAddBodyBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace).build());
+		docAddReqBuilder.setHeader(docAddReqHeader);
+		
+		Payload.Builder docAddPLBuilder = Payload.newBuilder();
+		
+		if(nameSpace != null && nameSpace.length() > 0)
+			docAddPLBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace).build());
 		
 		String fileExt = FilenameUtils.getExtension(filePath);
 		
@@ -172,6 +221,18 @@ public class ClientConnection {
 				
 		java.io.File file = FileUtils.getFile(filePath);
 		
+		long fileSize = FileUtils.sizeOf(file);
+		
+		logger.info("Size of the file to be sent "+fileSize);
+		
+		long totalChunk = ((fileSize / MAX_UNCHUNKED_FILE_SIZE))+1;
+		
+		if(fileSize < MAX_UNCHUNKED_FILE_SIZE ){
+			
+			logger.info(" DocADD: Sending the complete file in unchunked mode");
+			
+			logger.info("Total number of chunks "+totalChunk);
+			
 		byte[] fileContents = null;
 		
 		try {
@@ -185,14 +246,10 @@ public class ClientConnection {
 			return ;
      	}
 		
-		docAddBodyBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocExtension(fileExt).
-				setChunkContent(ByteString.copyFrom(fileContents)).setDocSize(fileContents.length).setTotalChunk(1));
+		docAddPLBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocExtension(fileExt).
+				setChunkContent(ByteString.copyFrom(fileContents)).setDocSize(fileSize).setTotalChunk(totalChunk).setChunkId(1));
 		
-		Request.Builder docAddReqBuilder = Request.newBuilder();
-		
-		docAddReqBuilder.setHeader(docAddReqHeader);
-		
-		docAddReqBuilder.setBody(docAddBodyBuilder);
+		docAddReqBuilder.setBody(docAddPLBuilder);
 		
 		try {
 			// enqueue message
@@ -200,7 +257,74 @@ public class ClientConnection {
 		} catch (InterruptedException e) {
 			logger.warn("Unable to deliver doc add message, queuing "+e.getMessage());
 		}
-}
+		
+		}else{
+			
+			logger.info(" DocADD: Uploading the file in chunked mode");
+			
+			logger.info("Total number of chunks "+totalChunk);
+			
+			try {
+				
+				int bytesRead = 0;
+				
+				int chunkId = 1;
+				
+				FileInputStream chunkeFIS = new FileInputStream(file);
+				
+				do{
+					
+				byte[] chunckContents = new byte[26214400];
+								
+				 bytesRead= IOUtils.read(chunkeFIS, chunckContents , 0 , 26214400);
+				 
+				 logger.info("Total number of bytes read for chunk "+chunkId+": "+bytesRead);
+				 
+				// logger.info("Contents of the chunk "+chunkId+" : "+chunckContents);
+				 
+				 docAddPLBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocExtension(fileExt).
+							setChunkContent(ByteString.copyFrom(chunckContents)).setDocSize(fileSize).setTotalChunk(totalChunk).setChunkId(chunkId));
+					
+					docAddReqBuilder.setBody(docAddPLBuilder);
+					
+					try {
+					
+						
+						outbound.put(docAddReqBuilder.build());
+					
+					} catch (InterruptedException e) {
+						
+						logger.warn("Unable to deliver doc add (chunked) message, queuing "+e.getMessage());
+					}
+					
+					chunckContents = null;
+					
+					System.gc();
+					
+					chunkId++;
+				
+				}while(chunkeFIS.available() > 0  );
+				
+				logger.info("Out of chunked write while loop");
+		
+			} catch (FileNotFoundException e) {
+			
+				logger.info("Requested File does not exists: File uploading Aborted "+e.getMessage());
+			
+				e.printStackTrace();
+			
+			} catch (IOException e) {
+				
+				logger.info("IO exception while uploading the requested file : File upload Aborted "+e.getMessage());
+				
+				e.printStackTrace();
+			}
+			
+		}
+		
+		logger.info("DocAdd: File Send activity complete ");
+
+	}
 	public void docRemove(String nameSpace , String fileName){
 	
 		Header.Builder docRemoveReqHeader = Header.newBuilder();
@@ -230,6 +354,8 @@ public class ClientConnection {
 			logger.warn("Unable to deliver doc remove message, queuing "+e.getMessage());
 		}
 	
+		System.gc();
+		
 	}
 	
 
@@ -248,10 +374,14 @@ public class ClientConnection {
 		// Set up the pipeline factory.
 		clientPipeline = new ClientDecoderPipeline();
 		bootstrap.setPipelineFactory(clientPipeline);
-
+		channel = connect();
 		// start outbound message processor
 		worker = new OutboundWorker(this);
 		worker.start();
+		
+		
+		
+		
 	}
 
 	/**
@@ -263,17 +393,17 @@ public class ClientConnection {
 		// Start the connection attempt.
 		if (channel == null) {
 			// System.out.println("---> connecting");
-			channel = bootstrap.connect(new InetSocketAddress(host, port));
+			channeluture = bootstrap.connect(new InetSocketAddress(host, port));
 
 			// cleanup on lost connection
 
 		}
 
 		// wait for the connection to establish
-		channel.awaitUninterruptibly();
+		channeluture.awaitUninterruptibly();
 
-		if (channel.isDone() && channel.isSuccess())
-			return channel.getChannel();
+		if (channeluture.isDone() && channeluture.isSuccess())
+			return channeluture.getChannel();
 		else
 			throw new RuntimeException("Not able to establish connection to server");
 	}
@@ -288,6 +418,7 @@ public class ClientConnection {
 	protected class OutboundWorker extends Thread {
 		ClientConnection conn;
 		boolean forever = true;
+		int retry = 0;
 
 		public OutboundWorker(ClientConnection conn) {
 			this.conn = conn;
@@ -299,22 +430,34 @@ public class ClientConnection {
 		@Override
 		public void run() {
 			
-			Channel ch = null;
+			Channel ch = conn.getChannel();
 			
-			if(firstTimeConnect){
-			
-				ch = conn.connect();
-				firstTimeConnect = false;
-		
-			}
-			if (ch == null || !ch.isOpen()) {
+				if (ch == null || !ch.isOpen()) {
 				ClientConnection.logger.error("connection missing, no outbound communication");
 				return;
 			}
 
 			while (true) {
-				if (!forever && conn.outbound.size() == 0)
-					break;
+				
+				if (!forever && conn.outbound.size() == 0){
+					
+					try {
+						
+						retry++;
+						if(retry <=5){
+						Thread.sleep(100);
+						continue;
+						}
+						else{
+							System.out.println("Closing the channel");
+							ch.close();
+							bootstrap.releaseExternalResources();
+						}
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					}
+				}
 
 				try {
 					// block until a message is enqueued

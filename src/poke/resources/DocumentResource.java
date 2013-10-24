@@ -25,10 +25,13 @@ import org.apache.commons.io.monitor.FileEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.protobuf.ByteString;
+
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
 import poke.server.storage.jdbc.SpaceMapper;
 import eye.Comm;
+import eye.Comm.Document;
 import eye.Comm.Header;
 import eye.Comm.Payload;
 import eye.Comm.PayloadReply;
@@ -114,15 +117,17 @@ public class DocumentResource implements Resource {
 
 	private Response docAddValidate(Header docAddValidateHeader , Payload docAddValidateBody){
 
-		long reqFileSize = docAddValidateBody.getDoc().getDocSize();
+		Document repDoc = docAddValidateBody.getDoc();
+		
+		long reqFileSize = repDoc.getDocSize();
 
-		String newFileName = docAddValidateBody.getDoc().getDocName();
+		String newFileName = repDoc.getDocName();
 
 		String nameSpece = docAddValidateBody.getSpace().getName();
 
 		Response.Builder docAddValidateResponseBuilder = Response.newBuilder();
-
-		docAddValidateResponseBuilder.setBody(PayloadReply.newBuilder().build());
+		
+		docAddValidateResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(repDoc).addSpaces(docAddValidateBody.getSpace()));
 
 		long spacceAvailable = 0;
 
@@ -230,30 +235,36 @@ public class DocumentResource implements Resource {
 	private Response docAdd(Header docAddHeader , Payload docAddBody){
 
 		String nameSpace = docAddBody.getSpace().getName();
+		
+		String effNS = HOMEDIR+File.separator+nameSpace;
 
 		String fileName = docAddBody.getDoc().getDocName();
 
-		logger.info("Received file "+fileName);
+		logger.info("DocAdd: Received file "+fileName);
 
-		logger.info("Creating namespace "+nameSpace);
+		logger.info("effective namespace "+effNS);
 
-		//File nameDir = new File(nameSpace);
+		File nameDir = new File(effNS);
 
-		File file = new File(nameSpace+"//"+fileName);
+		File file = new File(effNS+File.separator+fileName);
 
 		Header.Builder docAddHeaderBuilder = Header.newBuilder(docAddHeader);
+		
+		Document recivedFile = docAddBody.getDoc();
+		
+		Document toBesent= null;
 
 		try {
 
 			logger.info("Creating directory with name "+nameSpace );
 
-			//FileUtils.forceMkdir(nameDir);
+			FileUtils.forceMkdir(nameDir);
 
-			logger.info("Creating file with name "+fileName+" and woritng the content sent by client to it" );
+			logger.info("Creating file with name "+fileName+" and writing the content sent by client to it" );
 
-			FileUtils.writeByteArrayToFile(file, docAddBody.getDoc().getChunkContent().toByteArray(), true);
-
-
+			FileUtils.writeByteArrayToFile(file, recivedFile.getChunkContent().toByteArray(), true);
+			
+			toBesent = recivedFile.toBuilder().clearChunkContent().build();
 
 		} catch (IOException e) {
 
@@ -266,15 +277,23 @@ public class DocumentResource implements Resource {
 			e.printStackTrace();
 		}
 
+		System.gc();
+		
 		docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);
 
 		docAddHeaderBuilder.setReplyMsg("File Uploaded Successfully");
-
+		
 		Response.Builder docAddRespBuilder = Response.newBuilder();
 
 		docAddRespBuilder.setHeader(docAddHeaderBuilder);
 
-		docAddRespBuilder.setBody(PayloadReply.newBuilder().build());
+		System.gc();
+		
+	//	logger.info("Size of the chunk content to be sent  "+toBesent.getChunkContent().size());
+		
+		docAddRespBuilder.setBody(PayloadReply.newBuilder().addDocs(toBesent).addSpaces(docAddBody.getSpace()));
+		
+		System.gc();
 
 		return docAddRespBuilder.build();
 	}
