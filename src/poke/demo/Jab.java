@@ -39,9 +39,9 @@ public class Jab {
 //			cc.poke(tag, count);
 //		}
 	
-		cc.docAddReq("Kau1", "E://GTHub.flv");
+		//cc.docAddReq("Kau1", "E://GTHub.flv");
 		
-		//cc.docAdd("Kaustubh3", "E://test3.txt");
+		cc.docAdd("SMB", "E://test3.txt");
 		
 		//cc.docRemove("", "Kaustubh1");
 	

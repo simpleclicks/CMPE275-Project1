@@ -15,6 +15,7 @@
  */
 package poke.server.resources;
 
+import poke.server.storage.jdbc.DatabaseStorage;
 import eye.Comm.Request;
 import eye.Comm.Response;
 
@@ -34,6 +35,6 @@ public interface Resource {
 	 * @param request
 	 * @return
 	 */
-	Response process(Request request);
+	Response process(Request request, DatabaseStorage dbInst);
 
 }

@@ -29,6 +29,7 @@ import poke.server.management.InboundMgmtWorker;
 import poke.server.management.ManagementQueue;
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
+import poke.server.storage.jdbc.DatabaseStorage;
 import eye.Comm.Finger;
 import eye.Comm.PayloadReply;
 import eye.Comm.Request;
@@ -64,7 +65,7 @@ public class ForwardResource implements Resource {
 	}
 
 	@Override
-	public Response process(Request request) {
+	public Response process(Request request, DatabaseStorage dbInst) {
 		String nextNode = determineForwardNode(request);
 		if (nextNode != null) {
 			Request fwd = ResourceUtil.buildForwardMessage(request, cfg);

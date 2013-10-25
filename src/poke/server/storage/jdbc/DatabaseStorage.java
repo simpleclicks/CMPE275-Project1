@@ -186,8 +186,17 @@ public class DatabaseStorage implements Storage {
 
 	@Override
 	public boolean addDocument(String namespace, Document doc) {
-		// TODO Auto-generated method stub
-		return false;
+		try {
+			java.sql.Statement stmt = this.cpool.getConnection()
+					.createStatement();
+			String query = "INSERT INTO `thunderbolts`.`Document`(`DocumentID`, `DocumentName`, `NamespaceName`, `NodeID`, `ReplicationCount`) VALUES (DEFAULT,'"+doc.getDocName()+"','"+namespace+"','"+doc.getDocument().getNodeCount()+"',0)";
+			stmt.executeUpdate(query);
+			return true;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	@Override

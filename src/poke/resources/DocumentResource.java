@@ -29,6 +29,7 @@ import com.google.protobuf.ByteString;
 
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
+import poke.server.storage.jdbc.DatabaseStorage;
 import poke.server.storage.jdbc.SpaceMapper;
 import eye.Comm;
 import eye.Comm.Document;
@@ -71,9 +72,13 @@ public class DocumentResource implements Resource {
 
 	private static final File homeDir = new File(HOMEDIR);
 	
+	private static DatabaseStorage dbInstance;
+	
 		@Override
-	public Response process(Request request) {
+	public Response process(Request request, DatabaseStorage dbInst) {
 
+		dbInstance = dbInst;
+			
 		int opChoice = 0;
 
 		Response docOpResponse = null;
@@ -265,6 +270,8 @@ public class DocumentResource implements Resource {
 			FileUtils.writeByteArrayToFile(file, recivedFile.getChunkContent().toByteArray(), true);
 			
 			toBesent = recivedFile.toBuilder().clearChunkContent().build();
+			
+			dbInstance.addDocument(nameSpace, recivedFile);
 
 		} catch (IOException e) {
 
