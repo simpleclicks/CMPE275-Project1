@@ -49,6 +49,10 @@ public class HeartbeatManager extends Thread {
 	static final int sHeartRate = 5000; // msec
 
 	String nodeId;
+	public String getNodeId() {
+		return nodeId;
+	}
+
 	ManagementQueue mqueue;
 	boolean forever = true;
 
@@ -151,6 +155,14 @@ public class HeartbeatManager extends Thread {
 			node.setStatus(BeatStatus.Init);
 			incomingHB.put(node.getNodeId(), node);
 		}
+	}
+
+	public ConcurrentHashMap<String, HeartbeatData> getIncomingHB() {
+		return incomingHB;
+	}
+
+	public void setIncomingHB(ConcurrentHashMap<String, HeartbeatData> incomingHB) {
+		this.incomingHB = incomingHB;
 	}
 
 	/**

@@ -17,6 +17,8 @@ package poke.resources;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.io.FileSystemUtils;
 import org.apache.commons.io.FileUtils;
@@ -27,10 +29,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
 
+import poke.server.management.HeartbeatData;
+import poke.server.management.HeartbeatManager;
+import poke.server.nconnect.NodeClient;
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
-import poke.server.storage.jdbc.SpaceMapper;
-import eye.Comm;
 import eye.Comm.Document;
 import eye.Comm.Header;
 import eye.Comm.Payload;
@@ -104,6 +107,10 @@ public class DocumentResource implements Resource {
 
 		case 23:
 			docOpResponse = docRemove(docOpHeader, docOpBody);
+			break;
+		
+		case 25:
+			docOpResponse = docQuery(docOpHeader, docOpBody);
 			break;
 
 		default:
@@ -202,6 +209,18 @@ public class DocumentResource implements Resource {
 				return docAddValidateResponseBuilder.build();
 			}
 		}
+		
+			Collection<HeartbeatData> nodeList = HeartbeatManager.getInstance().getIncomingHB().values();
+			
+			HeartbeatData hb = null;
+			
+			if(nodeList.size() > 0 )
+				hb = nodeList.iterator().next();
+			
+			NodeClient nc1 = new NodeClient(hb.getHost(), hb.getPort(),hb.getNodeId());
+			
+			System.out.println("Query File"+ nc1.queryFile("Kau" , "abc.txt"));
+			
 
 		try {
 			spacceAvailable = FileSystemUtils.freeSpaceKb()*1024;
@@ -424,4 +443,18 @@ public class DocumentResource implements Resource {
 		
 		return fileRemoveResponseBuilder.build();
 	}
+	
+		private Response docQuery(Header docQueryHeader , Payload docQueryBody){
+			
+			logger.info(" Received doc query request from "+docQueryHeader.getOriginator());
+			
+			Response.Builder docQueryResponseBuilder = Response.newBuilder();
+			
+			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+			
+			docQueryResponseBuilder.setBody(PayloadReply.getDefaultInstance());
+			
+			return docQueryResponseBuilder.build();
+		}
+	
 }
