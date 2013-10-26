@@ -75,6 +75,8 @@ public class DocumentResource implements Resource {
 	private static final String OPERATIONNOTALLOWEDMSG = "Requested Operation is not allowed with the 'request' type ";
 
 	private static final File homeDir = new File(HOMEDIR);
+	
+	private static final File visitorDir = new File(VISITORDIR);
 
 	@Override
 	public Response process(Request request) {
@@ -159,12 +161,20 @@ public class DocumentResource implements Resource {
 
 
 			String effNS = HOMEDIR+File.separator+nameSpace; 
+						
+			String effVisitorNS = VISITORDIR+File.separator+nameSpace;
+			
+			logger.info("Validating "+effVisitorNS+" for "+newFileName);
 
 			File targetNS = new File (effNS);
-
+			
+			File targetVisitorNS =  new File(effVisitorNS);
+			
 			try {
 
 				boolean nsCheck = FileUtils.directoryContains(homeDir, targetNS);
+				
+				boolean nsAwayCheck = FileUtils.directoryContains(visitorDir, targetVisitorNS);
 
 				if(nsCheck){
 
@@ -181,8 +191,26 @@ public class DocumentResource implements Resource {
 					}
 
 				}
+				
+				if(nsAwayCheck){
+					
+					File targetFileName = new File (effVisitorNS+File.separator+newFileName);
 
-			} catch (IOException e) {
+					boolean fileCheck = FileUtils.directoryContains(targetVisitorNS, targetFileName);
+					
+					logger.info("Validating "+effVisitorNS+" for "+newFileName+" as "+fileCheck);
+
+					if(fileCheck){
+						
+						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+
+						return docAddValidateResponseBuilder.build();
+
+					}
+
+				}
+					
+		} catch (IOException e) {
 
 				logger.error("Document Response: IO Exception while validating file add request "+e.getMessage());
 
@@ -197,8 +225,20 @@ public class DocumentResource implements Resource {
 			try {
 
 				boolean fileCheck = FileUtils.directoryContains(homeDir, new File(HOMEDIR+File.separator+newFileName));
+				
+				boolean visitorFileCheck = FileUtils.directoryContains(visitorDir, new File(VISITORDIR+File.separator+newFileName));
+				
+				logger.info("Validating "+VISITORDIR+" for "+newFileName+" as "+visitorFileCheck);
 
 				if(fileCheck){
+
+					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+
+					return docAddValidateResponseBuilder.build();
+			
+				}
+				
+				if(visitorFileCheck){
 
 					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
 
@@ -499,14 +539,17 @@ public class DocumentResource implements Resource {
 		try {
 
 			if(parentHomeDir.exists()){
-				targetFile = new File(effHomeNS+fileName);
+				targetFile = new File(effHomeNS+File.separator+fileName);
 				fileHome =	FileUtils.directoryContains(parentHomeDir, targetFile);
+				logger.info("validating "+effHomeNS+" for "+fileName+" as "+fileHome);
 			}
 			
 			if(!fileHome){
 			if(parentAwayDir.exists()){
-			targetFile = new File(effAwayNS+fileName);
+				
+			targetFile = new File(effAwayNS+File.separator+fileName);
 			fileAway =	FileUtils.directoryContains(parentAwayDir, targetFile);
+				logger.info("validating "+effAwayNS+" for "+fileName+" as "+fileAway);
 			}
 			}
 			
