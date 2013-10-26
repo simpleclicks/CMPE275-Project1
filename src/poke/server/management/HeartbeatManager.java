@@ -49,6 +49,10 @@ public class HeartbeatManager extends Thread {
 	static final int sHeartRate = 5000; // msec
 
 	String nodeId;
+	public String getNodeId() {
+		return nodeId;
+	}
+
 	ManagementQueue mqueue;
 	boolean forever = true;
 
@@ -112,7 +116,10 @@ public class HeartbeatManager extends Thread {
 		if (!outgoingHB.containsKey(ch)) {
 			HeartbeatData heart = new HeartbeatData(nodeId, host, null, mgmtport);
 			heart.setConnection(ch, sa);
+			heart.setStatus(BeatStatus.Init);  // added by Kaustubh
 			outgoingHB.put(ch, heart);
+			
+			//this.addNearestNodeChannel(nodeId,ch,sa); // added by Kaustubh
 			
 			if(outgoingHB.size() >= 2)
 			System.out.println("Random HB Status "+incomingHB.values().iterator().next().getStatus());
@@ -148,6 +155,14 @@ public class HeartbeatManager extends Thread {
 			node.setStatus(BeatStatus.Init);
 			incomingHB.put(node.getNodeId(), node);
 		}
+	}
+
+	public ConcurrentHashMap<String, HeartbeatData> getIncomingHB() {
+		return incomingHB;
+	}
+
+	public void setIncomingHB(ConcurrentHashMap<String, HeartbeatData> incomingHB) {
+		this.incomingHB = incomingHB;
 	}
 
 	/**

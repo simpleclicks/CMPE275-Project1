@@ -88,6 +88,7 @@ message Header {
         DOCUPDATE = 22;
         DOCREMOVE = 23;
         DOCADDHANDSHAKE = 24; // prior DOCADDREQ
+        DOCQUERY = 25;
         }
         
      enum ReplyStatus {
