@@ -47,17 +47,17 @@ public class NodeClient {
 	private String nodeId;
 
 	private NodeResponseHandler handler;
-	
+
 	private OutboundWorker requestSender;
-	
+
 	private InboundWorker responseProcessor;
-	
+
 	private  LinkedBlockingDeque<Response> inboundResponseQueue = new LinkedBlockingDeque<Response>();
-	
+
 	private  LinkedBlockingDeque<Request> outboundRequestQueue = new LinkedBlockingDeque<Request>();
-	
+
 	private ConcurrentHashMap<String, String> docQueryResponseQueue =  new ConcurrentHashMap<String, String>();
-	
+
 
 	public NodeClient(String host, int port, String nodeId) {
 		super();
@@ -85,27 +85,28 @@ public class NodeClient {
 		}
 
 		bootstrap.setPipelineFactory(new NodePipeline(handler));
-		
+
 		//connect();
-		
+
 		requestSender.start();
-		
+
 		responseProcessor.start();
 	}
 
 	private void connect() {
-		
+
 		try{
 
-		if (channel == null) {
-			logger.info("connecting to network node "+nodeId+" at " + host + ":" + port);
-			channelFuture = bootstrap.connect(new InetSocketAddress(host, port));
+			if (channel == null) {
+				logger.info("connecting to network node "+nodeId+" at " + host + ":" + port);
+				channelFuture = bootstrap.connect(new InetSocketAddress(host, port));
+				channelFuture.awaitUninterruptibly();
+
+			}
 			
-		}
-		channelFuture.awaitUninterruptibly();
 		}catch(Exception btConnectExccep){
-			
-			logger.error(" Error while connecting to node "+nodeId+" "+btConnectExccep.getMessage());
+
+			logger.error(" Error while establishing public connection to node "+nodeId+" "+btConnectExccep.getMessage());
 		}
 
 		if (channelFuture.isDone() && channelFuture.isSuccess()) {
@@ -117,83 +118,105 @@ public class NodeClient {
 		} else {
 			channel = null;
 			channelFuture = null;
-			throw new RuntimeException("Not able to establish TCP connection to node "+nodeId);
+			//throw new RuntimeException("Not able to establish TCP connection to node "+nodeId);
+		}
+	}
+
+	public boolean queryFile(String nameSpace, String fileName){
+
+		Header.Builder docQueryHeaader = Header.newBuilder();
+
+		docQueryHeaader.setRoutingId(Header.Routing.DOCQUERY);
+
+		docQueryHeaader.setOriginator(HeartbeatManager.getInstance().getNodeId());
+
+		Payload.Builder docPayloadBuilder = Payload.newBuilder();
+
+		docPayloadBuilder.setDoc(Document.newBuilder().setDocName(fileName));
+
+		if(nameSpace !=null && nameSpace.length() > 0)
+			docPayloadBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace));
+
+		Request.Builder docQueryReqBuilder = Request.newBuilder();
+
+		docQueryReqBuilder.setHeader(docQueryHeaader.build());
+
+		docQueryReqBuilder.setBody(docPayloadBuilder.build());
+
+		return enqueueRequest(docQueryReqBuilder.build());
+
+	}
+	
+	public String checkDocQueryResponse(String nameSpace , String fileName){
+		
+		String key = nameSpace+fileName;
+		
+		String noResult = "NA";
+		
+		if(docQueryResponseQueue.containsKey(key)){
+			
+			return docQueryResponseQueue.get(key);
+					
+		}else{
+			
+			return noResult;
 		}
 	}
 	
-	public boolean queryFile(String nameSpace, String fileName){
-		
-		Header.Builder docQueryHeaader = Header.newBuilder();
-		
-		docQueryHeaader.setRoutingId(Header.Routing.DOCQUERY);
-		
-		docQueryHeaader.setOriginator(HeartbeatManager.getInstance().getNodeId());
-		
-		Payload.Builder docPayloadBuilder = Payload.newBuilder();
-		
-		docPayloadBuilder.setDoc(Document.newBuilder().setDocName(fileName));
-		
-		if(nameSpace !=null && nameSpace.length() > 0)
-			docPayloadBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace));
-		
-		Request.Builder docQueryReqBuilder = Request.newBuilder();
-		
-		docQueryReqBuilder.setHeader(docQueryHeaader.build());
-		
-		docQueryReqBuilder.setBody(docPayloadBuilder.build());
-		
-		return enqueueRequest(docQueryReqBuilder.build());
 
-}
-	
+	public String getNodeId() {
+		return nodeId;
+	}
+
+
 	private boolean enqueueRequest(Request request) {
 		try {
-			
+
 			outboundRequestQueue.put(request);
-			
+
 			return true;
-		
+
 		} catch (InterruptedException e) {
 			logger.error("message not enqueued for processing", e);
 			return false;
 		}
 	}
-	
+
 	public  void enqueueResponse(Response response) {
 		try {
-			
+
 			inboundResponseQueue.put(response);
-		
+
 		} catch (InterruptedException e) {
 			logger.error("message not enqueued for reply", e);
 		}
 	}
 
 	public static class NodeChannelClosedListener implements ChannelFutureListener {
-		
+
 
 		NodeClient nodeConnect;
-		
+
 		public NodeChannelClosedListener(NodeClient nodeConnect) {
-			
+
 			this.nodeConnect = nodeConnect;
-			
+
 		}
 
 		@Override
 		public void operationComplete(ChannelFuture future) throws Exception {
-			
+
 			logger.warn(" Public channel to node "+nodeConnect.nodeId+" has been closed");
-		
+
 		}
 
 	}
-	
+
 	protected class OutboundWorker extends Thread {
-		
+
 		NodeClient conn;
 		boolean forever = true;
-		
+
 		public OutboundWorker(NodeClient conn) {
 			this.conn = conn;
 
@@ -203,34 +226,43 @@ public class NodeClient {
 
 		@Override
 		public void run() {
-			
+
 			Channel ch = conn.channel;
-			
-			if(ch == null || !ch.isConnected()){
-				
-				logger.info("Initiating public TCP connection to "+nodeId);
-				conn.connect();
-				logger.info("Initiated public TCP connection to "+nodeId);
-				ch = conn.channel;
-			}
 			
 			int retry = 0;
 			
+			while(true){
+
+			if(ch == null || !ch.isConnected()){
+
+				logger.info("Attempting to establish public TCP connection to "+nodeId);
+				conn.connect();
+				ch = conn.channel;
+				
 				if (ch == null || !ch.isOpen()) {
-				logger.error("connection missing, no outbound communication");
-				return;
+					logger.error("connection missing, no outbound public communication with node "+nodeId);
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					continue;
+				}else
+					break;
 			}
+		
+		}// end of connect while-true
 
 			while (true) {
-				
+
 				if (!forever && conn.outboundRequestQueue.size() == 0){
-					
+
 					try {
-						
+
 						retry++;
 						if(retry <=5){
-						Thread.sleep(1000);
-						continue;
+							Thread.sleep(1000);
+							continue;
 						}
 						else{
 							System.out.println("Closing the public channel for nodeId "+conn.nodeId);
@@ -238,15 +270,15 @@ public class NodeClient {
 							bootstrap.releaseExternalResources();
 						}
 					} catch (InterruptedException e) {
-						
+
 						e.printStackTrace();
 					}
 				}
 
 				try {
-					
+
 					Request msg = conn.outboundRequestQueue.take();
-					
+
 					if (ch.isWritable()) {
 						logger.info("Sending request to the nodeId "+nodeId);
 						ChannelFuture cf = ch.write(msg);
@@ -254,8 +286,8 @@ public class NodeClient {
 							logger.error("failed to send request to nodeId "+nodeId);
 							conn.outboundRequestQueue.putFirst(msg);
 						}
-						
-						
+
+
 
 					} else{
 						conn.outboundRequestQueue.putFirst(msg);
@@ -276,13 +308,13 @@ public class NodeClient {
 			}
 		}
 	}
-	
+
 	protected class InboundWorker extends Thread {
 
 		boolean forever = true;
-		
+
 		int retry = 0;
-		
+
 		NodeClient owner;
 
 		public InboundWorker(NodeClient processResponse) {
@@ -303,7 +335,7 @@ public class NodeClient {
 				}
 
 				try {
-					
+
 					eye.Comm.Response msg = owner.inboundResponseQueue.take();
 
 					if (msg.getHeader().getRoutingId() == Header.Routing.DOCQUERY) {
@@ -311,27 +343,27 @@ public class NodeClient {
 						logger.info("Recieved the response to DOCQUERY from the Node "+owner.nodeId);
 
 						String msgKey = null;
-						
+
 						PayloadReply response =  msg.getBody();
-						
+
 						String nameSpace = null;
-						
+
 						if(response.getSpaces(0) !=null)
 							nameSpace = response.getSpaces(0).getName();
-						
+
 						String docName = response.getDocs(0).getDocName();
-						
+
 						if( docName == null || docName.length() ==0 )
 						{
 							logger.error("Invalid DocQueryResponse from node "+owner.nodeId+" document name missing");
 							continue;
 						}
-						
+
 						if(nameSpace !=null && nameSpace.length() >0)
 							msgKey = nameSpace;
-						
+
 						msgKey=msgKey+docName;
-						
+
 						owner.docQueryResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
 
 					}else if(msg.getHeader().getRoutingId() == Header.Routing.DOCADD){
@@ -340,7 +372,7 @@ public class NodeClient {
 
 						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
 
-							
+
 						}
 
 					}

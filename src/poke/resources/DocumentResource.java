@@ -132,11 +132,11 @@ public class DocumentResource implements Resource {
 
 		String newFileName = repDoc.getDocName();
 
-		String nameSpece = null;
+		String nameSpace = null;
 
 		if(docAddValidateBody.getSpace() !=null){
 
-			nameSpece = docAddValidateBody.getSpace().getName();
+			nameSpace = docAddValidateBody.getSpace().getName();
 		}
 
 		Response.Builder docAddValidateResponseBuilder = Response.newBuilder();
@@ -154,11 +154,11 @@ public class DocumentResource implements Resource {
 			return docAddValidateResponseBuilder.build();
 		}
 
-		if(nameSpece != null && nameSpece.length() > 0){
+		if(nameSpace != null && nameSpace.length() > 0){
 
 
 
-			String effNS = HOMEDIR+File.separator+nameSpece; 
+			String effNS = HOMEDIR+File.separator+nameSpace; 
 
 			File targetNS = new File (effNS);
 
@@ -167,8 +167,6 @@ public class DocumentResource implements Resource {
 				boolean nsCheck = FileUtils.directoryContains(homeDir, targetNS);
 
 				if(nsCheck){
-
-					System.out.println("Target NS exists");
 
 					File targetFileName = new File (effNS+File.separator+newFileName);
 
@@ -217,17 +215,26 @@ public class DocumentResource implements Resource {
 			}
 		}
 
-		Collection<NodeClient> activeNodes = NodeResponseQueue.getActiveNodeInterface();
+		NodeResponseQueue.broadcastDocQuery(nameSpace, newFileName);
+		
+		try {
+		
+			logger.info(" Document resousrce sleeping for 2000ms! Witing for responses from the other nodes for DOCQUERY ");
+		
+			Thread.sleep(2000);
+			
+			boolean docQueryResult = NodeResponseQueue.fetchDocQueryResult(nameSpace , newFileName);
+			
+			if(!docQueryResult){
+				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
 
-		NodeClient[] activeNodeArray = new NodeClient[activeNodes.size()];
-
-		activeNodes.toArray(activeNodeArray);
-
-		for(NodeClient nc: activeNodeArray){
-
-			nc.queryFile(nameSpece, newFileName);
+				return docAddValidateResponseBuilder.build();
+				}
+		
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
-
 
 		try {
 			spacceAvailable = FileSystemUtils.freeSpaceKb()*1024;
@@ -463,7 +470,9 @@ public class DocumentResource implements Resource {
 
 		String nameSpace =  null;
 
-		String effNS = HOMEDIR;
+		String effHomeNS = HOMEDIR;
+		
+		String effAwayNS = VISITORDIR;
 
 		if(space !=null){
 			nameSpace  = space.getName();
@@ -472,18 +481,36 @@ public class DocumentResource implements Resource {
 			docQueryResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(queryDoc));
 		}
 
-		if(nameSpace !=null && nameSpace.length() >0)
-			effNS= effNS+File.separator+nameSpace;
+		if(nameSpace !=null && nameSpace.length() >0){
+			effHomeNS= effHomeNS+File.separator+nameSpace;
+			effAwayNS = effAwayNS+File.separator+nameSpace;
+		}
 
-		File targetFile = new File(fileName);
+		File targetFile = null;
 
-		File parentDir = new File(effNS);
+		File parentHomeDir = new File(effHomeNS);
+		
+		File parentAwayDir = new File(effAwayNS);
 
-		boolean fileExists = false;
+		boolean fileHome = false;
+		
+		boolean fileAway = false;
 
 		try {
 
-			fileExists =	FileUtils.directoryContains(parentDir, targetFile);
+			if(parentHomeDir.exists()){
+				targetFile = new File(effHomeNS+fileName);
+				fileHome =	FileUtils.directoryContains(parentHomeDir, targetFile);
+			}
+			
+			if(!fileHome){
+			if(parentAwayDir.exists()){
+			targetFile = new File(effAwayNS+fileName);
+			fileAway =	FileUtils.directoryContains(parentAwayDir, targetFile);
+			}
+			}
+			
+			
 
 		} catch (IOException e) {
 
@@ -491,10 +518,10 @@ public class DocumentResource implements Resource {
 			e.printStackTrace();
 		}
 
-		if(fileExists)
-			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+		if(fileHome || fileAway)
+			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
 		else
-			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.FAILURE, FILEUPLOADREQVALIDATEDMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));	
+			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, FILEUPLOADREQVALIDATEDMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));	
 
 		
 		return docQueryResponseBuilder.build();
