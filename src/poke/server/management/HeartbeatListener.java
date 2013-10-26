@@ -19,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import poke.monitor.MonitorListener;
+import poke.server.nconnect.NodeClient;
+import poke.server.nconnect.NodeResponseQueue;
 
 public class HeartbeatListener implements MonitorListener {
 	protected static Logger logger = LoggerFactory.getLogger("management");
@@ -58,6 +60,18 @@ public class HeartbeatListener implements MonitorListener {
 		} else if (msg.hasBeat() && msg.getBeat().getNodeId().equals(data.getNodeId())) {
 			logger.info("Tracing code flow 2: HeartbeatLisner Received HB response from " + msg.getBeat().getNodeId());
 			data.setLastBeat(System.currentTimeMillis());
+			
+			if(!NodeResponseQueue.nodeExistCheck(data.getNodeId())){
+				
+				NodeClient activeNode = new NodeClient(data.getHost(), data.getPort(), data.getNodeId());
+				
+				NodeResponseQueue.addActiveNode(data.getNodeId(), activeNode);
+				
+				logger.info("New node with nodeId "+data.getNodeId()+" has been added to activeNode map");
+				
+				logger.info("number of active nodes in the network "+NodeResponseQueue.activeNodesCount());
+			}
+		
 		} else
 			logger.error("Received hbMgr from on wrong channel or unknown host: " + msg.getBeat().getNodeId());
 	}

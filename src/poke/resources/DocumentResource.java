@@ -32,10 +32,12 @@ import com.google.protobuf.ByteString;
 import poke.server.management.HeartbeatData;
 import poke.server.management.HeartbeatManager;
 import poke.server.nconnect.NodeClient;
+import poke.server.nconnect.NodeResponseQueue;
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
 import eye.Comm.Document;
 import eye.Comm.Header;
+import eye.Comm.NameSpace;
 import eye.Comm.Payload;
 import eye.Comm.PayloadReply;
 import eye.Comm.Request;
@@ -53,28 +55,28 @@ public class DocumentResource implements Resource {
 	private static final String FILEADDSUCCESSMSG = "File has been uploaded successfully";
 
 	private static final String FILEADDREQMISSINGPARAMMSG = "Fail to validate document upload request : Document name/size (mandatory) has not been provided.";
-	
+
 	private static final String FILEREQMISSINGPARAMMSG = "Fail to validate document find/delete request : Document name (mandatory) has not been provided.";
 
 	private static final String INTERNALSERVERERRORMSG ="Failed to serve the request: Internal Server Error";
-	
+
 	private static final String FILEADDREQDUPLICATEFILEMSG ="Can not upload the file: File already exists: Use docUpdate";
-	
+
 	private static final String FILETOOLARGETOSAVEMSG ="Can not upload the file: File is too large to save";
-	
+
 	private static final String FILEUPLOADREQVALIDATEDMSG ="Valid file upload request: File can be uploaded";
-	
+
 	private static final String NAMESPACEINEXISTENTMSG = " Supplied namespacce does not exist: Please suppy valid namespace";
-	
+
 	private static final String FILEINEXISTENTMSG = " Requested file does not exist: Please suppy valid filename";
-	
+
 	private static final String FILEDELETESUCCESSFULMSG = "Requested file has been deleted successfully";
-	
+
 	private static final String OPERATIONNOTALLOWEDMSG = "Requested Operation is not allowed with the 'request' type ";
 
 	private static final File homeDir = new File(HOMEDIR);
-	
-		@Override
+
+	@Override
 	public Response process(Request request) {
 
 		int opChoice = 0;
@@ -108,7 +110,7 @@ public class DocumentResource implements Resource {
 		case 23:
 			docOpResponse = docRemove(docOpHeader, docOpBody);
 			break;
-		
+
 		case 25:
 			docOpResponse = docQuery(docOpHeader, docOpBody);
 			break;
@@ -125,15 +127,20 @@ public class DocumentResource implements Resource {
 	private Response docAddValidate(Header docAddValidateHeader , Payload docAddValidateBody){
 
 		Document repDoc = docAddValidateBody.getDoc();
-		
+
 		long reqFileSize = repDoc.getDocSize();
 
 		String newFileName = repDoc.getDocName();
 
-		String nameSpece = docAddValidateBody.getSpace().getName();
+		String nameSpece = null;
+
+		if(docAddValidateBody.getSpace() !=null){
+
+			nameSpece = docAddValidateBody.getSpace().getName();
+		}
 
 		Response.Builder docAddValidateResponseBuilder = Response.newBuilder();
-		
+
 		docAddValidateResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(repDoc).addSpaces(docAddValidateBody.getSpace()));
 
 		long spacceAvailable = 0;
@@ -148,19 +155,19 @@ public class DocumentResource implements Resource {
 		}
 
 		if(nameSpece != null && nameSpece.length() > 0){
-			
-			
-			
+
+
+
 			String effNS = HOMEDIR+File.separator+nameSpece; 
-			
+
 			File targetNS = new File (effNS);
 
 			try {
-				
+
 				boolean nsCheck = FileUtils.directoryContains(homeDir, targetNS);
 
 				if(nsCheck){
-					
+
 					System.out.println("Target NS exists");
 
 					File targetFileName = new File (effNS+File.separator+newFileName);
@@ -172,7 +179,7 @@ public class DocumentResource implements Resource {
 						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
 
 						return docAddValidateResponseBuilder.build();
-						
+
 					}
 
 				}
@@ -188,20 +195,20 @@ public class DocumentResource implements Resource {
 			}
 
 		}else{
-			
+
 			try {
-			
+
 				boolean fileCheck = FileUtils.directoryContains(homeDir, new File(HOMEDIR+File.separator+newFileName));
-				
+
 				if(fileCheck){
-					
+
 					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
 
 					return docAddValidateResponseBuilder.build();
 				}
-		
+
 			} catch (IOException e) {
-				
+
 				logger.error("Document Response: IO Exception while validating file add request "+e.getMessage());
 
 				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
@@ -209,18 +216,18 @@ public class DocumentResource implements Resource {
 				return docAddValidateResponseBuilder.build();
 			}
 		}
-		
-			Collection<HeartbeatData> nodeList = HeartbeatManager.getInstance().getIncomingHB().values();
-			
-			HeartbeatData hb = null;
-			
-			if(nodeList.size() > 0 )
-				hb = nodeList.iterator().next();
-			
-			NodeClient nc1 = new NodeClient(hb.getHost(), hb.getPort(),hb.getNodeId());
-			
-			System.out.println("Query File"+ nc1.queryFile("Kau" , "abc.txt"));
-			
+
+		Collection<NodeClient> activeNodes = NodeResponseQueue.getActiveNodeInterface();
+
+		NodeClient[] activeNodeArray = new NodeClient[activeNodes.size()];
+
+		activeNodes.toArray(activeNodeArray);
+
+		for(NodeClient nc: activeNodeArray){
+
+			nc.queryFile(nameSpece, newFileName);
+		}
+
 
 		try {
 			spacceAvailable = FileSystemUtils.freeSpaceKb()*1024;
@@ -228,7 +235,7 @@ public class DocumentResource implements Resource {
 			bufferredLimit = spacceAvailable - 10240000;
 
 			logger.info("DocumentResource: Free Space available " + spacceAvailable);
-			
+
 		} catch (IOException e) {
 
 			System.out.println("DpcumentResource:docAddValidate IOException while calculating free space");
@@ -241,9 +248,9 @@ public class DocumentResource implements Resource {
 		if(reqFileSize > bufferredLimit){
 
 			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILETOOLARGETOSAVEMSG));
-			
+
 		}else{
-			
+
 			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.SUCCESS, FILEUPLOADREQVALIDATEDMSG));
 		}
 
@@ -254,7 +261,7 @@ public class DocumentResource implements Resource {
 	private Response docAdd(Header docAddHeader , Payload docAddBody){
 
 		String nameSpace = docAddBody.getSpace().getName();
-		
+
 		String effNS = HOMEDIR+File.separator+nameSpace;
 
 		String fileName = docAddBody.getDoc().getDocName();
@@ -268,9 +275,9 @@ public class DocumentResource implements Resource {
 		File file = new File(effNS+File.separator+fileName);
 
 		Header.Builder docAddHeaderBuilder = Header.newBuilder(docAddHeader);
-		
+
 		Document recivedFile = docAddBody.getDoc();
-		
+
 		Document toBesent= null;
 
 		try {
@@ -282,7 +289,7 @@ public class DocumentResource implements Resource {
 			logger.info("Creating file with name "+fileName+" and writing the content sent by client to it" );
 
 			FileUtils.writeByteArrayToFile(file, recivedFile.getChunkContent().toByteArray(), true);
-			
+
 			toBesent = recivedFile.toBuilder().clearChunkContent().build();
 
 		} catch (IOException e) {
@@ -297,21 +304,19 @@ public class DocumentResource implements Resource {
 		}
 
 		System.gc();
-		
+
 		docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);
 
 		docAddHeaderBuilder.setReplyMsg("File Uploaded Successfully");
-		
+
 		Response.Builder docAddRespBuilder = Response.newBuilder();
 
 		docAddRespBuilder.setHeader(docAddHeaderBuilder);
 
 		System.gc();
-		
-	//	logger.info("Size of the chunk content to be sent  "+toBesent.getChunkContent().size());
-		
+
 		docAddRespBuilder.setBody(PayloadReply.newBuilder().addDocs(toBesent).addSpaces(docAddBody.getSpace()));
-		
+
 		System.gc();
 
 		return docAddRespBuilder.build();
@@ -332,9 +337,9 @@ public class DocumentResource implements Resource {
 		String fileToBeDeleted = docRemoveBody.getDoc().getDocName();
 
 		String nameSpece = docRemoveBody.getSpace().getName();
-		
+
 		logger.info("docRemove Client data file to be delted: "+fileToBeDeleted+" namespace: "+nameSpece);
-		
+
 		File targetFile = null;
 
 		Response.Builder fileRemoveResponseBuilder = Response.newBuilder();
@@ -349,46 +354,46 @@ public class DocumentResource implements Resource {
 		}
 
 		if(nameSpece != null && nameSpece.length() > 0){
-			
+
 			String effNS = HOMEDIR+File.separator+nameSpece;
 
 			File targetNS = new File (effNS);
-			
+
 			targetFile = new File(effNS+File.separator+fileToBeDeleted);
-			
+
 
 			try {
-				
+
 				boolean nsCheck = FileUtils.directoryContains(homeDir, targetNS);
-				
+
 				if(nsCheck){
 
 					boolean fileCheck = FileUtils.directoryContains(targetNS, targetFile);
 
 					if(fileCheck){
-						
+
 						if(targetFile.isDirectory()){
-							
+
 							fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, OPERATIONNOTALLOWEDMSG+"Supplied file is directory"));
 
 							return fileRemoveResponseBuilder.build();
 						}
 
 						FileUtils.forceDelete(targetFile);
-						
+
 					}else{
-						
+
 						fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEINEXISTENTMSG));
 
 						return fileRemoveResponseBuilder.build();
 					}
 
 				}else{
-					
+
 					fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, NAMESPACEINEXISTENTMSG));
 
 					return fileRemoveResponseBuilder.build();
-					
+
 				}
 
 			} catch (IOException e) {
@@ -400,61 +405,99 @@ public class DocumentResource implements Resource {
 				return fileRemoveResponseBuilder.build();
 
 			}
-		
+
 		} else{
-			
+
 			try {
-			
+
 				targetFile = new File(HOMEDIR+File.separator+fileToBeDeleted);
-				
+
 				boolean fileCheck = FileUtils.directoryContains(homeDir, targetFile);
-				
+
 				if(fileCheck){
-					
+
 					if(targetFile.isDirectory()){
-						
+
 						fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, OPERATIONNOTALLOWEDMSG+"Requested file is directory"));
 
 						return fileRemoveResponseBuilder.build();
 					}
-					
+
 					FileUtils.forceDelete(targetFile);
-									
+
 				}else{
-					
+
 					fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEINEXISTENTMSG));
 
 					return fileRemoveResponseBuilder.build();
-					
+
 				}
-		
+
 			} catch (IOException e) {
-				
+
 				logger.error("Document Response: IO Exception while processing file delete request w/o namespace "+e.getMessage());
-				
+
 				fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
 
 				return fileRemoveResponseBuilder.build();
 			}
-			
+
 		}
-		
+
 		fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.SUCCESS, FILEDELETESUCCESSFULMSG));
-		
+
 		return fileRemoveResponseBuilder.build();
 	}
-	
-		private Response docQuery(Header docQueryHeader , Payload docQueryBody){
-			
-			logger.info(" Received doc query request from "+docQueryHeader.getOriginator());
-			
-			Response.Builder docQueryResponseBuilder = Response.newBuilder();
-			
-			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
-			
-			docQueryResponseBuilder.setBody(PayloadReply.getDefaultInstance());
-			
-			return docQueryResponseBuilder.build();
+
+	private Response docQuery(Header docQueryHeader , Payload docQueryBody){
+
+		logger.info(" Received doc query request from "+docQueryHeader.getOriginator());
+
+		Response.Builder docQueryResponseBuilder = Response.newBuilder();
+
+		Document queryDoc = docQueryBody.getDoc();
+
+		NameSpace space = docQueryBody.getSpace();
+
+		String fileName = queryDoc.getDocName();
+
+		String nameSpace =  null;
+
+		String effNS = HOMEDIR;
+
+		if(space !=null){
+			nameSpace  = space.getName();
+			docQueryResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(queryDoc).addSpaces(space));
+		}else{
+			docQueryResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(queryDoc));
 		}
-	
+
+		if(nameSpace !=null && nameSpace.length() >0)
+			effNS= effNS+File.separator+nameSpace;
+
+		File targetFile = new File(fileName);
+
+		File parentDir = new File(effNS);
+
+		boolean fileExists = false;
+
+		try {
+
+			fileExists =	FileUtils.directoryContains(parentDir, targetFile);
+
+		} catch (IOException e) {
+
+			logger.error("DocQuery: IOException while validating file existence");
+			e.printStackTrace();
+		}
+
+		if(fileExists)
+			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+		else
+			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.FAILURE, FILEUPLOADREQVALIDATEDMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));	
+
+		
+		return docQueryResponseBuilder.build();
+	}
+
 }
