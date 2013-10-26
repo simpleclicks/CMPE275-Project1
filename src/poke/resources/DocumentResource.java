@@ -31,7 +31,7 @@ import com.google.protobuf.ByteString;
 
 import poke.server.management.HeartbeatData;
 import poke.server.management.HeartbeatManager;
-import poke.server.nconnect.NodeClient;
+//import poke.server.nconnect.NodeClient;
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
 import eye.Comm.Document;
@@ -217,9 +217,9 @@ public class DocumentResource implements Resource {
 			if(nodeList.size() > 0 )
 				hb = nodeList.iterator().next();
 			
-			NodeClient nc1 = new NodeClient(hb.getHost(), hb.getPort(),hb.getNodeId());
+		//	NodeClient nc1 = new NodeClient(hb.getHost(), hb.getPort(),hb.getNodeId());
 			
-			System.out.println("Query File"+ nc1.queryFile("Kau" , "abc.txt"));
+			//System.out.println("Query File"+ nc1.queryFile("Kau" , "abc.txt"));
 			
 
 		try {
