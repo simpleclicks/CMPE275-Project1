@@ -41,7 +41,7 @@ public class Jab {
 	
 		//cc.docAddReq("Kau1", "E://GTHub.flv");
 		
-		cc.docAdd("SMB", "E://test3.txt");
+		cc.docAdd("PLAA", "E://test3.txt");
 		
 		//cc.docRemove("", "Kaustubh1");
 	

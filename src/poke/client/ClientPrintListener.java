@@ -48,6 +48,8 @@ public class ClientPrintListener implements ClientListener {
 			
 			System.out.println("Server response to document remove "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
 			
+		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCFIND){
+			//TODO add the code for saving the received found file or the message if file not found 
 		}
 	}
 }

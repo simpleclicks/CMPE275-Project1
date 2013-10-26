@@ -358,6 +358,18 @@ public class ClientConnection {
 		
 	}
 	
+	public void docFind(String nameSpace, String fileName){
+		Header.Builder docFindReqHeader = Header.newBuilder();
+		docFindReqHeader.setRoutingId(Routing.DOCFIND);
+		docFindReqHeader.setOriginator("Document Find test");
+		Payload.Builder docFindReqBody = Payload.newBuilder();
+		
+		if(nameSpace !=null && nameSpace.length() > 0)
+			docFindReqBody.setSpace(NameSpace.newBuilder().setName(nameSpace).build());
+		
+		docFindReqBody.setDoc(Document.newBuilder().setDocName(fileName));
+		
+	}
 
 	private void init() {
 		// the queue to support client-side surging
