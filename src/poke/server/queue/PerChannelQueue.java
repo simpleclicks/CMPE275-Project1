@@ -161,6 +161,7 @@ public class PerChannelQueue implements ChannelQueue {
 
 		@Override
 		public void run() {
+			System.out.println("PerChannelQueue.OutboundWorker.run()");
 			Channel conn = sq.channel;
 			if (conn == null || !conn.isOpen()) {
 				PerChannelQueue.logger.error("connection missing, no outbound communication");
@@ -178,7 +179,7 @@ public class PerChannelQueue implements ChannelQueue {
 						boolean rtn = false;
 						if (channel != null && channel.isOpen() && channel.isWritable()) {
 							ChannelFuture cf = channel.write(msg);
-
+							
 							// blocks on write - use listener to be async
 							cf.awaitUninterruptibly();
 							rtn = cf.isSuccess();
@@ -235,7 +236,8 @@ public class PerChannelQueue implements ChannelQueue {
 					// process request and enqueue response
 					if (msg instanceof Request) {
 						Request req = ((Request) msg);
-
+						if (req == null)
+							logger.error("req is null");
 						// do we need to route the request?
 
 						// handle it locally
@@ -247,6 +249,7 @@ public class PerChannelQueue implements ChannelQueue {
 							reply = ResourceUtil.buildError(req.getHeader(), ReplyStatus.FAILURE,
 									"Request not processed");
 						} else
+							logger.info("request recieved from client");
 							reply = rsc.process(req);
 
 						sq.enqueueResponse(reply);

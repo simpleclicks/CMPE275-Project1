@@ -28,7 +28,7 @@ public class Jab {
 	}
 
 	public void run() {
-		ClientConnection cc = ClientConnection.initConnection("localhost", 5570);
+		ClientConnection cc = ClientConnection.initConnection("192.168.0.105", 5570);
 		System.out.println("Adding listener");
 		ClientListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);
@@ -38,12 +38,14 @@ public class Jab {
 //			System.out.println("Poke 1"+count);
 //			cc.poke(tag, count);
 //		}
+		
 	
-		cc.docAddReq("Kau1", "E://GTHub.flv");
-		
+	//	cc.docAddReq("Kau1", "E://GTHub.flv");
 		//cc.docAdd("Kaustubh3", "E://test3.txt");
-		
 		//cc.docRemove("", "Kaustubh1");
+
+		//cc.docAdd("devika", "C:\\Courses\\Fall13\\275\\myname.txt");
+		cc.namespaceAdd("Ritvik");
 	
 	}
 
