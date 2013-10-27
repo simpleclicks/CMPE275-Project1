@@ -209,7 +209,7 @@ public class ClientResponseAction {
 				}
 
 				docAddPLBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocExtension(filePath).
-						setChunkContent(ByteString.copyFrom(fileContents)).setDocSize(fileSize).setTotalChunk(totalChunk).setChunkId(0));
+						setChunkContent(ByteString.copyFrom(fileContents)).setDocSize(fileSize).setTotalChunk(totalChunk).setChunkId(1));
 
 				docAddReqBuilder.setBody(docAddPLBuilder);
 
