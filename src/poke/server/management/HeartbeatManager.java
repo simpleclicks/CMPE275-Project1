@@ -67,6 +67,11 @@ public class HeartbeatManager extends Thread {
 	public static HeartbeatManager getInstance() {
 		return instance.get();
 	}
+	
+	public boolean checkNearest(String nodeId){
+		
+		return incomingHB.containsKey(nodeId);
+	}
 
 	/**
 	 * initialize the hbMgr for this server

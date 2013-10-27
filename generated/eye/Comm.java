@@ -4670,6 +4670,7 @@ public final class Comm {
       DOCREMOVE(11, 23),
       DOCADDHANDSHAKE(12, 24),
       DOCQUERY(13, 25),
+      REPLICAREMOVE(14, 26),
       ;
       
       public static final int FINGER_VALUE = 2;
@@ -4686,6 +4687,7 @@ public final class Comm {
       public static final int DOCREMOVE_VALUE = 23;
       public static final int DOCADDHANDSHAKE_VALUE = 24;
       public static final int DOCQUERY_VALUE = 25;
+      public static final int REPLICAREMOVE_VALUE = 26;
       
       
       public final int getNumber() { return value; }
@@ -4706,6 +4708,7 @@ public final class Comm {
           case 23: return DOCREMOVE;
           case 24: return DOCADDHANDSHAKE;
           case 25: return DOCQUERY;
+          case 26: return REPLICAREMOVE;
           default: return null;
         }
       }
@@ -4736,7 +4739,7 @@ public final class Comm {
       }
       
       private static final Routing[] VALUES = {
-        FINGER, STATS, NAMESPACEADD, NAMESPACELIST, NAMESPACEUPDATE, NAMESPACEREMOVE, DOCREPLICATEREQ, DOCREPLICATE, DOCADD, DOCFIND, DOCUPDATE, DOCREMOVE, DOCADDHANDSHAKE, DOCQUERY, 
+        FINGER, STATS, NAMESPACEADD, NAMESPACELIST, NAMESPACEUPDATE, NAMESPACEREMOVE, DOCREPLICATEREQ, DOCREPLICATE, DOCADD, DOCFIND, DOCUPDATE, DOCREMOVE, DOCADDHANDSHAKE, DOCQUERY, REPLICAREMOVE, 
       };
       
       public static Routing valueOf(
@@ -10749,36 +10752,36 @@ public final class Comm {
       "\001(\t\"+\n\013DocumentSet\022\034\n\tdocuments\030\001 \003(\0132\t." +
       "Document\"*\n\014NameSpaceSet\022\032\n\006spaces\030\001 \003(\013" +
       "2\n.NameSpace\")\n\013RoutingPath\022\014\n\004node\030\001 \002(" +
-      "\t\022\014\n\004time\030\002 \002(\003\"\251\004\n\006Header\022#\n\nrouting_id" +
+      "\t\022\014\n\004time\030\002 \002(\003\"\274\004\n\006Header\022#\n\nrouting_id" +
       "\030\001 \002(\0162\017.Header.Routing\022\022\n\noriginator\030\002 " +
       "\002(\t\022\013\n\003tag\030\003 \001(\t\022\014\n\004time\030\004 \001(\003\022\'\n\nreply_" +
       "code\030\005 \001(\0162\023.Header.ReplyStatus\022\021\n\treply" +
       "_msg\030\006 \001(\t\022\032\n\004path\030\007 \003(\0132\014.RoutingPath\022\016",
       "\n\006toNode\030\010 \001(\t\022\031\n\021remainingHopCount\030\t \001(" +
-      "\003\"\360\001\n\007Routing\022\n\n\006FINGER\020\002\022\t\n\005STATS\020\003\022\020\n\014" +
+      "\003\"\203\002\n\007Routing\022\n\n\006FINGER\020\002\022\t\n\005STATS\020\003\022\020\n\014" +
       "NAMESPACEADD\020\n\022\021\n\rNAMESPACELIST\020\013\022\023\n\017NAM" +
       "ESPACEUPDATE\020\014\022\023\n\017NAMESPACEREMOVE\020\r\022\023\n\017D" +
       "OCREPLICATEREQ\020\022\022\020\n\014DOCREPLICATE\020\023\022\n\n\006DO" +
       "CADD\020\024\022\013\n\007DOCFIND\020\025\022\r\n\tDOCUPDATE\020\026\022\r\n\tDO" +
       "CREMOVE\020\027\022\023\n\017DOCADDHANDSHAKE\020\030\022\014\n\010DOCQUE" +
-      "RY\020\031\"U\n\013ReplyStatus\022\013\n\007SUCCESS\020\001\022\013\n\007FAIL" +
-      "URE\020\002\022\n\n\006NOAUTH\020\003\022\016\n\nMISSINGARG\020\004\022\020\n\014NOC" +
-      "ONNECTION\020\005\"U\n\007Payload\022\027\n\006finger\030\001 \001(\0132\007",
-      ".Finger\022\026\n\003doc\030\002 \001(\0132\t.Document\022\031\n\005space" +
-      "\030\003 \001(\0132\n.NameSpace\"v\n\014PayloadReply\022\027\n\006fi" +
-      "nger\030\001 \001(\0132\007.Finger\022\027\n\004docs\030\002 \003(\0132\t.Docu" +
-      "ment\022\032\n\006spaces\030\003 \003(\0132\n.NameSpace\022\030\n\005stat" +
-      "s\030\004 \001(\0132\t.Document\":\n\007Request\022\027\n\006header\030" +
-      "\001 \002(\0132\007.Header\022\026\n\004body\030\002 \002(\0132\010.Payload\"@" +
-      "\n\010Response\022\027\n\006header\030\001 \002(\0132\007.Header\022\033\n\004b" +
-      "ody\030\002 \002(\0132\r.PayloadReply\",\n\tHeartbeat\022\016\n" +
-      "\006nodeId\030\001 \002(\t\022\017\n\007timeRef\030\002 \002(\003\"\225\001\n\007Netwo" +
-      "rk\022\016\n\006nodeId\030\001 \002(\t\022\037\n\006action\030\002 \002(\0162\017.Net",
-      "work.Action\"Y\n\006Action\022\014\n\010NODEJOIN\020\001\022\r\n\tN" +
-      "ODELEAVE\020\002\022\014\n\010NODEDEAD\020\003\022\007\n\003MAP\0207\022\014\n\010ANN" +
-      "OUNCE\0208\022\r\n\010SHUTDOWN\020\347\007\"?\n\nManagement\022\027\n\005" +
-      "graph\030\001 \001(\0132\010.Network\022\030\n\004beat\030\002 \001(\0132\n.He" +
-      "artbeatB\007\n\003eyeH\001"
+      "RY\020\031\022\021\n\rREPLICAREMOVE\020\032\"U\n\013ReplyStatus\022\013" +
+      "\n\007SUCCESS\020\001\022\013\n\007FAILURE\020\002\022\n\n\006NOAUTH\020\003\022\016\n\n" +
+      "MISSINGARG\020\004\022\020\n\014NOCONNECTION\020\005\"U\n\007Payloa",
+      "d\022\027\n\006finger\030\001 \001(\0132\007.Finger\022\026\n\003doc\030\002 \001(\0132" +
+      "\t.Document\022\031\n\005space\030\003 \001(\0132\n.NameSpace\"v\n" +
+      "\014PayloadReply\022\027\n\006finger\030\001 \001(\0132\007.Finger\022\027" +
+      "\n\004docs\030\002 \003(\0132\t.Document\022\032\n\006spaces\030\003 \003(\0132" +
+      "\n.NameSpace\022\030\n\005stats\030\004 \001(\0132\t.Document\":\n" +
+      "\007Request\022\027\n\006header\030\001 \002(\0132\007.Header\022\026\n\004bod" +
+      "y\030\002 \002(\0132\010.Payload\"@\n\010Response\022\027\n\006header\030" +
+      "\001 \002(\0132\007.Header\022\033\n\004body\030\002 \002(\0132\r.PayloadRe" +
+      "ply\",\n\tHeartbeat\022\016\n\006nodeId\030\001 \002(\t\022\017\n\007time" +
+      "Ref\030\002 \002(\003\"\225\001\n\007Network\022\016\n\006nodeId\030\001 \002(\t\022\037\n",
+      "\006action\030\002 \002(\0162\017.Network.Action\"Y\n\006Action" +
+      "\022\014\n\010NODEJOIN\020\001\022\r\n\tNODELEAVE\020\002\022\014\n\010NODEDEA" +
+      "D\020\003\022\007\n\003MAP\0207\022\014\n\010ANNOUNCE\0208\022\r\n\010SHUTDOWN\020\347" +
+      "\007\"?\n\nManagement\022\027\n\005graph\030\001 \001(\0132\010.Network" +
+      "\022\030\n\004beat\030\002 \001(\0132\n.HeartbeatB\007\n\003eyeH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

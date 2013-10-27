@@ -139,6 +139,9 @@ public class ClientResponseAction {
 							}
 						}
 
+					}else if(msg.getHeader().getRoutingId() == Header.Routing.DOCREMOVE){
+						
+						System.out.println("ClientResponseHandler: Recieved the response to docRemove from the server and the response is "+msg.getHeader().getReplyCode()+" with Message from server as "+msg.getHeader().getReplyMsg());
 					}
 
 				} catch (InterruptedException ie) {

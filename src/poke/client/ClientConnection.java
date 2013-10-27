@@ -340,6 +340,8 @@ public class ClientConnection {
 		
 		docRemoveBodyBuilder.setDoc(Document.newBuilder().setDocName(fileName));
 		
+		logger.info((docRemoveBodyBuilder.getSpace().getName().length())+"");
+		
 		Request.Builder docRemoveReqBuilder = Request.newBuilder();
 		
 		docRemoveReqBuilder.setBody(docRemoveBodyBuilder.build());
