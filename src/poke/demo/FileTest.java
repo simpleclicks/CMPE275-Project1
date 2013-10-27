@@ -14,7 +14,7 @@ public class FileTest {
 		
 		File abc = new File("away\\abc.txt");
 		
-		File awayTree =  new File(fileAway, "away.txt");
+	//	File awayTree =  new File(fileAway, "away.txt");
 		
 		try {
 		

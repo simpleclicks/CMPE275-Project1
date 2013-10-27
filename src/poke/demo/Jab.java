@@ -20,11 +20,11 @@ import poke.client.ClientListener;
 import poke.client.ClientPrintListener;
 
 public class Jab {
-	private String tag;
-	private int count;
+//	private String tag;
+//	private int count;
 
 	public Jab(String tag) {
-		this.tag = tag;
+	//	this.tag = tag;
 	}
 
 	public void run() {
