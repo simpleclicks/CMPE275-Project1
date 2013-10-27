@@ -33,10 +33,12 @@ import com.google.protobuf.ByteString;
 import poke.server.management.HeartbeatData;
 import poke.server.management.HeartbeatManager;
 //import poke.server.nconnect.NodeClient;
+import poke.server.nconnect.NodeResponseQueue;
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
 import eye.Comm.Document;
 import eye.Comm.Header;
+import eye.Comm.NameSpace;
 import eye.Comm.Payload;
 import eye.Comm.PayloadReply;
 import eye.Comm.Request;
@@ -74,6 +76,10 @@ public class DocumentResource implements Resource {
 	private static final String OPERATIONNOTALLOWEDMSG = "Requested Operation is not allowed with the 'request' type ";
 
 	private static final File homeDir = new File(HOMEDIR);
+	
+	private static final File visitorDir = new File(VISITORDIR);
+
+	@Override
 
 	@Override
 	public Response process(Request request) {
@@ -131,7 +137,12 @@ public class DocumentResource implements Resource {
 
 		String newFileName = repDoc.getDocName();
 
-		String nameSpece = docAddValidateBody.getSpace().getName();
+		String nameSpace = null;
+
+		if(docAddValidateBody.getSpace() !=null){
+
+			nameSpace = docAddValidateBody.getSpace().getName();
+		}
 
 		Response.Builder docAddValidateResponseBuilder = Response.newBuilder();
 
@@ -148,21 +159,52 @@ public class DocumentResource implements Resource {
 			return docAddValidateResponseBuilder.build();
 		}
 
-		if(nameSpece != null && nameSpece.length() > 0){
+		if(nameSpace != null && nameSpace.length() > 0){
 
 
 
+			String effNS = HOMEDIR+File.separator+nameSpace; 
+						
+			String effVisitorNS = VISITORDIR+File.separator+nameSpace;
+<<<<<<< .mine
+
+
+
+
+
+
+
+=======
+			
+			logger.info("Validating "+effVisitorNS+" for "+newFileName);
+
+			File targetNS = new File (effNS);
+			
+			File targetVisitorNS =  new File(effVisitorNS);
+			
+>>>>>>> .theirs
+<<<<<<< .mine
 			String effNS = HOMEDIR+File.separator+nameSpece; 
 
 			File targetNS = new File (effNS);
-
+=======
 			try {
+
+
+>>>>>>> .theirs
 
 				boolean nsCheck = FileUtils.directoryContains(homeDir, targetNS);
 
+				boolean nsAwayCheck = FileUtils.directoryContains(visitorDir, targetVisitorNS);
+
 				if(nsCheck){
+<<<<<<< .mine
 
 					System.out.println("Target NS exists");
+=======
+
+
+>>>>>>> .theirs
 
 					File targetFileName = new File (effNS+File.separator+newFileName);
 
@@ -173,12 +215,48 @@ public class DocumentResource implements Resource {
 						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
 
 						return docAddValidateResponseBuilder.build();
+<<<<<<< .mine
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=======
 
 					}
 
 				}
+				
+				if(nsAwayCheck){
+					
+					File targetFileName = new File (effVisitorNS+File.separator+newFileName);
 
-			} catch (IOException e) {
+					boolean fileCheck = FileUtils.directoryContains(targetVisitorNS, targetFileName);
+					
+					logger.info("Validating "+effVisitorNS+" for "+newFileName+" as "+fileCheck);
+
+					if(fileCheck){
+						
+>>>>>>> .theirs
+						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+
+						return docAddValidateResponseBuilder.build();
+
+					}
+
+				}
+					
+		} catch (IOException e) {
 
 				logger.error("Document Response: IO Exception while validating file add request "+e.getMessage());
 
@@ -194,13 +272,36 @@ public class DocumentResource implements Resource {
 
 				boolean fileCheck = FileUtils.directoryContains(homeDir, new File(HOMEDIR+File.separator+newFileName));
 
+				boolean visitorFileCheck = FileUtils.directoryContains(visitorDir, new File(VISITORDIR+File.separator+newFileName));
+				
+				logger.info("Validating "+VISITORDIR+" for "+newFileName+" as "+visitorFileCheck);
+
 				if(fileCheck){
+
+					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+
+					return docAddValidateResponseBuilder.build();
+			
+				}
+<<<<<<< .mine
+
+
+
+
+
+
+
+
+=======
+				
+				if(visitorFileCheck){
 
 					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
 
 					return docAddValidateResponseBuilder.build();
 				}
 
+>>>>>>> .theirs
 			} catch (IOException e) {
 
 				logger.error("Document Response: IO Exception while validating file add request "+e.getMessage());
@@ -210,7 +311,37 @@ public class DocumentResource implements Resource {
 				return docAddValidateResponseBuilder.build();
 			}
 		}
+<<<<<<< .mine
 
+
+
+
+
+
+
+
+
+
+
+
+
+=======
+
+		NodeResponseQueue.broadcastDocQuery(nameSpace, newFileName);
+		
+		try {
+		
+			logger.info(" Document resousrce sleeping for 2000ms! Witing for responses from the other nodes for DOCQUERY ");
+		
+			Thread.sleep(2000);
+			
+			boolean docQueryResult = NodeResponseQueue.fetchDocQueryResult(nameSpace , newFileName);
+			
+			if(!docQueryResult){
+				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+>>>>>>> .theirs
+
+<<<<<<< .mine
 		Collection<HeartbeatData> nodeList = HeartbeatManager.getInstance().getIncomingHB().values();
 
 		HeartbeatData hb = null;
@@ -223,6 +354,20 @@ public class DocumentResource implements Resource {
 		//System.out.println("Query File"+ nc1.queryFile("Kau" , "abc.txt"));
 
 
+=======
+				return docAddValidateResponseBuilder.build();
+				}
+		
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+
+
+
+
+>>>>>>> .theirs
 		try {
 			spacceAvailable = FileSystemUtils.freeSpaceKb()*1024;
 
@@ -308,9 +453,15 @@ public class DocumentResource implements Resource {
 		docAddRespBuilder.setHeader(docAddHeaderBuilder);
 
 		System.gc();
+<<<<<<< .mine
 
 		//	logger.info("Size of the chunk content to be sent  "+toBesent.getChunkContent().size());
 
+=======
+
+
+
+>>>>>>> .theirs
 		docAddRespBuilder.setBody(PayloadReply.newBuilder().addDocs(toBesent).addSpaces(docAddBody.getSpace()));
 
 		System.gc();
@@ -447,6 +598,7 @@ public class DocumentResource implements Resource {
 
 		return fileRemoveResponseBuilder.build();
 	}
+<<<<<<< .mine
 
 	private Response docQuery(Header docQueryHeader , Payload docQueryBody){
 
@@ -461,4 +613,142 @@ public class DocumentResource implements Resource {
 		return docQueryResponseBuilder.build();
 	}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=======
+
+	private Response docQuery(Header docQueryHeader , Payload docQueryBody){
+
+		logger.info(" Received doc query request from "+docQueryHeader.getOriginator());
+
+		Response.Builder docQueryResponseBuilder = Response.newBuilder();
+
+		Document queryDoc = docQueryBody.getDoc();
+
+		NameSpace space = docQueryBody.getSpace();
+
+		String fileName = queryDoc.getDocName();
+
+		String nameSpace =  null;
+
+		String effHomeNS = HOMEDIR;
+		
+		String effAwayNS = VISITORDIR;
+
+		if(space !=null){
+			nameSpace  = space.getName();
+			docQueryResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(queryDoc).addSpaces(space));
+		}else{
+			docQueryResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(queryDoc));
+		}
+
+		if(nameSpace !=null && nameSpace.length() >0){
+			effHomeNS= effHomeNS+File.separator+nameSpace;
+			effAwayNS = effAwayNS+File.separator+nameSpace;
+		}
+
+		File targetFile = null;
+
+		File parentHomeDir = new File(effHomeNS);
+		
+		File parentAwayDir = new File(effAwayNS);
+
+		boolean fileHome = false;
+		
+		boolean fileAway = false;
+
+		try {
+
+			if(parentHomeDir.exists()){
+				targetFile = new File(effHomeNS+File.separator+fileName);
+				fileHome =	FileUtils.directoryContains(parentHomeDir, targetFile);
+				logger.info("validating "+effHomeNS+" for "+fileName+" as "+fileHome);
+			}
+			
+			if(!fileHome){
+			if(parentAwayDir.exists()){
+				
+			targetFile = new File(effAwayNS+File.separator+fileName);
+			fileAway =	FileUtils.directoryContains(parentAwayDir, targetFile);
+				logger.info("validating "+effAwayNS+" for "+fileName+" as "+fileAway);
+			}
+			}
+			
+			
+
+		} catch (IOException e) {
+
+			logger.error("DocQuery: IOException while validating file existence");
+			e.printStackTrace();
+		}
+
+		if(fileHome || fileAway)
+			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+		else
+			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, FILEUPLOADREQVALIDATEDMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));	
+
+		
+		return docQueryResponseBuilder.build();
+	}
+
+>>>>>>> .theirs
 }

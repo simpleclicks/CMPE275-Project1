@@ -33,6 +33,8 @@ public class Jab {
 		ClientListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);
 
+		cc.docAddReq("Kaustubh", "E://test3.txt");
+		
 //		for (int i = 0; i < 3; i++) {
 //			count++;
 //			System.out.println("Poke 1"+count);
