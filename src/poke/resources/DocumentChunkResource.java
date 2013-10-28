@@ -23,6 +23,7 @@ import eye.Comm.Payload;
 import eye.Comm.PayloadReply;
 import eye.Comm.Request;
 import eye.Comm.Response;
+import poke.server.nconnect.NodeClient;
 import poke.server.resources.ChunkedResource;
 import poke.server.resources.ResourceUtil;
 import poke.server.storage.jdbc.DatabaseStorage;
@@ -165,7 +166,7 @@ public class DocumentChunkResource implements ChunkedResource {
 
 				} else {
 
-					logger.info(" DocADD: Uploading the file in chunked mode");
+					logger.info(" DocFind: Uploading the file in chunked mode");
 
 					logger.info("Total number of chunks " + totalChunk);
 
@@ -214,27 +215,43 @@ public class DocumentChunkResource implements ChunkedResource {
 
 					} catch (FileNotFoundException e) {
 
-						logger.info("Requested File does not exists: File uploading Aborted "
-								+ e.getMessage());
+						logger.info("IO Exception while creating the file and/or writing the content to it "+e.getMessage());
 
-						e.printStackTrace();
+			              docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
+
+			              docFindRespHeader.setReplyMsg("Server Exception while downloading the requested file.");
+			              
+			              responses.add(docFindResponse.build());
+
+			              e.printStackTrace();
 
 					} catch (IOException e) {
 
-						logger.info("IO exception while uploading the requested file : File upload Aborted "
-								+ e.getMessage());
+						logger.info("IO Exception while creating the file and/or writing the content to it "+e.getMessage());
 
-						e.printStackTrace();
+			              docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
+
+			              docFindRespHeader.setReplyMsg("Server Exception while downloading the requested file.");
+			              
+			              responses.add(docFindResponse.build());
+
+			              e.printStackTrace();
 					}
 
 				}
 
 			} else {
-				System.out.println("File not found");
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			  logger.info("IO Exception while creating the file and/or writing the content to it "+e.getMessage());
+
+              docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
+
+              docFindRespHeader.setReplyMsg("Server Exception while downloading the requested file.");
+              
+              responses.add(docFindResponse.build());
+
+              e.printStackTrace();
 		}
 
 		return responses;
