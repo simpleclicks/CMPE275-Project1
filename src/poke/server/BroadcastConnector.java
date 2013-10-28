@@ -99,17 +99,12 @@ public class BroadcastConnector {
 						
 			NetworkInterface ni;
 			try {
-				ni = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
-				String broadcastAddress = ni.getInterfaceAddresses().get(0).getBroadcast().toString().substring(1);	
+				//ni = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
+				//String broadcastAddress = ni.getInterfaceAddresses().get(0).getBroadcast().toString().substring(1);
+				String broadcastAddress = "192.168.0.255";
 				logger.info("sending broadcast to " + broadcastAddress + ":" + bport);
 				channel = bootstrap.connect(new InetSocketAddress(broadcastAddress, bport));
 				
-			} catch (SocketException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

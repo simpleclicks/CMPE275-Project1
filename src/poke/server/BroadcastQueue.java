@@ -58,7 +58,7 @@ public class BroadcastQueue {
 	public static class BroadcastQueueEntry {
 		public BroadcastQueueEntry(String nodeId, String ipAddress, int port, int mgmtPort) {
 			this.nodeId = nodeId;
-			this.ipAddress = nodeId;
+			this.ipAddress = ipAddress;
 			this.port = port;
 			this.mgmtPort = mgmtPort;
 		}

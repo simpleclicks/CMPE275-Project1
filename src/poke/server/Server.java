@@ -263,6 +263,7 @@ public class Server {
 			logger.info("Unknown host");
 			e.printStackTrace();
 		}
+		System.out.println(hostAddress);
 		BroadcastConnector bconnector = new BroadcastConnector(nodeId, hostAddress, port, mport, bport);
 		bconnector.initiateBroadcast();
 		logger.info("Broadcasting availability");
