@@ -1,5 +1,8 @@
 package poke.monitor;
 
+import java.net.SocketAddress;
+
+import org.jboss.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +23,7 @@ public class HeartPrintListener implements MonitorListener {
 	}
 
 	@Override
-	public void onMessage(Management msg) {
+	public void onMessage(Management msg, Channel channel, SocketAddress socketaddress) {
 		if (logger.isDebugEnabled())
 			logger.debug(msg.getBeat().getNodeId());
 

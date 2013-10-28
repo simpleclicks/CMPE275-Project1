@@ -15,6 +15,7 @@
  */
 package poke.monitor;
 
+import java.net.SocketAddress;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -72,13 +73,13 @@ public class MonitorHandler extends SimpleChannelUpstreamHandler {
 		return true;
 	}
 
-	public void handleMessage(eye.Comm.Management msg) {
+	public void handleMessage(eye.Comm.Management msg, Channel channel, SocketAddress socketaddress) {
 		for (String id : listeners.keySet()) {
 			MonitorListener ml = listeners.get(id);
 
 			// TODO this may need to be delegated to a thread pool to allow
 			// async processing of replies
-			ml.onMessage(msg);
+			ml.onMessage(msg, channel, socketaddress);
 		}
 	}
 
@@ -116,7 +117,7 @@ public class MonitorHandler extends SimpleChannelUpstreamHandler {
 
 	@Override
 	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
-		handleMessage((eye.Comm.Management) e.getMessage());
+		handleMessage((eye.Comm.Management) e.getMessage(), e.getChannel(), e.getRemoteAddress());
 	}
 
 	@Override

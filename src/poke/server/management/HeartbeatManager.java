@@ -270,6 +270,8 @@ public class HeartbeatManager extends Thread {
 				logger.warn("HB incoming channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());
 				incomingHB.remove(future.getChannel());
 			}
+			//remove the node from monitors
+			HeartbeatConnector.getInstance().removeNodeFromMonitor(heart);
 		}
 	}
 }

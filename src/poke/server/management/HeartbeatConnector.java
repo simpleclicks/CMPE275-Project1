@@ -78,26 +78,21 @@ public class HeartbeatConnector extends Thread {
 		}
 	}
 
-	/*public void addMonitor(HeartbeatData node) {
-		// null data is not allowed
-		if (node == null || node.getNodeId() == null)
-			throw new RuntimeException("Null nodes or IDs are not allowed");
-
-		// register the node to the manager that is used to determine if a
-		// connection is usable by the public messaging
-		//HeartbeatManager.getInstance().addNearestNode(node);
-
-		// this class will monitor this channel/connection and together with the
-		// manager, we create the circuit breaker pattern to separate
-		// health-status from usage.
-		logger.info(" adding node to monitor");
-		HeartbeatListener hbmon = new HeartbeatListener(node);
-		MonitorHandler handler = new MonitorHandler();
-		handler.addListener(hbmon);
-		HeartMonitor hm = new HeartMonitor(node.getHost(), node.getMgmtport(), handler);
-		monitors.add(hm);
-	}
+	/**
+	 * After removing the node from incoming and outgoing HB queues
+	 * the node also has to be removed from monitor
+	 * 
+	 * 
+	 * @param heart
 	 */
+	public void removeNodeFromMonitor(HeartbeatData heart) {
+		
+		if(monitors.containsKey(heart.getNodeId())) {
+			
+			monitors.remove(heart.getNodeId());
+		}
+	}
+	
 	@Override
 	public void run() {
 
@@ -117,6 +112,7 @@ public class HeartbeatConnector extends Thread {
 							try {
 								logger.info("attempting to connect to node: " + hb.getNodeInfo());
 								hb.initiateHeartbeat();
+								validateConnection();
 							} catch (Exception ie) {
 								// do nothing
 							}

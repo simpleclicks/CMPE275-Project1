@@ -1,97 +1,78 @@
 package poke.server;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelFutureListener;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ExceptionEvent;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import poke.server.conf.ServerConf;
-import poke.server.management.HeartbeatConnector;
-import poke.server.management.HeartbeatData;
-import poke.server.resources.ResourceFactory;
-
-public class BroadcastHandler extends Thread {
-
+public class BroadcastHandler extends SimpleChannelUpstreamHandler {
 	protected static Logger logger = LoggerFactory.getLogger("server");
-	static DatagramSocket recieveSocket;
-	static int recievePort;
-	DatagramPacket packet;
-	static ServerConf broadcastConf;
-	static BroadcastHandler broadcast;
-	
-	private BroadcastHandler(){
-		
+
+	public BroadcastHandler() {
+		// logger.info("** HeartbeatHandler created **");
 	}
 
-	public static void intialize(int port, ServerConf conf) {
-	
-		recievePort = port;
-		broadcastConf = conf;
-		broadcast = new BroadcastHandler();
-		 
-	}
-	
-	public static BroadcastHandler getInstance() {
-		
-		if (broadcast == null)
-			throw new RuntimeException("Server not intialized");
-
-		return broadcast;
-	}
-	public void run() {
-
-		try {
-
-			recieveSocket = new DatagramSocket(recievePort, InetAddress.getLocalHost());
-			recieveSocket.setBroadcast(true);
-
-			while (true) {
-
-				byte[] recvBuf = new byte[15000];
-
-				packet = new DatagramPacket(recvBuf, recvBuf.length);
-				
-
-				recieveSocket.receive(packet);
-				String message = new String(packet.getData()).trim();
-
-				if (message.contains("NETWORK_DISCOVERY")) {
-
-					//System.out.println(message.toString());
-					String nodeId = message.split("_")[2];
-					
-					String hostAddress = packet.getAddress().getHostAddress();
-					System.out.println("host Address: "+hostAddress);
-					
-					//done for testing - change this later to read from own config
-					int port = Integer.valueOf(message.split("_")[3]);
-					int mgmtPort = Integer.valueOf(message.split("_")[4]);
-					
-					logger.info("Broadcast recieved");
-					HeartbeatData node = new HeartbeatData(nodeId, hostAddress, port, mgmtPort);
-					HeartbeatConnector.getInstance().addConnectToThisNode(node);
-					
-					
-					//HeartbeatConnector.getInstance().start();
-				}
-
-			}
-		} catch (SocketException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	/**
+	 * override this method to provide processing behavior
+	 * 
+	 * @param msg
+	 */
+	public void handleMessage(eye.Comm.Broadcast req, Channel channel) {
+		if (req == null) {
+			logger.error("ERROR: Unexpected content - null");
+			return;
 		}
+
+		logger.info("BroadcastHandler got messsage");
+		// ManagementQueue.enqueueRequest(req, channel);
 	}
 
+	@Override
+	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
+		logger.info("broadcast rcv: " + e.getRemoteAddress());
+		BroadcastQueue.enqueueRequest((eye.Comm.Broadcast) e.getMessage());							
 
+		// handleMessage((eye.Comm.Management) e.getMessage(), e.getChannel());
+	}
+
+	@Override
+	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
+		logger.error(
+				"BroadcastHandler error, closing channel, reason: "
+						+ e.getCause(), e);
+		e.getCause().printStackTrace();
+		e.getChannel().close();
+	}
+
+	/**
+	 * usage:
+	 * 
+	 * <pre>
+	 * channel.getCloseFuture().addListener(new BroadcastClosedListener(queue));
+	 * </pre>
+	 * 
+	 * @author gash
+	 * 
+	 */
+	public static class BroadcastClosedListener implements
+			ChannelFutureListener {
+		// private ManagementQueue sq;
+
+		public BroadcastClosedListener(BroadcastQueue sq) {
+			// this.sq = sq;
+		}
+
+		@Override
+		public void operationComplete(ChannelFuture future) throws Exception {
+			// if (sq != null)
+			// sq.shutdown(true);
+			// sq = null;
+		}
+
+	}
 }

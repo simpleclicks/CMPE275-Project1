@@ -15,6 +15,10 @@
  */
 package poke.monitor;
 
+import java.net.SocketAddress;
+
+import org.jboss.netty.channel.Channel;
+
 /**
  * to receive management messages
  * 
@@ -38,7 +42,7 @@ public interface MonitorListener {
 	 * 
 	 * @param msg
 	 */
-	public abstract void onMessage(eye.Comm.Management msg);
+	public abstract void onMessage(eye.Comm.Management msg, Channel channel, SocketAddress socketaddress);
 
 	/**
 	 * called when the connection fails or is not readable.

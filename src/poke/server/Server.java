@@ -18,21 +18,15 @@ package poke.server;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.InterfaceAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.netty.bootstrap.Bootstrap;
+import org.jboss.netty.bootstrap.ConnectionlessBootstrap;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.AdaptiveReceiveBufferSizePredictorFactory;
 import org.jboss.netty.channel.Channel;
@@ -73,7 +67,7 @@ public class Server {
 
 	protected static final ChannelGroup allChannels = new DefaultChannelGroup("server");
 	protected static HashMap<Integer, Bootstrap> bootstrap = new HashMap<Integer, Bootstrap>();
-	protected ChannelFactory cf, mgmtCF;
+	protected ChannelFactory cf, mgmtCF, broadcastCF;
 	protected ServerConf conf;
 	protected HeartbeatManager hbMgr;
 
@@ -118,21 +112,10 @@ public class Server {
 		// communication - external (TCP) using asynchronous communication
 		cf = new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
 		
-
-		// communication - internal (UDP)
-//		mgmtCF = new NioDatagramChannelFactory(Executors.newCachedThreadPool(), 1);
-//		try {
-//			 Channel cf = mgmtCF.newChannel(new ServerDecoderPipeline().getPipeline());
-//			 
-//			 
-//			
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-
 		 //internal using TCP - a better option
 		mgmtCF = new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newFixedThreadPool(2));
+		
+		broadcastCF = new NioDatagramChannelFactory(Executors.newCachedThreadPool(), 1);
 
 	}
 
@@ -204,6 +187,29 @@ public class Server {
 
 		logger.info("Starting server, listening on port = " + port);
 	}
+	
+	private void createBroadcastBoot(int port) {
+		// construct boss and worker threads (num threads = number of cores)
+
+		// UDP
+		ConnectionlessBootstrap bs = new ConnectionlessBootstrap(broadcastCF);
+
+		// Set up the pipeline factory.
+		bs.setPipelineFactory(new BroadcastPipeline());
+
+		// tweak for performance
+		// bs.setOption("tcpNoDelay", true);
+		bs.setOption("child.tcpNoDelay", true);
+		bs.setOption("child.keepAlive", true);
+		
+		bootstrap.put(port, bs);
+
+		// Bind and start to accept incoming connections.
+		Channel ch = bs.bind(new InetSocketAddress(port));
+		allChannels.add(ch);
+
+		logger.info("Starting server, listening for broadcast on port = " + port);
+	}
 
 	/**
 	 * 
@@ -221,6 +227,9 @@ public class Server {
 
 		str = conf.getServer().getProperty("port.mgmt");
 		int mport = Integer.parseInt(str);
+		
+		str = conf.getServer().getProperty("port.broadcast");
+		int bport = Integer.parseInt(str);
 
 		// storage initialization
 		// TODO storage setup (e.g., connection to a database)
@@ -234,6 +243,7 @@ public class Server {
 
 		// establish nearest nodes and start receiving heartbeats
 		str = conf.getServer().getProperty("node.id");
+		String nodeId = str;
 		hbMgr = HeartbeatManager.getInstance(str);
 		for (NodeDesc nn : conf.getNearest().getNearestNodes().values()) {
 			HeartbeatData node = new HeartbeatData(nn.getNodeId(), nn.getHost(), nn.getPort(), nn.getMgmtPort());
@@ -245,59 +255,27 @@ public class Server {
 		HeartbeatConnector conn = HeartbeatConnector.getInstance();
 		conn.start();
 		
-		logger.info("Server ready");
-		
-		
-		int bport = Integer.parseInt(conf.getServer().getProperty("port.broadcast"));
-		
-		broadcastAvailability(bport);
-		
+		String hostAddress = null;
+		try {
+			hostAddress = InetAddress.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			logger.info("Unknown host");
+			e.printStackTrace();
+		}
+		BroadcastConnector bconnector = new BroadcastConnector(nodeId, hostAddress, port, mport, bport);
+		bconnector.initiateBroadcast();
 		logger.info("Broadcasting availability");
 		
-		BroadcastHandler.intialize(bport, conf);
-		BroadcastHandler broadcastThread = BroadcastHandler.getInstance(); 
-		broadcastThread.start();
+		createBroadcastBoot(bport);
+		BroadcastQueue.startup(conf.getServer().getProperty("node.id"));
 		logger.info("Broadcast listener started");
+		
+		logger.info("Server ready");
 		
 	}
 	
-	private void broadcastAvailability(int broadcastport) {
-		
-		DatagramSocket broadcastSocket = null;
-		try {
-			broadcastSocket = new DatagramSocket();
-			broadcastSocket.setBroadcast(true);
-			
-			String sendNodeId = conf.getServer().getProperty("node.id");
-			String sendPort = conf.getServer().getProperty("port");
-			String sendMgmtPort = conf.getServer().getProperty("port.mgmt");
-			
-			//done for testing - change this later to read from own config
-			byte[] sendData = ("NETWORK_DISCOVERY_"+sendNodeId+"_"+sendPort+"_"+sendMgmtPort).getBytes();
-
-			//NetworkInterface ni = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
-		    //String broadcastAddress = ni.getInterfaceAddresses().get(0).getBroadcast().toString().substring(1);
-		    
-			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("192.168.0.255"), 5685);
-		    broadcastSocket.send(sendPacket);
-		    
-		  //  logger.info("Broadcast Sent : " + broadcastAddress +","+InetAddress.getLocalHost());
-		    
-		} catch (SocketException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			broadcastSocket.close();
-		}
-		
-	}
-
+	
 	/**
 	 * @param args
 	 */

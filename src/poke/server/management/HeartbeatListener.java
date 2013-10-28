@@ -15,10 +15,14 @@
  */
 package poke.server.management;
 
+import java.net.SocketAddress;
+
+import org.jboss.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import poke.monitor.MonitorListener;
+import poke.server.management.HeartbeatData.BeatStatus;
 
 public class HeartbeatListener implements MonitorListener {
 	protected static Logger logger = LoggerFactory.getLogger("management");
@@ -49,7 +53,7 @@ public class HeartbeatListener implements MonitorListener {
 	 * @see poke.monitor.MonitorListener#onMessage(eye.Comm.Management)
 	 */
 	@Override
-	public void onMessage(eye.Comm.Management msg) {
+	public void onMessage(eye.Comm.Management msg, Channel channel, SocketAddress socketaddress) {
 		if (logger.isDebugEnabled())
 			logger.debug(msg.getBeat().getNodeId());
 
@@ -58,7 +62,11 @@ public class HeartbeatListener implements MonitorListener {
 		} else if (msg.hasBeat() && msg.getBeat().getNodeId().equals(data.getNodeId())) {
 			logger.info("Tracing code flow 2: HeartbeatLisner Received HB response from " + msg.getBeat().getNodeId());
 			data.setLastBeat(System.currentTimeMillis());
-			//HeartbeatManager.getInstance().addNearestNodeChannel(msg.getBeat().getNodeId(), data.channel, data.sa);
+			HeartbeatData hd = HeartbeatManager.getInstance().getHeartbeatData(msg.getBeat().getNodeId());
+			
+			if(hd.getStatus().compareTo(BeatStatus.Init) == 0) {
+				HeartbeatManager.getInstance().addNearestNodeChannel(msg.getBeat().getNodeId(), channel, socketaddress);
+			}
 		} else
 			logger.error("Received hbMgr from on wrong channel or unknown host: " + msg.getBeat().getNodeId());
 	}

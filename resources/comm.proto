@@ -146,3 +146,10 @@ message Management {
 	optional Network graph = 1;
 	optional Heartbeat beat = 2;
 }	
+
+message Broadcast {
+	required string nodeId = 1;
+	required string ipAddress = 2;
+	required int32 port = 3;
+	required int32 mgmtPort = 4;
+}

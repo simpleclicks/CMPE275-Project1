@@ -10749,6 +10749,621 @@ public final class Comm {
     // @@protoc_insertion_point(class_scope:Management)
   }
   
+  public interface BroadcastOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+    
+    // required string nodeId = 1;
+    boolean hasNodeId();
+    String getNodeId();
+    
+    // required string ipAddress = 2;
+    boolean hasIpAddress();
+    String getIpAddress();
+    
+    // required int32 port = 3;
+    boolean hasPort();
+    int getPort();
+    
+    // required int32 mgmtPort = 4;
+    boolean hasMgmtPort();
+    int getMgmtPort();
+  }
+  public static final class Broadcast extends
+      com.google.protobuf.GeneratedMessage
+      implements BroadcastOrBuilder {
+    // Use Broadcast.newBuilder() to construct.
+    private Broadcast(Builder builder) {
+      super(builder);
+    }
+    private Broadcast(boolean noInit) {}
+    
+    private static final Broadcast defaultInstance;
+    public static Broadcast getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public Broadcast getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return eye.Comm.internal_static_Broadcast_descriptor;
+    }
+    
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return eye.Comm.internal_static_Broadcast_fieldAccessorTable;
+    }
+    
+    private int bitField0_;
+    // required string nodeId = 1;
+    public static final int NODEID_FIELD_NUMBER = 1;
+    private java.lang.Object nodeId_;
+    public boolean hasNodeId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public String getNodeId() {
+      java.lang.Object ref = nodeId_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          nodeId_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getNodeIdBytes() {
+      java.lang.Object ref = nodeId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        nodeId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
+    // required string ipAddress = 2;
+    public static final int IPADDRESS_FIELD_NUMBER = 2;
+    private java.lang.Object ipAddress_;
+    public boolean hasIpAddress() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    public String getIpAddress() {
+      java.lang.Object ref = ipAddress_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          ipAddress_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getIpAddressBytes() {
+      java.lang.Object ref = ipAddress_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        ipAddress_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
+    // required int32 port = 3;
+    public static final int PORT_FIELD_NUMBER = 3;
+    private int port_;
+    public boolean hasPort() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    public int getPort() {
+      return port_;
+    }
+    
+    // required int32 mgmtPort = 4;
+    public static final int MGMTPORT_FIELD_NUMBER = 4;
+    private int mgmtPort_;
+    public boolean hasMgmtPort() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    public int getMgmtPort() {
+      return mgmtPort_;
+    }
+    
+    private void initFields() {
+      nodeId_ = "";
+      ipAddress_ = "";
+      port_ = 0;
+      mgmtPort_ = 0;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+      
+      if (!hasNodeId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasIpAddress()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasPort()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasMgmtPort()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getNodeIdBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getIpAddressBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt32(3, port_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeInt32(4, mgmtPort_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getNodeIdBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getIpAddressBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(3, port_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(4, mgmtPort_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+    
+    public static eye.Comm.Broadcast parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static eye.Comm.Broadcast parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static eye.Comm.Broadcast parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static eye.Comm.Broadcast parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static eye.Comm.Broadcast parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static eye.Comm.Broadcast parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static eye.Comm.Broadcast parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static eye.Comm.Broadcast parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static eye.Comm.Broadcast parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static eye.Comm.Broadcast parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(eye.Comm.Broadcast prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements eye.Comm.BroadcastOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return eye.Comm.internal_static_Broadcast_descriptor;
+      }
+      
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return eye.Comm.internal_static_Broadcast_fieldAccessorTable;
+      }
+      
+      // Construct using eye.Comm.Broadcast.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+      
+      private Builder(BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+      
+      public Builder clear() {
+        super.clear();
+        nodeId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        ipAddress_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        port_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        mgmtPort_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+      
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return eye.Comm.Broadcast.getDescriptor();
+      }
+      
+      public eye.Comm.Broadcast getDefaultInstanceForType() {
+        return eye.Comm.Broadcast.getDefaultInstance();
+      }
+      
+      public eye.Comm.Broadcast build() {
+        eye.Comm.Broadcast result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+      
+      private eye.Comm.Broadcast buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        eye.Comm.Broadcast result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return result;
+      }
+      
+      public eye.Comm.Broadcast buildPartial() {
+        eye.Comm.Broadcast result = new eye.Comm.Broadcast(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.nodeId_ = nodeId_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.ipAddress_ = ipAddress_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.port_ = port_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.mgmtPort_ = mgmtPort_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+      
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof eye.Comm.Broadcast) {
+          return mergeFrom((eye.Comm.Broadcast)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+      
+      public Builder mergeFrom(eye.Comm.Broadcast other) {
+        if (other == eye.Comm.Broadcast.getDefaultInstance()) return this;
+        if (other.hasNodeId()) {
+          setNodeId(other.getNodeId());
+        }
+        if (other.hasIpAddress()) {
+          setIpAddress(other.getIpAddress());
+        }
+        if (other.hasPort()) {
+          setPort(other.getPort());
+        }
+        if (other.hasMgmtPort()) {
+          setMgmtPort(other.getMgmtPort());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+      
+      public final boolean isInitialized() {
+        if (!hasNodeId()) {
+          
+          return false;
+        }
+        if (!hasIpAddress()) {
+          
+          return false;
+        }
+        if (!hasPort()) {
+          
+          return false;
+        }
+        if (!hasMgmtPort()) {
+          
+          return false;
+        }
+        return true;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder(
+            this.getUnknownFields());
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              this.setUnknownFields(unknownFields.build());
+              onChanged();
+              return this;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                this.setUnknownFields(unknownFields.build());
+                onChanged();
+                return this;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              nodeId_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              ipAddress_ = input.readBytes();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              port_ = input.readInt32();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              mgmtPort_ = input.readInt32();
+              break;
+            }
+          }
+        }
+      }
+      
+      private int bitField0_;
+      
+      // required string nodeId = 1;
+      private java.lang.Object nodeId_ = "";
+      public boolean hasNodeId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      public String getNodeId() {
+        java.lang.Object ref = nodeId_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          nodeId_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setNodeId(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        nodeId_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearNodeId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        nodeId_ = getDefaultInstance().getNodeId();
+        onChanged();
+        return this;
+      }
+      void setNodeId(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000001;
+        nodeId_ = value;
+        onChanged();
+      }
+      
+      // required string ipAddress = 2;
+      private java.lang.Object ipAddress_ = "";
+      public boolean hasIpAddress() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      public String getIpAddress() {
+        java.lang.Object ref = ipAddress_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          ipAddress_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setIpAddress(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        ipAddress_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearIpAddress() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        ipAddress_ = getDefaultInstance().getIpAddress();
+        onChanged();
+        return this;
+      }
+      void setIpAddress(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000002;
+        ipAddress_ = value;
+        onChanged();
+      }
+      
+      // required int32 port = 3;
+      private int port_ ;
+      public boolean hasPort() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      public int getPort() {
+        return port_;
+      }
+      public Builder setPort(int value) {
+        bitField0_ |= 0x00000004;
+        port_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearPort() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        port_ = 0;
+        onChanged();
+        return this;
+      }
+      
+      // required int32 mgmtPort = 4;
+      private int mgmtPort_ ;
+      public boolean hasMgmtPort() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      public int getMgmtPort() {
+        return mgmtPort_;
+      }
+      public Builder setMgmtPort(int value) {
+        bitField0_ |= 0x00000008;
+        mgmtPort_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearMgmtPort() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        mgmtPort_ = 0;
+        onChanged();
+        return this;
+      }
+      
+      // @@protoc_insertion_point(builder_scope:Broadcast)
+    }
+    
+    static {
+      defaultInstance = new Broadcast(true);
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:Broadcast)
+  }
+  
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_Finger_descriptor;
   private static
@@ -10824,6 +11439,11 @@ public final class Comm {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_Management_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_Broadcast_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_Broadcast_fieldAccessorTable;
   
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -10877,7 +11497,9 @@ public final class Comm {
       "\r\n\tNODELEAVE\020\002\022\014\n\010NODEDEAD\020\003\022\007\n\003MAP\0207\022\014\n" +
       "\010ANNOUNCE\0208\022\r\n\010SHUTDOWN\020\347\007\"?\n\nManagement" +
       "\022\027\n\005graph\030\001 \001(\0132\010.Network\022\030\n\004beat\030\002 \001(\0132" +
-      "\n.HeartbeatB\007\n\003eyeH\001"
+      "\n.Heartbeat\"N\n\tBroadcast\022\016\n\006nodeId\030\001 \002(\t" +
+      "\022\021\n\tipAddress\030\002 \002(\t\022\014\n\004port\030\003 \002(\005\022\020\n\010mgm" +
+      "tPort\030\004 \002(\005B\007\n\003eyeH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -11004,6 +11626,14 @@ public final class Comm {
               new java.lang.String[] { "Graph", "Beat", },
               eye.Comm.Management.class,
               eye.Comm.Management.Builder.class);
+          internal_static_Broadcast_descriptor =
+            getDescriptor().getMessageTypes().get(15);
+          internal_static_Broadcast_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_Broadcast_descriptor,
+              new java.lang.String[] { "NodeId", "IpAddress", "Port", "MgmtPort", },
+              eye.Comm.Broadcast.class,
+              eye.Comm.Broadcast.Builder.class);
           return null;
         }
       };
