@@ -108,11 +108,12 @@ public class HeartbeatConnector extends Thread {
 					Thread.sleep(sConnectRate);
 					// try to establish connections to our nearest nodes
 					for (HeartMonitor hb : monitors.values()) {
+						validateConnection();
 						if (!hb.isConnected()) {
 							try {
 								logger.info("attempting to connect to node: " + hb.getNodeInfo());
 								hb.initiateHeartbeat();
-								validateConnection();
+								
 							} catch (Exception ie) {
 								// do nothing
 							}
@@ -132,6 +133,7 @@ public class HeartbeatConnector extends Thread {
 		// validate connections this node wants to create
 		for (HeartbeatData hb : HeartbeatManager.getInstance().incomingHB.values()) {
 			// receive HB - need to check if the channel is readable
+			System.out.println(hb.getStatus());
 			if (hb.channel == null) {
 				if (hb.getStatus() == BeatStatus.Active || hb.getStatus() == BeatStatus.Weak) {
 					hb.setStatus(BeatStatus.Failed);
@@ -161,6 +163,7 @@ public class HeartbeatConnector extends Thread {
 		// validate connections this node wants to create
 		for (HeartbeatData hb : HeartbeatManager.getInstance().outgoingHB.values()) {
 			// emit HB - need to check if the channel is writable
+			System.out.println(hb.getStatus());
 			if (hb.channel == null) {
 				if (hb.getStatus() == BeatStatus.Active || hb.getStatus() == BeatStatus.Weak) {
 					hb.setStatus(BeatStatus.Failed);

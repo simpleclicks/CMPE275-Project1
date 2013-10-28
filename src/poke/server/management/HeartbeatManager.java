@@ -218,6 +218,7 @@ public class HeartbeatManager extends Thread {
 					// send my status (hbMgr)
 					GeneratedMessage msg = null;
 					for (HeartbeatData hd : outgoingHB.values()) {
+						//System.out.println(hd.getStatus());
 						// if failed sends exceed threshold, stop sending
 						if (hd.getFailuresOnSend() > HeartbeatData.sFailureToSendThresholdDefault)
 							continue;
