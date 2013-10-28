@@ -133,8 +133,9 @@ public class HeartbeatConnector extends Thread {
 		// validate connections this node wants to create
 		for (HeartbeatData hb : HeartbeatManager.getInstance().incomingHB.values()) {
 			// receive HB - need to check if the channel is readable
-			System.out.println(hb.getStatus());
+			System.out.println("IncomingHB: "+hb.getStatus());
 			if (hb.channel == null) {
+				System.out.println("");
 				if (hb.getStatus() == BeatStatus.Active || hb.getStatus() == BeatStatus.Weak) {
 					hb.setStatus(BeatStatus.Failed);
 					hb.setLastFailed(System.currentTimeMillis());
@@ -143,9 +144,11 @@ public class HeartbeatConnector extends Thread {
 			} else if (hb.channel.isConnected()) {
 				if (hb.channel.isWritable()) {
 					if (System.currentTimeMillis() - hb.getLastBeat() >= hb.getBeatInterval()) {
+						System.out.println("IncomingHB: isconnected and iswritable" + hb.getLastBeat() + ":" + hb.getBeatInterval());
 						hb.incrementFailures();
 						hb.setStatus(BeatStatus.Weak);
 					} else {
+						System.out.println("IncomingHB else of isconnected and is writable");
 						hb.setStatus(BeatStatus.Active);
 						hb.setFailures(0);
 					}
@@ -163,7 +166,7 @@ public class HeartbeatConnector extends Thread {
 		// validate connections this node wants to create
 		for (HeartbeatData hb : HeartbeatManager.getInstance().outgoingHB.values()) {
 			// emit HB - need to check if the channel is writable
-			System.out.println(hb.getStatus());
+			System.out.println("OutgoingHB: "+hb.getStatus());
 			if (hb.channel == null) {
 				if (hb.getStatus() == BeatStatus.Active || hb.getStatus() == BeatStatus.Weak) {
 					hb.setStatus(BeatStatus.Failed);
@@ -173,9 +176,11 @@ public class HeartbeatConnector extends Thread {
 			} else if (hb.channel.isConnected()) {
 				if (hb.channel.isWritable()) {
 					if (System.currentTimeMillis() - hb.getLastBeat() >= hb.getBeatInterval()) {
+						System.out.println("OutgoingHB: isconnected and iswritable " + hb.getLastBeat() + ":" + hb.getBeatInterval());
 						hb.incrementFailures();
 						hb.setStatus(BeatStatus.Weak);
 					} else {
+						System.out.println("OutgoingHB: else of isconnected and is writable");
 						hb.setStatus(BeatStatus.Active);
 						hb.setFailures(0);
 					}

@@ -173,7 +173,7 @@ public class HeartbeatManager extends Thread {
 		HeartbeatData hd = incomingHB.get(nodeId);
 		if (hd != null) {
 			hd.setConnection(ch, sa);
-			hd.setStatus(BeatStatus.Active);
+			//hd.setStatus(BeatStatus.Active);
 
 			// when the channel closes, remove it from the incomingHB list
 			ch.getCloseFuture().addListener(new CloseHeartListener(hd));
