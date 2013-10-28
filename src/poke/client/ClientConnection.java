@@ -387,7 +387,44 @@ public class ClientConnection {
 
 	}
 
+	public void namespaceRemove(String namespace) {
+		
+		// remove namespace
+		
+		Header.Builder namespaceRemoveReqHeader = Header.newBuilder();
 
+		namespaceRemoveReqHeader.setRoutingId(Routing.NAMESPACEREMOVE);
+
+		namespaceRemoveReqHeader.setOriginator("Namespace remove test");
+
+		Payload.Builder namespaceRemoveBodyBuilder = Payload.newBuilder();
+
+		if(namespace !=null && namespace.length() > 0)
+			namespaceRemoveBodyBuilder.setSpace(NameSpace.newBuilder().setName(namespace).build());
+
+		//namespaceRemoveBodyBuilder.setDoc(Document.newBuilder().setDocName(fileName));
+
+		Request.Builder namespaceRemoveRequest = Request.newBuilder();
+
+		namespaceRemoveRequest.setHeader(namespaceRemoveReqHeader.build());
+		namespaceRemoveRequest.setBody(namespaceRemoveBodyBuilder.build());
+
+
+		try {
+
+			outbound.put(namespaceRemoveRequest.build());
+
+		} catch (InterruptedException e) {
+			logger.warn("Unable to deliver namespace remove message, queuing "+e.getMessage());
+		}
+
+	}
+
+	public void namespaceList(String namespace) {
+		// To list the namespace and files in it
+		
+	}
+	
 	private void init() {
 		// the queue to support client-side surging
 		outbound = new LinkedBlockingDeque<com.google.protobuf.GeneratedMessage>();

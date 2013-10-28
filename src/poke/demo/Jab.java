@@ -28,12 +28,12 @@ public class Jab {
 	}
 
 	public void run() {
-		ClientConnection cc = ClientConnection.initConnection("192.168.0.105", 5570);
+		ClientConnection cc = ClientConnection.initConnection("192.168.0.108", 5570);
 		System.out.println("Adding listener");
 		ClientListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);
 
-		cc.docAddReq("Kaustubh", "E://test3.txt");
+	//	cc.docAddReq("devsam","C://Courses//Fall13//275//protoc-compile-cmd.txt");
 		
 //		for (int i = 0; i < 3; i++) {
 //			count++;
@@ -43,11 +43,13 @@ public class Jab {
 		
 	
 	//	cc.docAddReq("Kau1", "E://GTHub.flv");
-		//cc.docAdd("Kaustubh3", "E://test3.txt");
+	//	cc.docAdd("Kaustubh3", "E://test3.txt");
 		//cc.docRemove("", "Kaustubh1");
 
 		//cc.docAdd("devika", "C:\\Courses\\Fall13\\275\\myname.txt");
-		cc.namespaceAdd("Ritvik");
+		//cc.namespaceAdd("Remote");
+	//	cc.namespaceRemove("remote");
+		cc.namespaceList("Ritvik");
 	
 	}
 

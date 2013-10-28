@@ -67,6 +67,18 @@ public class NodeResponseQueue {
 			nc.queryFile(nameSpace, fileName);
 		}
 	}
+	
+public static void broadcastNamespaceQuery(String nameSpace){
+		
+		NodeClient[] activeNodeArray = getActiveNodeInterface();
+
+		for(NodeClient nc: activeNodeArray){
+
+			nc.queryNamespace(nameSpace);
+		}
+	}
+	
+	
 
 	public static boolean fetchDocQueryResult( String nameSpace , String fileName){
 		

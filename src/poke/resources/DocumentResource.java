@@ -16,7 +16,6 @@
 package poke.resources;
 
 import java.io.File;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -32,7 +31,7 @@ import com.google.protobuf.ByteString;
 
 import poke.server.management.HeartbeatData;
 import poke.server.management.HeartbeatManager;
-//import poke.server.nconnect.NodeClient;
+import poke.server.nconnect.NodeClient;
 import poke.server.nconnect.NodeResponseQueue;
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
@@ -80,8 +79,6 @@ public class DocumentResource implements Resource {
 	private static final File visitorDir = new File(VISITORDIR);
 
 	@Override
-
-	@Override
 	public Response process(Request request) {
 
 		int opChoice = 0;
@@ -119,7 +116,7 @@ public class DocumentResource implements Resource {
 		case 25:
 			docOpResponse = docQuery(docOpHeader, docOpBody);
 			break;
-		
+
 		default:
 			System.out.println("DpcumentResource: No matching doc op id found");
 
@@ -166,15 +163,6 @@ public class DocumentResource implements Resource {
 			String effNS = HOMEDIR+File.separator+nameSpace; 
 						
 			String effVisitorNS = VISITORDIR+File.separator+nameSpace;
-<<<<<<< .mine
-
-
-
-
-
-
-
-=======
 			
 			logger.info("Validating "+effVisitorNS+" for "+newFileName);
 
@@ -182,29 +170,13 @@ public class DocumentResource implements Resource {
 			
 			File targetVisitorNS =  new File(effVisitorNS);
 			
->>>>>>> .theirs
-<<<<<<< .mine
-			String effNS = HOMEDIR+File.separator+nameSpece; 
-
-			File targetNS = new File (effNS);
-=======
 			try {
 
-
->>>>>>> .theirs
-
 				boolean nsCheck = FileUtils.directoryContains(homeDir, targetNS);
-
+				
 				boolean nsAwayCheck = FileUtils.directoryContains(visitorDir, targetVisitorNS);
 
 				if(nsCheck){
-<<<<<<< .mine
-
-					System.out.println("Target NS exists");
-=======
-
-
->>>>>>> .theirs
 
 					File targetFileName = new File (effNS+File.separator+newFileName);
 
@@ -215,23 +187,6 @@ public class DocumentResource implements Resource {
 						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
 
 						return docAddValidateResponseBuilder.build();
-<<<<<<< .mine
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-=======
 
 					}
 
@@ -247,7 +202,6 @@ public class DocumentResource implements Resource {
 
 					if(fileCheck){
 						
->>>>>>> .theirs
 						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
 
 						return docAddValidateResponseBuilder.build();
@@ -271,7 +225,7 @@ public class DocumentResource implements Resource {
 			try {
 
 				boolean fileCheck = FileUtils.directoryContains(homeDir, new File(HOMEDIR+File.separator+newFileName));
-
+				
 				boolean visitorFileCheck = FileUtils.directoryContains(visitorDir, new File(VISITORDIR+File.separator+newFileName));
 				
 				logger.info("Validating "+VISITORDIR+" for "+newFileName+" as "+visitorFileCheck);
@@ -283,16 +237,6 @@ public class DocumentResource implements Resource {
 					return docAddValidateResponseBuilder.build();
 			
 				}
-<<<<<<< .mine
-
-
-
-
-
-
-
-
-=======
 				
 				if(visitorFileCheck){
 
@@ -301,7 +245,6 @@ public class DocumentResource implements Resource {
 					return docAddValidateResponseBuilder.build();
 				}
 
->>>>>>> .theirs
 			} catch (IOException e) {
 
 				logger.error("Document Response: IO Exception while validating file add request "+e.getMessage());
@@ -311,21 +254,6 @@ public class DocumentResource implements Resource {
 				return docAddValidateResponseBuilder.build();
 			}
 		}
-<<<<<<< .mine
-
-
-
-
-
-
-
-
-
-
-
-
-
-=======
 
 		NodeResponseQueue.broadcastDocQuery(nameSpace, newFileName);
 		
@@ -339,22 +267,7 @@ public class DocumentResource implements Resource {
 			
 			if(!docQueryResult){
 				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
->>>>>>> .theirs
 
-<<<<<<< .mine
-		Collection<HeartbeatData> nodeList = HeartbeatManager.getInstance().getIncomingHB().values();
-
-		HeartbeatData hb = null;
-
-		if(nodeList.size() > 0 )
-			hb = nodeList.iterator().next();
-
-		//	NodeClient nc1 = new NodeClient(hb.getHost(), hb.getPort(),hb.getNodeId());
-
-		//System.out.println("Query File"+ nc1.queryFile("Kau" , "abc.txt"));
-
-
-=======
 				return docAddValidateResponseBuilder.build();
 				}
 		
@@ -363,11 +276,6 @@ public class DocumentResource implements Resource {
 			e1.printStackTrace();
 		}
 
-
-
-
-
->>>>>>> .theirs
 		try {
 			spacceAvailable = FileSystemUtils.freeSpaceKb()*1024;
 
@@ -453,24 +361,13 @@ public class DocumentResource implements Resource {
 		docAddRespBuilder.setHeader(docAddHeaderBuilder);
 
 		System.gc();
-<<<<<<< .mine
 
-		//	logger.info("Size of the chunk content to be sent  "+toBesent.getChunkContent().size());
-
-=======
-
-
-
->>>>>>> .theirs
 		docAddRespBuilder.setBody(PayloadReply.newBuilder().addDocs(toBesent).addSpaces(docAddBody.getSpace()));
 
 		System.gc();
 
 		return docAddRespBuilder.build();
 	}
-
-	
-
 
 	private Response docFind(Header docFindHeader , Payload docFindBody){
 
@@ -598,83 +495,6 @@ public class DocumentResource implements Resource {
 
 		return fileRemoveResponseBuilder.build();
 	}
-<<<<<<< .mine
-
-	private Response docQuery(Header docQueryHeader , Payload docQueryBody){
-
-		logger.info(" Received doc query request from "+docQueryHeader.getOriginator());
-
-		Response.Builder docQueryResponseBuilder = Response.newBuilder();
-
-		docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
-
-		docQueryResponseBuilder.setBody(PayloadReply.getDefaultInstance());
-
-		return docQueryResponseBuilder.build();
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-=======
 
 	private Response docQuery(Header docQueryHeader , Payload docQueryBody){
 
@@ -750,5 +570,4 @@ public class DocumentResource implements Resource {
 		return docQueryResponseBuilder.build();
 	}
 
->>>>>>> .theirs
 }

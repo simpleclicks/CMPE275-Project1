@@ -141,6 +141,14 @@ public class ClientResponseAction {
 						}
 
 					}
+					else if (msg.getHeader().getRoutingId() == Header.Routing.NAMESPACEADD){
+						
+						System.out.println("Server response to namespaceAdd "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
+					}
+					else if (msg.getHeader().getRoutingId() == Header.Routing.NAMESPACEREMOVE){
+						
+						System.out.println("Server response to namespaceRemove "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
+					}
 
 				} catch (InterruptedException ie) {
 					break;

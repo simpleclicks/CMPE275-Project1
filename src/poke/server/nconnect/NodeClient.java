@@ -147,6 +147,31 @@ public class NodeClient {
 
 	}
 	
+	public boolean queryNamespace(String nameSpace){
+
+		Header.Builder namespaceQueryHeader = Header.newBuilder();
+
+		namespaceQueryHeader.setRoutingId(Header.Routing.NAMESPACEQUERY);
+
+		namespaceQueryHeader.setOriginator(HeartbeatManager.getInstance().getNodeId());
+
+		Payload.Builder docPayloadBuilder = Payload.newBuilder();
+
+		//docPayloadBuilder.setDoc(Document.newBuilder().setDocName(fileName));
+
+		if(nameSpace !=null && nameSpace.length() > 0)
+			docPayloadBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace));
+
+		Request.Builder namespaceQueryReqBuilder = Request.newBuilder();
+
+		namespaceQueryReqBuilder.setHeader(namespaceQueryHeader.build());
+
+		namespaceQueryReqBuilder.setBody(docPayloadBuilder.build());
+
+		return enqueueRequest(namespaceQueryReqBuilder.build());
+
+	}
+	
 	public String checkDocQueryResponse(String nameSpace , String fileName){
 		
 		String key = nameSpace+fileName;
@@ -372,6 +397,17 @@ public class NodeClient {
 
 						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
 
+
+						}
+
+					}
+					
+					else if(msg.getHeader().getRoutingId() == Header.Routing.NAMESPACEQUERY){
+
+						System.out.println("NodeClientResponseHandler: Recieved the response to namespaceQuery from the server and the response is "+msg.getHeader().getReplyCode()+" with Message fom server as "+msg.getHeader().getReplyMsg());
+
+						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
+							logger.info("Namespace removed from node "+ owner.getNodeId());
 
 						}
 

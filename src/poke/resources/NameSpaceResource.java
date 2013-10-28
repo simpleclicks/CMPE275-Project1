@@ -18,13 +18,19 @@ package poke.resources;
 import java.io.File;
 import java.io.IOException;
 
+import javax.management.loading.PrivateClassLoader;
+
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import poke.server.management.HeartbeatManager;
+import poke.server.nconnect.NodeResponseQueue;
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
+import eye.Comm.Document;
 import eye.Comm.Header;
+import eye.Comm.NameSpace;
 import eye.Comm.Payload;
 import eye.Comm.PayloadReply;
 import eye.Comm.Request;
@@ -38,8 +44,16 @@ public class NameSpaceResource implements Resource {
 	private static final String VISITORDIR = "away";
 
 	private static final String NAMESPACEEXIST = " requested namespacce already exist:";
+	private static final String NAMESPACENOTDIRECTORY = "Requested namespace is not a directory ";
+	private static final String NAMESPACEINEXISTENTMSG = " Requested namespacce does not exist: Please provide valid namespace";
+	private static final String INTERNALSERVERERRORMSG ="Failed to serve the request: Internal Server Error";
+	private static final String NAMESPACEREMOVED = "Namespace removed successfully";
+	private static final String NAMESPACEDOESNOTEXIT = "Namespace does not exist";
+
 
 	private static final File homeDir = new File(HOMEDIR);
+	private static final File visitorDir = new File(VISITORDIR);
+
 
 	@Override
 	public Response process(Request request) {
@@ -60,15 +74,23 @@ public class NameSpaceResource implements Resource {
 			docOpResponse = namespaceAdd(docOpHeader, docOpBody);
 			break;
 
+		case 13:
+			docOpResponse = namespaceRemove(docOpHeader, docOpBody);
+			break;	
+		
+		case 14:
+			docOpResponse = namespaceQuery(docOpHeader, docOpBody);
+			break;	
+
 		default:
 			System.out.println("NamespaceResource: No matching doc op id found for "+opChoice);
 		}
 		return docOpResponse;
 	}
-	
+
 	private Response namespaceAdd(Header namespaceAddHeader, Payload namespaceAddBody) {
 		// Add new namespace
-		
+
 		String nameSpace = namespaceAddBody.getSpace().getName();
 		String namespacePath = HOMEDIR+File.separator+nameSpace;
 
@@ -112,6 +134,161 @@ public class NameSpaceResource implements Resource {
 
 		return namespaceAddResponse.build();
 
+	}
+
+
+	private Response namespaceRemove(Header namespaceRemoveHeader, Payload namespaceRemoveBody) {
+		// Remove the namespace
+
+		String nameSpace = namespaceRemoveBody.getSpace().getName();
+
+		logger.info("namespace to be delted: "+nameSpace);
+
+		Response.Builder namespaceRemoveResponseBuilder = Response.newBuilder();
+
+		namespaceRemoveResponseBuilder.setBody(PayloadReply.newBuilder().build());
+
+		if(nameSpace != null && nameSpace.length() > 0){
+
+			String namespacePath = HOMEDIR+File.separator+nameSpace;
+
+			File namespaceDir = new File (namespacePath);
+
+			try {
+
+				boolean checkNamespace = FileUtils.directoryContains(homeDir, namespaceDir);
+
+				if(checkNamespace){
+
+					if(namespaceDir.isDirectory()){
+						FileUtils.forceDelete(namespaceDir);
+
+					}
+					else{
+						namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACENOTDIRECTORY+"Supplied namespace is not directory"));
+						return namespaceRemoveResponseBuilder.build();
+					}
+
+				}else{
+					namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACEINEXISTENTMSG));
+
+					return namespaceRemoveResponseBuilder.build();
+				}
+				// remove replica namespace
+				
+				String namespaceReplPath = VISITORDIR+File.separator+nameSpace;
+
+				File namespaceReplDir = new File (namespaceReplPath);
+				
+				boolean checkReplNamespace = FileUtils.directoryContains(visitorDir, namespaceReplDir);
+
+				if(checkReplNamespace){
+
+					if(namespaceReplDir.isDirectory()){
+						FileUtils.forceDelete(namespaceReplDir);
+
+					}
+					else{
+						namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACENOTDIRECTORY+"Supplied namespace is not directory"));
+						return namespaceRemoveResponseBuilder.build();
+					}
+
+				}else{
+					namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACEINEXISTENTMSG));
+
+					return namespaceRemoveResponseBuilder.build();
+				}
+				
+				
+				
+				
+			}
+			catch(Exception e){
+				
+				logger.error("Namespace Response: IO Exception while processing namespace delete request "+e.getMessage());
+				namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
+				return namespaceRemoveResponseBuilder.build();
+
+			}
+
+		}else{
+			namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
+			return namespaceRemoveResponseBuilder.build();
+
+		}
+		
+		NodeResponseQueue.broadcastNamespaceQuery(nameSpace);
+		try{
+		logger.info(" Document resousrce sleeping for 2000ms! Witing for responses from the other nodes for DOCQUERY ");
+		
+		Thread.sleep(2000);
+		}
+		catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		logger.info("Namespace successfully deleted");
+		namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
+
+		return namespaceRemoveResponseBuilder.build();
+	}
+	
+	private Response namespaceQuery(Header namespaceQueryHeader , Payload namespaceQueryBody){
+
+		logger.info(" Received namespace query request from "+namespaceQueryHeader.getOriginator());
+
+		Response.Builder namespaceQueryResponseBuilder = Response.newBuilder();
+
+		NameSpace space = namespaceQueryBody.getSpace();
+		namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.SUCCESS, NAMESPACEDOESNOTEXIT).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+
+		String nameSpace =  null;
+
+		String effHomeNS = HOMEDIR;
+		
+		String effAwayNS = VISITORDIR;
+
+		if(space !=null){
+			nameSpace  = space.getName();
+			namespaceQueryResponseBuilder.setBody(PayloadReply.newBuilder().addSpaces(space));
+		}
+
+		if(nameSpace !=null && nameSpace.length() >0){
+			effHomeNS= effHomeNS+File.separator+nameSpace;
+			effAwayNS = effAwayNS+File.separator+nameSpace;
+		}
+
+
+		File parentHomeDir = new File(effHomeNS);
+		
+		File parentAwayDir = new File(effAwayNS);
+
+		try {
+
+			if(parentHomeDir.exists()){
+				FileUtils.forceDelete(parentHomeDir);
+				logger.info("Deleted namespace in Home directory");
+				namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+
+			}
+			
+			//if(!fileHome){
+			if(parentAwayDir.exists()){
+				FileUtils.forceDelete(parentAwayDir);
+				logger.info("Deleted namespace in Replica directory");
+				namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+			}
+
+		} catch (IOException e) {
+
+			logger.error("NamespaceQuery: IOException while deleting namespace");
+			e.printStackTrace();
+		}
+		logger.info("sending response to namespace query's inbound queue");
+		return namespaceQueryResponseBuilder.build();
 	}
 
 }
