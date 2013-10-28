@@ -16,8 +16,6 @@
 package poke.resources;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -25,7 +23,6 @@ import java.util.List;
 import org.apache.commons.io.FileSystemUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.monitor.FileEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +33,9 @@ import poke.server.management.HeartbeatData;
 import poke.server.management.HeartbeatManager;
 import poke.server.nconnect.NodeClient;
 import poke.server.nconnect.NodeResponseQueue;
-
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
-
 import poke.server.storage.jdbc.DatabaseStorage;
-import poke.server.storage.jdbc.SpaceMapper;
-import eye.Comm;
-
 import eye.Comm.Document;
 import eye.Comm.Header;
 import eye.Comm.NameSpace;
@@ -55,895 +47,523 @@ import eye.Comm.Header.ReplyStatus;
 
 public class DocumentResource implements Resource {
 
-	protected static Logger logger = LoggerFactory
-			.getLogger("DocumentResource");
+        protected static Logger logger = LoggerFactory.getLogger("DocumentResource");
 
-	private static final String HOMEDIR = "home";
+        private static final String HOMEDIR = "home";
 
-	private static final String VISITORDIR = "away";
+        private static final String VISITORDIR = "away";
 
-	private static final String FILEADDSUCCESSMSG = "File has been uploaded successfully";
+        private static final String FILEADDSUCCESSMSG = "File has been uploaded successfully";
 
-	private static final String FILEADDREQMISSINGPARAMMSG = "Fail to validate document upload request : Document name/size (mandatory) has not been provided.";
+        private static final String FILEADDREQMISSINGPARAMMSG = "Fail to validate document upload request : Document name/size (mandatory) has not been provided.";
 
-	private static final String FILEREQMISSINGPARAMMSG = "Fail to validate document find/delete request : Document name (mandatory) has not been provided.";
+        private static final String FILEREQMISSINGPARAMMSG = "Fail to validate document find/delete request : Document name (mandatory) has not been provided.";
 
-	private static final String INTERNALSERVERERRORMSG = "Failed to serve the request: Internal Server Error";
+        private static final String INTERNALSERVERERRORMSG ="Failed to serve the request: Internal Server Error";
 
-	private static final String FILEADDREQDUPLICATEFILEMSG = "Can not upload the file: File already exists: Use docUpdate";
+        private static final String FILEADDREQDUPLICATEFILEMSG ="Can not upload the file: File already exists: Use docUpdate";
 
-	private static final String FILETOOLARGETOSAVEMSG = "Can not upload the file: File is too large to save";
+        private static final String FILETOOLARGETOSAVEMSG ="Can not upload the file: File is too large to save";
 
-	private static final String FILEUPLOADREQVALIDATEDMSG = "Valid file upload request: File can be uploaded";
+        private static final String FILEUPLOADREQVALIDATEDMSG ="Valid file upload request: File can be uploaded";
 
-	private static final String INTERNALSERVERERRORMSG ="Failed to serve the request: Internal Server Error";
+        private static final String NAMESPACEINEXISTENTMSG = " Supplied namespacce does not exist: Please suppy valid namespace";
 
-	private static final String FILEADDREQDUPLICATEFILEMSG ="Can not upload the file: File already exists: Use docUpdate";
+        private static final String FILEINEXISTENTMSG = " Requested file does not exist: Please suppy valid filename";
 
-	private static final String FILETOOLARGETOSAVEMSG ="Can not upload the file: File is too large to save";
+        private static final String FILEDELETESUCCESSFULMSG = "Requested file has been deleted successfully";
 
-	private static final String FILEUPLOADREQVALIDATEDMSG ="Valid file upload request: File can be uploaded";
+        private static final String OPERATIONNOTALLOWEDMSG = "Requested Operation is not allowed with the 'request' type ";
 
+        private static final File homeDir = new File(HOMEDIR);
+        
+        private static final File visitorDir = new File(VISITORDIR);
+        
+        private static DatabaseStorage dbInstance;
 
-	private static final String NAMESPACEINEXISTENTMSG = " Supplied namespacce does not exist: Please suppy valid namespace";
+        @Override
+        public Response process(Request request, DatabaseStorage dbInst) {
+        	
+        		dbInstance = dbInst;
 
-	private static final String FILEINEXISTENTMSG = " Requested file does not exist: Please suppy valid filename";
+                int opChoice = 0;
 
-	private static final String FILEDELETESUCCESSFULMSG = "Requested file has been deleted successfully";
+                Response docOpResponse = null;
 
-	private static final String OPERATIONNOTALLOWEDMSG = "Requested Operation is not allowed with the 'request' type ";
+                Header docOpHeader = request.getHeader();
 
-	private static final File homeDir = new File(HOMEDIR);
-	
+                Payload docOpBody =  request.getBody();
 
-	private static final long MAX_UNCHUNKED_FILE_SIZE = 26214400L;
+                opChoice = docOpHeader.getRoutingId().getNumber();
 
-	private static DatabaseStorage dbInstance;
+                switch(opChoice){
 
-	private static final File visitorDir = new File(VISITORDIR);
+                case 24:
+                        docOpResponse = docAddValidate(docOpHeader , docOpBody);
+                        break;
 
-	@Override
-	public Response process(Request request, DatabaseStorage dbInst) {
+                case 20:
+                        docOpResponse = docAdd(docOpHeader , docOpBody);
+                        break;
 
-		dbInstance = dbInst;
-		int opChoice = 0;
+                case 22:
+                        docOpResponse = docUpdate(docOpHeader, docOpBody);
+                        break;
 
-		Response docOpResponse = null;
+                case 23:
+                        docOpResponse = docRemove(docOpHeader, docOpBody);
+                        break;
 
-		Header docOpHeader = request.getHeader();
+                case 25:
+                        docOpResponse = docQuery(docOpHeader, docOpBody);
+                        break;
 
-		Payload docOpBody = request.getBody();
+                default:
+                        System.out.println("DpcumentResource: No matching doc op id found");
 
-		opChoice = docOpHeader.getRoutingId().getNumber();
 
-		switch (opChoice) {
+                }
 
-		case 24:
-			docOpResponse = docAddValidate(docOpHeader, docOpBody);
-			break;
+                return docOpResponse;
+        }
 
-		case 20:
-			docOpResponse = docAdd(docOpHeader, docOpBody);
-			break;
+        private Response docAddValidate(Header docAddValidateHeader , Payload docAddValidateBody){
 
-		case 21:
-			docOpResponse = docFind(docOpHeader, docOpBody);
-			break;
+                Document repDoc = docAddValidateBody.getDoc();
 
-		case 22:
-			docOpResponse = docUpdate(docOpHeader, docOpBody);
-			break;
+                long reqFileSize = repDoc.getDocSize();
 
-		case 23:
-			docOpResponse = docRemove(docOpHeader, docOpBody);
-			break;
+                String newFileName = repDoc.getDocName();
 
-		case 25:
-			docOpResponse = docQuery(docOpHeader, docOpBody);
-			break;
+                String nameSpace = null;
 
-		default:
-			System.out.println("DpcumentResource: No matching doc op id found");
+                if(docAddValidateBody.getSpace() !=null){
 
-		}
+                        nameSpace = docAddValidateBody.getSpace().getName();
+                }
 
-		return docOpResponse;
-	}
+                Response.Builder docAddValidateResponseBuilder = Response.newBuilder();
 
-	private Response docAddValidate(Header docAddValidateHeader,
-			Payload docAddValidateBody) {
+                docAddValidateResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(repDoc).addSpaces(docAddValidateBody.getSpace()));
 
-		Document repDoc = docAddValidateBody.getDoc();
+                long spacceAvailable = 0;
 
-		long reqFileSize = repDoc.getDocSize();
+                long  bufferredLimit = 0;
 
-		String newFileName = repDoc.getDocName();
+                if((newFileName == null || newFileName.length() ==0) || reqFileSize ==0){
 
-		String nameSpace = null;
+                        docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQMISSINGPARAMMSG));
 
-		if(docAddValidateBody.getSpace() !=null){
+                        return docAddValidateResponseBuilder.build();
+                }
 
-			nameSpace = docAddValidateBody.getSpace().getName();
-		}
+                if(nameSpace != null && nameSpace.length() > 0){
 
-		Response.Builder docAddValidateResponseBuilder = Response.newBuilder();
 
-		docAddValidateResponseBuilder.setBody(PayloadReply.newBuilder()
-				.addDocs(repDoc).addSpaces(docAddValidateBody.getSpace()));
+                        String effNS = HOMEDIR+File.separator+nameSpace; 
+                                                
+                        String effVisitorNS = VISITORDIR+File.separator+nameSpace;
+                        
+                        logger.info("Validating "+effVisitorNS+" for "+newFileName);
 
-		docAddValidateResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(repDoc).addSpaces(docAddValidateBody.getSpace()));
+                        File targetNS = new File (effNS);
+                        
+                        File targetVisitorNS =  new File(effVisitorNS);
+                        
+                        try {
 
+                                boolean nsCheck = FileUtils.directoryContains(homeDir, targetNS);
+                                
+                                boolean nsAwayCheck = FileUtils.directoryContains(visitorDir, targetVisitorNS);
 
-		long spacceAvailable = 0;
+                                if(nsCheck){
 
-		long bufferredLimit = 0;
+                                        File targetFileName = new File (effNS+File.separator+newFileName);
 
-		if ((newFileName == null || newFileName.length() == 0)
-				|| reqFileSize == 0) {
+                                        boolean fileCheck = FileUtils.directoryContains(targetNS, targetFileName);
 
-			docAddValidateResponseBuilder.setHeader(ResourceUtil
-					.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE,
-							FILEADDREQMISSINGPARAMMSG));
+                                        if(fileCheck){
 
-			return docAddValidateResponseBuilder.build();
-		}
+                                                docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
 
+                                                return docAddValidateResponseBuilder.build();
 
-		if (nameSpece != null && nameSpece.length() > 0) {
+                                        }
 
-			String effNS = HOMEDIR + File.separator + nameSpece;
+                                }
+                                
+                                if(nsAwayCheck){
+                                        
+                                        File targetFileName = new File (effVisitorNS+File.separator+newFileName);
 
-			File targetNS = new File(effNS);
+                                        boolean fileCheck = FileUtils.directoryContains(targetVisitorNS, targetFileName);
+                                        
+                                        logger.info("Validating "+effVisitorNS+" for "+newFileName+" as "+fileCheck);
 
-			try {
+                                        if(fileCheck){
+                                                
+                                                docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+                                                
+                                                return docAddValidateResponseBuilder.build();
 
-				boolean nsCheck = FileUtils
-						.directoryContains(homeDir, targetNS);
+                                        }
 
-				if (nsCheck) {
+                                }
+                                        
+                } catch (IOException e) {
 
-					System.out.println("Target NS exists");
+                                logger.error("Document Response: IO Exception while validating file add request "+e.getMessage());
 
-		if(nameSpace != null && nameSpace.length() > 0){
+                                docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
 
+                                return docAddValidateResponseBuilder.build();
 
+                        }
 
-			String effNS = HOMEDIR+File.separator+nameSpace; 
-						
-			String effVisitorNS = VISITORDIR+File.separator+nameSpace;
-			
-			logger.info("Validating "+effVisitorNS+" for "+newFileName);
+                }else{
 
-			File targetNS = new File (effNS);
-			
-			File targetVisitorNS =  new File(effVisitorNS);
-			
-			try {
+                        try {
 
-				boolean nsCheck = FileUtils.directoryContains(homeDir, targetNS);
-				
-				boolean nsAwayCheck = FileUtils.directoryContains(visitorDir, targetVisitorNS);
+                                boolean fileCheck = FileUtils.directoryContains(homeDir, new File(HOMEDIR+File.separator+newFileName));
+                                
+                                boolean visitorFileCheck = FileUtils.directoryContains(visitorDir, new File(VISITORDIR+File.separator+newFileName));
+                                
+                                logger.info("Validating "+VISITORDIR+" for "+newFileName+" as "+visitorFileCheck);
 
-				if(nsCheck){
+                                if(fileCheck){
 
-					File targetFileName = new File(effNS + File.separator
-							+ newFileName);
+                                        docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
 
-					boolean fileCheck = FileUtils.directoryContains(targetNS,
-							targetFileName);
+                                        return docAddValidateResponseBuilder.build();
+                        
+                                }
+                                
+                                if(visitorFileCheck){
 
-					if (fileCheck) {
+                                        docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
 
-						docAddValidateResponseBuilder.setHeader(ResourceUtil
-								.buildHeaderFrom(docAddValidateHeader,
-										ReplyStatus.FAILURE,
-										FILEADDREQDUPLICATEFILEMSG));
+                                        return docAddValidateResponseBuilder.build();
+                                }
 
-						return docAddValidateResponseBuilder.build();
+                        } catch (IOException e) {
 
-					}
+                                logger.error("Document Response: IO Exception while validating file add request "+e.getMessage());
 
-				}
-				
-				if(nsAwayCheck){
-					
-					File targetFileName = new File (effVisitorNS+File.separator+newFileName);
+                                docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
 
-					boolean fileCheck = FileUtils.directoryContains(targetVisitorNS, targetFileName);
-					
-					logger.info("Validating "+effVisitorNS+" for "+newFileName+" as "+fileCheck);
+                                return docAddValidateResponseBuilder.build();
+                        }
+                }
 
-					if(fileCheck){
-						
-						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+                NodeResponseQueue.broadcastDocQuery(nameSpace, newFileName);
+                
+                try {
+                
+                        logger.info(" Document resousrce sleeping for 2000ms! Witing for responses from the other nodes for DOCQUERY ");
+                
+                        Thread.sleep(2000);
+                        
+                        boolean docQueryResult = NodeResponseQueue.fetchDocQueryResult(nameSpace , newFileName);
+                        
+                        if(!docQueryResult){
+                                docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
 
-						return docAddValidateResponseBuilder.build();
+                                return docAddValidateResponseBuilder.build();
+                        }
+                
+                } catch (InterruptedException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                }
 
-					}
+                try {
+                        spacceAvailable = FileSystemUtils.freeSpaceKb()*1024;
 
-				}
-					
-		} catch (IOException e) {
+                        bufferredLimit = spacceAvailable - 10240000;
 
-				logger.error("Document Response: IO Exception while validating file add request "
-						+ e.getMessage());
+                        logger.info("DocumentResource: Free Space available " + spacceAvailable);
 
-				docAddValidateResponseBuilder.setHeader(ResourceUtil
-						.buildHeaderFrom(docAddValidateHeader,
-								ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+                } catch (IOException e) {
 
-				return docAddValidateResponseBuilder.build();
+                        System.out.println("DpcumentResource:docAddValidate IOException while calculating free space");
 
-			}
+                        docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
 
-		} else {
+                        return docAddValidateResponseBuilder.build();
+                }
 
-			try {
+                if(reqFileSize > bufferredLimit){
 
-				boolean fileCheck = FileUtils.directoryContains(homeDir,
-						new File(HOMEDIR + File.separator + newFileName));
+                        docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILETOOLARGETOSAVEMSG));
 
-				if (fileCheck) {
+                }else{
+                		dbInstance.addDocument(nameSpace, repDoc);
 
-					docAddValidateResponseBuilder.setHeader(ResourceUtil
-							.buildHeaderFrom(docAddValidateHeader,
-									ReplyStatus.FAILURE,
-									FILEADDREQDUPLICATEFILEMSG));
+                        docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.SUCCESS, FILEUPLOADREQVALIDATEDMSG));
+                }
 
-		}else{
+                return docAddValidateResponseBuilder.build();
+        }
 
-			try {
 
-				boolean fileCheck = FileUtils.directoryContains(homeDir, new File(HOMEDIR+File.separator+newFileName));
-				
-				boolean visitorFileCheck = FileUtils.directoryContains(visitorDir, new File(VISITORDIR+File.separator+newFileName));
-				
-				logger.info("Validating "+VISITORDIR+" for "+newFileName+" as "+visitorFileCheck);
+        private Response docAdd(Header docAddHeader , Payload docAddBody){
 
-				if(fileCheck){
+                String nameSpace = docAddBody.getSpace().getName();
 
-					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+                String effNS = HOMEDIR+File.separator+nameSpace;
 
+                String fileName = docAddBody.getDoc().getDocName();
 
-					return docAddValidateResponseBuilder.build();
-			
-				}
-			} catch (IOException e) {
-				
-				if(visitorFileCheck){
+                logger.info("DocAdd: Received file "+fileName);
 
-					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+                logger.info("effective namespace "+effNS);
 
-					return docAddValidateResponseBuilder.build();
-				}
+                File nameDir = new File(effNS);
 
-			} catch (IOException e) {
+                File file = new File(effNS+File.separator+fileName);
 
-				logger.error("Document Response: IO Exception while validating file add request "+e.getMessage());
+                Header.Builder docAddHeaderBuilder = Header.newBuilder(docAddHeader);
 
-				logger.error("Document Response: IO Exception while validating file add request "
-						+ e.getMessage());
+                Document recivedFile = docAddBody.getDoc();
 
-				docAddValidateResponseBuilder.setHeader(ResourceUtil
-						.buildHeaderFrom(docAddValidateHeader,
-								ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+                Document toBesent= null;
 
-				return docAddValidateResponseBuilder.build();
-			}
-		}
+                try {
 
-		Collection<HeartbeatData> nodeList = HeartbeatManager.getInstance()
-				.getIncomingHB().values();
+                        logger.info("Creating directory with name "+nameSpace );
 
-		HeartbeatData hb = null;
+                        FileUtils.forceMkdir(nameDir);
 
-		if (nodeList.size() > 0)
-			hb = nodeList.iterator().next();
+                        logger.info("Creating file with name "+fileName+" and writing the content sent by client to it" );
 
-		// NodeClient nc1 = new NodeClient(hb.getHost(),
-		// hb.getPort(),hb.getNodeId());
+                        FileUtils.writeByteArrayToFile(file, recivedFile.getChunkContent().toByteArray(), true);
 
-		// System.out.println("Query File"+ nc1.queryFile("Kau" , "abc.txt"));
+                        toBesent = recivedFile.toBuilder().clearChunkContent().build();
 
-		NodeResponseQueue.broadcastDocQuery(nameSpace, newFileName);
-		
-		try {
-		
-			logger.info(" Document resousrce sleeping for 2000ms! Witing for responses from the other nodes for DOCQUERY ");
-		
-			Thread.sleep(2000);
-			
-			boolean docQueryResult = NodeResponseQueue.fetchDocQueryResult(nameSpace , newFileName);
-			
-			if(!docQueryResult){
-				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+                } catch (IOException e) {
 
-				return docAddValidateResponseBuilder.build();
-				}
-		
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+                        logger.info("Exception while creating the file and/or writing the content to it "+e.getMessage());
 
-		try {
-			spacceAvailable = FileSystemUtils.freeSpaceKb() * 1024;
+                        docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.FAILURE);
 
-			bufferredLimit = spacceAvailable - 10240000;
+                        docAddHeaderBuilder.setReplyMsg("Server Exception while uploading a file");
 
+                        e.printStackTrace();
+                }
 
-			logger.info("DocumentResource: Free Space available "
-					+ spacceAvailable);
-			logger.info("DocumentResource: Free Space available " + spacceAvailable);
+                System.gc();
 
+                docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);
 
-		} catch (IOException e) {
+                docAddHeaderBuilder.setReplyMsg("File Uploaded Successfully");
 
-			System.out
-					.println("DpcumentResource:docAddValidate IOException while calculating free space");
+                Response.Builder docAddRespBuilder = Response.newBuilder();
 
-			docAddValidateResponseBuilder.setHeader(ResourceUtil
-					.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE,
-							INTERNALSERVERERRORMSG));
+                docAddRespBuilder.setHeader(docAddHeaderBuilder);
 
-			return docAddValidateResponseBuilder.build();
-		}
+                System.gc();
 
-		if (reqFileSize > bufferredLimit) {
+                docAddRespBuilder.setBody(PayloadReply.newBuilder().addDocs(toBesent).addSpaces(docAddBody.getSpace()));
 
-			docAddValidateResponseBuilder.setHeader(ResourceUtil
-					.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE,
-							FILETOOLARGETOSAVEMSG));
+                System.gc();
 
-		} else {
+                return docAddRespBuilder.build();
+        }
 
+        private Response docUpdate(Header docUpdateHeader , Payload docUpdateBody){
 
-			docAddValidateResponseBuilder.setHeader(ResourceUtil
-					.buildHeaderFrom(docAddValidateHeader, ReplyStatus.SUCCESS,
-							FILEUPLOADREQVALIDATEDMSG));
+                return null;
+        }
 
-			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILETOOLARGETOSAVEMSG));
+        private Response docRemove(Header docRemoveHeader , Payload docRemoveBody){
 
-		}else{
+                String fileToBeDeleted = docRemoveBody.getDoc().getDocName();
 
-			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.SUCCESS, FILEUPLOADREQVALIDATEDMSG));
+                String nameSpece = docRemoveBody.getSpace().getName();
 
-		}
+                logger.info("docRemove Client data file to be delted: "+fileToBeDeleted+" namespace: "+nameSpece);
 
-		return docAddValidateResponseBuilder.build();
-	}
+                File targetFile = null;
 
-	private Response docAdd(Header docAddHeader, Payload docAddBody) {
+                Response.Builder fileRemoveResponseBuilder = Response.newBuilder();
 
-		String nameSpace = docAddBody.getSpace().getName();
+                fileRemoveResponseBuilder.setBody(PayloadReply.newBuilder().build());
 
+                if(fileToBeDeleted == null || fileToBeDeleted.length() ==0){
 
-		String effNS = HOMEDIR + File.separator + nameSpace;
+                        fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEREQMISSINGPARAMMSG));
 
-		String effNS = HOMEDIR+File.separator+nameSpace;
+                        return fileRemoveResponseBuilder.build();
+                }
 
+                if(nameSpece != null && nameSpece.length() > 0){
 
-		String fileName = docAddBody.getDoc().getDocName();
+                        String effNS = HOMEDIR+File.separator+nameSpece;
 
-		logger.info("DocAdd: Received file " + fileName);
+                        File targetNS = new File (effNS);
 
-		logger.info("effective namespace " + effNS);
+                        targetFile = new File(effNS+File.separator+fileToBeDeleted);
 
-		File nameDir = new File(effNS);
 
-		File file = new File(effNS + File.separator + fileName);
+                        try {
 
-		Header.Builder docAddHeaderBuilder = Header.newBuilder(docAddHeader);
+                                boolean nsCheck = FileUtils.directoryContains(homeDir, targetNS);
 
-		Document recivedFile = docAddBody.getDoc();
+                                if(nsCheck){
 
+                                        boolean fileCheck = FileUtils.directoryContains(targetNS, targetFile);
 
-		Document toBesent = null;
-		Document toBesent= null;
+                                        if(fileCheck){
 
+                                                if(targetFile.isDirectory()){
 
-		try {
+                                                        fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, OPERATIONNOTALLOWEDMSG+"Supplied file is directory"));
 
-			logger.info("Creating directory with name " + nameSpace);
+                                                        return fileRemoveResponseBuilder.build();
+                                                }
 
-			FileUtils.forceMkdir(nameDir);
+                                                FileUtils.forceDelete(targetFile);
 
-			logger.info("Creating file with name " + fileName
-					+ " and writing the content sent by client to it");
+                                        }else{
 
-			FileUtils.writeByteArrayToFile(file, recivedFile.getChunkContent()
-					.toByteArray(), true);
+                                                fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEINEXISTENTMSG));
 
+                                                return fileRemoveResponseBuilder.build();
+                                        }
 
-			FileUtils.writeByteArrayToFile(file, recivedFile.getChunkContent().toByteArray(), true);
+                                }else{
 
-			toBesent = recivedFile.toBuilder().clearChunkContent().build();
+                                        fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, NAMESPACEINEXISTENTMSG));
 
-			dbInstance.addDocument(nameSpace, recivedFile);
+                                        return fileRemoveResponseBuilder.build();
 
-		} catch (IOException e) {
+                                }
 
-			logger.info("Exception while creating the file and/or writing the content to it "
-					+ e.getMessage());
+                        } catch (IOException e) {
 
-			docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.FAILURE);
+                                logger.error("Document Response: IO Exception while processing file delete request "+e.getMessage());
 
-			docAddHeaderBuilder
-					.setReplyMsg("Server Exception while uploading a file");
+                                fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
 
-			e.printStackTrace();
-		}
+                                return fileRemoveResponseBuilder.build();
 
-		System.gc();
+                        }
 
-		docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);
+                } else{
 
-		docAddHeaderBuilder.setReplyMsg("File Uploaded Successfully");
+                        try {
 
-		Response.Builder docAddRespBuilder = Response.newBuilder();
+                                targetFile = new File(HOMEDIR+File.separator+fileToBeDeleted);
 
-		docAddRespBuilder.setHeader(docAddHeaderBuilder);
+                                boolean fileCheck = FileUtils.directoryContains(homeDir, targetFile);
 
-		System.gc();
+                                if(fileCheck){
 
+                                        if(targetFile.isDirectory()){
 
-		// logger.info("Size of the chunk content to be sent  "+toBesent.getChunkContent().size());
+                                                fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, OPERATIONNOTALLOWEDMSG+"Requested file is directory"));
 
-		docAddRespBuilder.setBody(PayloadReply.newBuilder().addDocs(toBesent)
-				.addSpaces(docAddBody.getSpace()));
+                                                return fileRemoveResponseBuilder.build();
+                                        }
 
-		docAddRespBuilder.setBody(PayloadReply.newBuilder().addDocs(toBesent).addSpaces(docAddBody.getSpace()));
+                                        FileUtils.forceDelete(targetFile);
 
+                                }else{
 
-		System.gc();
+                                        fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEINEXISTENTMSG));
 
-		return docAddRespBuilder.build();
-	}
+                                        return fileRemoveResponseBuilder.build();
 
-	private Response docFind(Header docFindHeader, Payload docFindBody) {
-		String fileName = HOMEDIR + File.separator
-				+ docFindBody.getSpace().getName() + File.separator
-				+ docFindBody.getDoc().getDocName();
-		boolean fileExists = false;
-		Response.Builder docFindResponse = Response.newBuilder();
-		PayloadReply.Builder docFindRespPayload = PayloadReply.newBuilder();
-		Header.Builder docFindRespHeader = Header.newBuilder();
-		String nameSpace = docFindBody.getSpace().getName();
-		
-		
-		try {
-			fileExists = FileUtils.directoryContains(homeDir,
-					new File(fileName));
-			if (fileExists) {
-				if (nameSpace != null && nameSpace.length() > 0)
-					docFindRespPayload.setSpaces(0, NameSpace.newBuilder().setName(nameSpace));
+                                }
 
-				String fileExt = FilenameUtils.getExtension(fileName);
+                        } catch (IOException e) {
 
-				java.io.File file = FileUtils.getFile(fileName);
+                                logger.error("Document Response: IO Exception while processing file delete request w/o namespace "+e.getMessage());
 
-				long fileSize = FileUtils.sizeOf(file);
+                                fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
 
-				logger.info("Size of the file to be sent " + fileSize);
+                                return fileRemoveResponseBuilder.build();
+                        }
 
-				long totalChunk = ((fileSize / MAX_UNCHUNKED_FILE_SIZE)) + 1;
+                }
 
-				if (fileSize < MAX_UNCHUNKED_FILE_SIZE) {
+                fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.SUCCESS, FILEDELETESUCCESSFULMSG));
 
-					logger.info(" DocFind: Sending the complete file in unchunked mode");
+                return fileRemoveResponseBuilder.build();
+        }
 
-					logger.info("Total number of chunks " + totalChunk);
+        private Response docQuery(Header docQueryHeader , Payload docQueryBody){
 
-					byte[] fileContents = null;
+                logger.info(" Received doc query request from "+docQueryHeader.getOriginator());
 
-					try {
+                Response.Builder docQueryResponseBuilder = Response.newBuilder();
 
-						fileContents = FileUtils.readFileToByteArray(file);
+                Document queryDoc = docQueryBody.getDoc();
 
-					} catch (IOException e) {
+                NameSpace space = docQueryBody.getSpace();
 
-						logger.error("Error while reading the specified file "
-								+ e.getMessage());
-						docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
+                String fileName = queryDoc.getDocName();
 
-						docFindRespHeader
-								.setReplyMsg("Server Exception while downloading the file found.");
-						docFindResponse.setBody(docFindRespPayload.build());
-						docFindResponse.setHeader(docFindHeader);
-						return docFindResponse.build();
-					}
+                String nameSpace =  null;
 
-					docFindRespPayload.setDocs(0, Document.newBuilder().setDocName(fileName)
-					.setDocExtension(fileExt)
-					.setChunkContent(ByteString.copyFrom(fileContents))
-					.setDocSize(fileSize).setTotalChunk(totalChunk)
-					.setChunkId(1));
+                String effHomeNS = HOMEDIR;
+                
+                String effAwayNS = VISITORDIR;
 
-					docFindResponse.setBody(docFindRespPayload.build());
-					return docFindResponse.build();
+                if(space !=null){
+                        nameSpace  = space.getName();
+                        docQueryResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(queryDoc).addSpaces(space));
+                }else{
+                        docQueryResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(queryDoc));
+                }
 
-				} else {
+                if(nameSpace !=null && nameSpace.length() >0){
+                        effHomeNS= effHomeNS+File.separator+nameSpace;
+                        effAwayNS = effAwayNS+File.separator+nameSpace;
+                }
 
-					logger.info(" DocADD: Uploading the file in chunked mode");
+                File targetFile = null;
 
-					logger.info("Total number of chunks " + totalChunk);
+                File parentHomeDir = new File(effHomeNS);
+                
+                File parentAwayDir = new File(effAwayNS);
 
-					try {
+                boolean fileHome = false;
+                
+                boolean fileAway = false;
 
-						int bytesRead = 0;
+                try {
 
-						int chunkId = 1;
+                        if(parentHomeDir.exists()){
+                                targetFile = new File(effHomeNS+File.separator+fileName);
+                                fileHome =        FileUtils.directoryContains(parentHomeDir, targetFile);
+                                logger.info("validating "+effHomeNS+" for "+fileName+" as "+fileHome);
+                        }
+                        
+                        if(!fileHome){
+                        if(parentAwayDir.exists()){
+                                
+                        targetFile = new File(effAwayNS+File.separator+fileName);
+                        fileAway =        FileUtils.directoryContains(parentAwayDir, targetFile);
+                                logger.info("validating "+effAwayNS+" for "+fileName+" as "+fileAway);
+                        }
+                        }
+                        
+                        
 
-						FileInputStream chunkeFIS = new FileInputStream(file);
+                } catch (IOException e) {
 
-						do {
+                        logger.error("DocQuery: IOException while validating file existence");
+                        e.printStackTrace();
+                }
 
-							byte[] chunckContents = new byte[26214400];
+                if(fileHome || fileAway)
+                        docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+                else
+                        docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, FILEUPLOADREQVALIDATEDMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));        
 
-							bytesRead = IOUtils.read(chunkeFIS, chunckContents, 0,
-									26214400);
-
-							logger.info("Total number of bytes read for chunk "
-									+ chunkId + ": " + bytesRead);
-
-							// logger.info("Contents of the chunk "+chunkId+" : "+chunckContents);
-
-							docFindRespPayload.setDocs(0,Document
-									.newBuilder()
-									.setDocName(fileName)
-									.setDocExtension(fileExt)
-									.setChunkContent(
-											ByteString.copyFrom(chunckContents))
-									.setDocSize(fileSize).setTotalChunk(totalChunk)
-									.setChunkId(chunkId));
-
-							docFindResponse.setBody(docFindRespPayload.build());
-
-							
-
-							chunckContents = null;
-
-							System.gc();
-
-							chunkId++;
-
-						} while (chunkeFIS.available() > 0);
-
-						logger.info("Out of chunked write while loop");
-
-					} catch (FileNotFoundException e) {
-
-						logger.info("Requested File does not exists: File uploading Aborted "
-								+ e.getMessage());
-
-						e.printStackTrace();
-
-					} catch (IOException e) {
-
-						logger.info("IO exception while uploading the requested file : File upload Aborted "
-								+ e.getMessage());
-
-						e.printStackTrace();
-					}
-
-				}
-
-			} else {
-				System.out.println("File not found");
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return null;
-	}
-
-	private Response docUpdate(Header docUpdateHeader, Payload docUpdateBody) {
-
-		return null;
-	}
-
-	private Response docRemove(Header docRemoveHeader, Payload docRemoveBody) {
-
-		String fileToBeDeleted = docRemoveBody.getDoc().getDocName();
-
-		String nameSpece = docRemoveBody.getSpace().getName();
-
-
-		logger.info("docRemove Client data file to be delted: "
-				+ fileToBeDeleted + " namespace: " + nameSpece);
-
-		logger.info("docRemove Client data file to be delted: "+fileToBeDeleted+" namespace: "+nameSpece);
-
-
-		File targetFile = null;
-
-		Response.Builder fileRemoveResponseBuilder = Response.newBuilder();
-
-		fileRemoveResponseBuilder.setBody(PayloadReply.newBuilder().build());
-
-		if (fileToBeDeleted == null || fileToBeDeleted.length() == 0) {
-
-			fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(
-					docRemoveHeader, ReplyStatus.FAILURE,
-					FILEREQMISSINGPARAMMSG));
-
-			return fileRemoveResponseBuilder.build();
-		}
-
-
-		if (nameSpece != null && nameSpece.length() > 0) {
-
-			String effNS = HOMEDIR + File.separator + nameSpece;
-
-			File targetNS = new File(effNS);
-
-			targetFile = new File(effNS + File.separator + fileToBeDeleted);
-
-			try {
-
-		if(nameSpece != null && nameSpece.length() > 0){
-
-			String effNS = HOMEDIR+File.separator+nameSpece;
-
-			File targetNS = new File (effNS);
-
-			targetFile = new File(effNS+File.separator+fileToBeDeleted);
-
-
-			try {
-
-				boolean nsCheck = FileUtils.directoryContains(homeDir, targetNS);
-
-				if(nsCheck){
-
-
-				boolean nsCheck = FileUtils
-						.directoryContains(homeDir, targetNS);
-
-				if (nsCheck) {
-
-					boolean fileCheck = FileUtils.directoryContains(targetNS,
-							targetFile);
-
-					if (fileCheck) {
-
-						if (targetFile.isDirectory()) {
-
-							fileRemoveResponseBuilder
-									.setHeader(ResourceUtil
-											.buildHeaderFrom(
-													docRemoveHeader,
-													ReplyStatus.FAILURE,
-													OPERATIONNOTALLOWEDMSG
-															+ "Supplied file is directory"));
-
-					if(fileCheck){
-
-						if(targetFile.isDirectory()){
-
-							fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, OPERATIONNOTALLOWEDMSG+"Supplied file is directory"));
-
-
-							return fileRemoveResponseBuilder.build();
-						}
-
-						FileUtils.forceDelete(targetFile);
-
-					} else {
-
-						fileRemoveResponseBuilder
-								.setHeader(ResourceUtil.buildHeaderFrom(
-										docRemoveHeader, ReplyStatus.FAILURE,
-										FILEINEXISTENTMSG));
-					}else{
-
-						fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEINEXISTENTMSG));
-
-
-						return fileRemoveResponseBuilder.build();
-					}
-
-				} else {
-
-					fileRemoveResponseBuilder
-							.setHeader(ResourceUtil.buildHeaderFrom(
-									docRemoveHeader, ReplyStatus.FAILURE,
-									NAMESPACEINEXISTENTMSG));
-
-				}else{
-
-					fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, NAMESPACEINEXISTENTMSG));
-
-					return fileRemoveResponseBuilder.build();
-
-				}
-
-			} catch (IOException e) {
-
-				logger.error("Document Response: IO Exception while processing file delete request "
-						+ e.getMessage());
-
-				fileRemoveResponseBuilder.setHeader(ResourceUtil
-						.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE,
-								INTERNALSERVERERRORMSG));
-
-				return fileRemoveResponseBuilder.build();
-
-			}
-		} else {
-
-			try {
-
-				targetFile = new File(HOMEDIR + File.separator
-						+ fileToBeDeleted);
-
-				boolean fileCheck = FileUtils.directoryContains(homeDir,
-						targetFile);
-
-				if (fileCheck) {
-
-					if (targetFile.isDirectory()) {
-
-						fileRemoveResponseBuilder
-								.setHeader(ResourceUtil
-										.buildHeaderFrom(
-												docRemoveHeader,
-												ReplyStatus.FAILURE,
-												OPERATIONNOTALLOWEDMSG
-														+ "Requested file is directory"));
-		} else{
-
-			try {
-
-				targetFile = new File(HOMEDIR+File.separator+fileToBeDeleted);
-
-				boolean fileCheck = FileUtils.directoryContains(homeDir, targetFile);
-
-				if(fileCheck){
-
-					if(targetFile.isDirectory()){
-
-						fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, OPERATIONNOTALLOWEDMSG+"Requested file is directory"));
-
-						return fileRemoveResponseBuilder.build();
-					}
-
-					FileUtils.forceDelete(targetFile);
-
-				} else {
-
-					fileRemoveResponseBuilder.setHeader(ResourceUtil
-							.buildHeaderFrom(docRemoveHeader,
-									ReplyStatus.FAILURE, FILEINEXISTENTMSG));
-				}else{
-
-					fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEINEXISTENTMSG));
-
-
-					return fileRemoveResponseBuilder.build();
-
-				}
-
-			} catch (IOException e) {
-
-
-				logger.error("Document Response: IO Exception while processing file delete request w/o namespace "
-						+ e.getMessage());
-
-				fileRemoveResponseBuilder.setHeader(ResourceUtil
-						.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE,
-								INTERNALSERVERERRORMSG));
-
-				logger.error("Document Response: IO Exception while processing file delete request w/o namespace "+e.getMessage());
-
-				fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
-
-
-				return fileRemoveResponseBuilder.build();
-			}
-
-		}
-
-
-		fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(
-				docRemoveHeader, ReplyStatus.SUCCESS, FILEDELETESUCCESSFULMSG));
-
-		fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.SUCCESS, FILEDELETESUCCESSFULMSG));
-
-
-		return fileRemoveResponseBuilder.build();
-	}
-
-
-	private Response docQuery(Header docQueryHeader, Payload docQueryBody) {
-
-		logger.info(" Received doc query request from "
-				+ docQueryHeader.getOriginator());
-
-		Response.Builder docQueryResponseBuilder = Response.newBuilder();
-
-		docQueryResponseBuilder.setHeader(ResourceUtil
-				.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS,
-						FILEADDREQDUPLICATEFILEMSG).toBuilder()
-				.setOriginator(HeartbeatManager.getInstance().getNodeId()));
-
-		docQueryResponseBuilder.setBody(PayloadReply.getDefaultInstance());
-
-
-	private Response docQuery(Header docQueryHeader , Payload docQueryBody){
-
-		logger.info(" Received doc query request from "+docQueryHeader.getOriginator());
-
-		Response.Builder docQueryResponseBuilder = Response.newBuilder();
-
-		Document queryDoc = docQueryBody.getDoc();
-
-		NameSpace space = docQueryBody.getSpace();
-
-		String fileName = queryDoc.getDocName();
-
-		String nameSpace =  null;
-
-		String effHomeNS = HOMEDIR;
-		
-		String effAwayNS = VISITORDIR;
-
-		if(space !=null){
-			nameSpace  = space.getName();
-			docQueryResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(queryDoc).addSpaces(space));
-		}else{
-			docQueryResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(queryDoc));
-		}
-
-		if(nameSpace !=null && nameSpace.length() >0){
-			effHomeNS= effHomeNS+File.separator+nameSpace;
-			effAwayNS = effAwayNS+File.separator+nameSpace;
-		}
-
-		File targetFile = null;
-
-		File parentHomeDir = new File(effHomeNS);
-		
-		File parentAwayDir = new File(effAwayNS);
-
-		boolean fileHome = false;
-		
-		boolean fileAway = false;
-
-		try {
-
-			if(parentHomeDir.exists()){
-				targetFile = new File(effHomeNS+File.separator+fileName);
-				fileHome =	FileUtils.directoryContains(parentHomeDir, targetFile);
-				logger.info("validating "+effHomeNS+" for "+fileName+" as "+fileHome);
-			}
-			
-			if(!fileHome){
-			if(parentAwayDir.exists()){
-				
-			targetFile = new File(effAwayNS+File.separator+fileName);
-			fileAway =	FileUtils.directoryContains(parentAwayDir, targetFile);
-				logger.info("validating "+effAwayNS+" for "+fileName+" as "+fileAway);
-			}
-			}
-			
-			
-
-		} catch (IOException e) {
-
-			logger.error("DocQuery: IOException while validating file existence");
-			e.printStackTrace();
-		}
-
-		if(fileHome || fileAway)
-			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
-		else
-			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, FILEUPLOADREQVALIDATEDMSG).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));	
-
-		
-		return docQueryResponseBuilder.build();
-	}
+                
+                return docQueryResponseBuilder.build();
+        }
 
 }

@@ -1,5 +1,6 @@
 package poke.client;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.slf4j.Logger;
@@ -83,6 +85,7 @@ public class ClientResponseAction {
 
 	protected class InboundWorker extends Thread {
 
+		private static final String DOWNLOADDIR = "download";
 		boolean forever = true;
 		int retry = 0;
 		ClientResponseAction target;
@@ -139,6 +142,52 @@ public class ClientResponseAction {
 							}
 						}
 
+					}
+					else if(msg.getHeader().getRoutingId() == Routing.DOCFIND){
+						System.out.println("ClientResponseHandler : Document found. Downloading...");
+						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
+
+							for (int i = 0, I = msg.getBody().getDocsCount(); i < I; i++){
+								//ClientUtil.printDocument(msg.getBody().getDocs(i));
+								String nameSpace = msg.getBody().getSpaces(0).getName();
+								String[] NSFolder = nameSpace.split("\\\\");
+				                String effNS = DOWNLOADDIR+File.separator+NSFolder[NSFolder.length-1];
+
+				                String fileName = msg.getBody().getDocs(0).getDocName();
+				                String fname;
+				                String[] filePath = fileName.split("\\\\");
+				                fname = filePath[filePath.length-1];
+
+				                logger.info("DocAdd: Received file "+fname);
+
+				                logger.info("effective namespace "+effNS);
+
+				                File nameDir = new File(effNS);
+
+				                File file = new File(effNS+File.separator+fname);
+
+				                Document recivedFile = msg.getBody().getDocs(0);
+
+
+				                try {
+				                	System.out.println("The file contains " + msg.getBody().getDocs(i).getTotalChunk() + "chunks. The chunkId is " + msg.getBody().getDocs(i).getChunkId());
+
+				                        logger.info("Creating directory with name "+nameSpace );
+
+				                        FileUtils.forceMkdir(nameDir);
+
+				                        logger.info("Creating file with name "+fname+" and writing the content sent by server to it" );
+
+				                        FileUtils.writeByteArrayToFile(file, recivedFile.getChunkContent().toByteArray(), true);
+				                }
+				                catch(Exception e){
+				                	
+				                }
+								
+							}
+							
+								
+							}
 					}
 
 				} catch (InterruptedException ie) {

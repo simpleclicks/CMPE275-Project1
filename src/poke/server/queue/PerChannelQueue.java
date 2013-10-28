@@ -15,22 +15,35 @@
  */
 package poke.server.queue;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.lang.Thread.State;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import poke.server.resources.ChunkedResource;
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceFactory;
 import poke.server.resources.ResourceUtil;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.GeneratedMessage;
 
 import eye.Comm.Header.ReplyStatus;
+import eye.Comm.Header.Routing;
+import eye.Comm.Document;
+import eye.Comm.NameSpace;
+import eye.Comm.Payload;
+import eye.Comm.PayloadReply;
 import eye.Comm.Request;
 import eye.Comm.Response;
 
@@ -47,13 +60,16 @@ import eye.Comm.Response;
  */
 public class PerChannelQueue implements ChannelQueue {
 	protected static Logger logger = LoggerFactory.getLogger("server");
+	
+	private static final String HOMEDIR = "home";
 
 	private Channel channel;
 	private LinkedBlockingDeque<com.google.protobuf.GeneratedMessage> inbound;
 	private LinkedBlockingDeque<com.google.protobuf.GeneratedMessage> outbound;
 	private OutboundWorker oworker;
 	private InboundWorker iworker;
-
+	private static final int MAX_UNCHUNKED_FILE_SIZE = 26214400;
+	
 	// not the best method to ensure uniqueness
 	private ThreadGroup tgroup = new ThreadGroup("ServerQueue-" + System.nanoTime());
 
@@ -239,17 +255,89 @@ public class PerChannelQueue implements ChannelQueue {
 						// do we need to route the request?
 
 						// handle it locally
-						Resource rsc = ResourceFactory.getInstance().resourceInstance(req.getHeader());
+						ChunkedResource crsc = null;
+						Resource rsc = null;
+						if(req.getHeader().getRoutingId() == Routing.DOCFIND){
+							crsc = ResourceFactory.getInstance().chunkedResourceInstance(req.getHeader());
+						}
+						else {
+							rsc = ResourceFactory.getInstance().resourceInstance(req.getHeader());
+						}						
 
 						Response reply = null;
-						if (rsc == null) {
+						
+						List<Response> responses;
+						if (rsc == null && crsc == null) {
 							logger.error("failed to obtain resource for " + req);
 							reply = ResourceUtil.buildError(req.getHeader(), ReplyStatus.FAILURE,
 									"Request not processed");
-						} else
-							reply = rsc.process(req, ResourceFactory.dbInstance);
+						} else if(req.getHeader().getRoutingId() == Routing.DOCFIND){
+							responses = crsc.process(req, ResourceFactory.dbInstance);
+							String fname = responses.get(0).getBody().getDocs(0).getDocName();
+							String namespaceName = responses.get(0).getBody().getSpaces(0).getName();
+							FileInputStream chunkeFIS = new FileInputStream(new File(fname));
+							String fileExt = FilenameUtils.getExtension(fname);
 
-						sq.enqueueResponse(reply);
+							java.io.File file = FileUtils.getFile(fname);
+
+							long fileSize = FileUtils.sizeOf(file);
+
+							logger.info("Size of the file to be sent " + fileSize);
+
+							long totalChunk = ((fileSize / MAX_UNCHUNKED_FILE_SIZE)) + 1;
+
+							for (Response response : responses) {
+								
+								if(response.getBody().getDocs(0).getTotalChunk() <= 1){
+									sq.enqueueResponse(response);
+								}
+								else{
+									Response.Builder respEnqueue = Response.newBuilder();
+									//TODO read each chunk from the file and enqueue
+									int bytesRead = 0;
+
+
+										byte[] chunckContents = new byte[26214400];
+
+										bytesRead = IOUtils.read(chunkeFIS, chunckContents, 0,
+												26214400);
+
+										logger.info("CHUNKED Contents of the chunk "+response.getBody().getDocs(0).getChunkId()+" : "+chunckContents);
+										
+										respEnqueue.setHeader(response.getHeader());
+										PayloadReply.Builder respEnqueuePL = PayloadReply.newBuilder();
+										
+										respEnqueuePL.addDocsBuilder();
+										respEnqueuePL.addSpacesBuilder();
+										respEnqueuePL.setSpaces(0, NameSpace.newBuilder().setName(namespaceName));
+										respEnqueuePL.setDocs(0,Document
+												.newBuilder()
+												.setDocName(fname)
+												.setDocExtension(fileExt)
+												.setDocSize(fileSize).setTotalChunk(totalChunk)
+												.setChunkContent(ByteString.copyFrom(chunckContents))
+												.setChunkId(response.getBody().getDocs(0).getChunkId()));
+										
+										respEnqueue.setBody(respEnqueuePL.build());
+
+										chunckContents = null;
+
+										System.gc();
+
+										//chunkId++;
+										
+										logger.info("CHUNKED engueuing response for client request for : " + response.getBody().getDocs(0).getChunkId());
+										Response tbE = respEnqueue.build();
+										sq.enqueueResponse(tbE);
+										
+										Thread.sleep(1000);
+								}
+							}
+						}
+						else {
+							reply = rsc.process(req, ResourceFactory.dbInstance);
+							sq.enqueueResponse(reply);
+						}
 					}
 
 				} catch (InterruptedException ie) {

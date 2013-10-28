@@ -40,9 +40,9 @@ public class Jab {
 //			cc.poke(tag, count);
 //		}
 	
-		//cc.docAddReq("Kau1", "E://GTHub.flv");
+		//cc.docAddReq("TestChunk", "E://Movies//Easy A (2010).avi");
 		
-		cc.docFind("PLAA", "test3.txt");
+		cc.docFind("TestChunk", "docFindTest.txt");
 		
 		//cc.docRemove("", "Kaustubh1");
 	
