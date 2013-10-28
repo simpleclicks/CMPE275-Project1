@@ -102,8 +102,8 @@ public class BroadcastConnector {
 				//ni = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
 				//String broadcastAddress = ni.getInterfaceAddresses().get(0).getBroadcast().toString().substring(1);
 				String broadcastAddress = "192.168.0.255";
-				logger.info("sending broadcast to " + broadcastAddress + ":" + bport);
-				channel = bootstrap.connect(new InetSocketAddress(broadcastAddress, bport));
+				logger.info("sending broadcast to " + broadcastAddress + ":" + bport+1);
+				channel = bootstrap.connect(new InetSocketAddress(broadcastAddress, bport+1));
 				
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

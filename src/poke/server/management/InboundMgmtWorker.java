@@ -95,33 +95,14 @@ public class InboundMgmtWorker extends Thread {
 							//can i cast socka?
 							SocketAddress socka = msg.channel.getRemoteAddress();
 							if (socka != null) {
+								
 								InetSocketAddress isa = (InetSocketAddress) socka;
-								//logger.info("NODEJOIN: " + isa.getHostName() + ", " + isa.getPort()); // probably we need to take the remote address instead of local
-								//HeartbeatManager.getInstance().addOutgoingChannel(n.getNodeId(), isa.getHostName(),
-								//		isa.getPort(), msg.channel, msg.sa);
-								//String remoteAddress = String.vmsg.channel.getRemoteAddress();
 								logger.info("NODEJOIN: " +msg.channel.getRemoteAddress() +", " +n.getNodeId() + ", "+ msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0]); // probably we need to take the remote address instead of local
-								HeartbeatManager.getInstance().addOutgoingChannel(n.getNodeId(), isa.getHostName(),
+								HeartbeatManager.getInstance().addOutgoingChannel(n.getNodeId(), isa.getAddress().getHostAddress(),
 										isa.getPort(), msg.channel, msg.sa);
-								//HeartbeatData heart = new HeartbeatData(n.getNodeId(), "192.168.0.182", 5575, 5675);
-								//msg.channel.getRemoteAddress().toString().split(":")[0].substring(1);
-								//if(n.getNodeId() == "four")
-								//{
-
-								//if(!HeartbeatManager.getInstance().incomingHB.contains(n.getOriginId())){
-								HeartbeatData heart = new HeartbeatData(n.getNodeId(), msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5575, 5675);
+																HeartbeatData heart = new HeartbeatData(n.getNodeId(), msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5575, 5675);
 								HeartbeatConnector.getInstance().addConnectToThisNode(heart);
-								//}
-								//}
-								//if(n.getNodeId() == "five")
-								//{
-								//HeartbeatData heart = new HeartbeatData(n.getNodeId(), msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0], 5574, 5674);
-								//HeartbeatConnector.getInstance().addConnectToThisNode(heart);
-								//}
-
-							
-								
-								
+									
 							}
 						} else
 							logger.warn(n.getNodeId() + " not writable");

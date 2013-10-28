@@ -195,7 +195,7 @@ public class Server {
 		ConnectionlessBootstrap bs = new ConnectionlessBootstrap(broadcastCF);
 
 		// Set up the pipeline factory.
-		bs.setPipelineFactory(new BroadcastPipeline());
+		bs.setPipelineFactory(new BroadcastPipeline(new BroadcastHandler()));
 
 		// tweak for performance
 		// bs.setOption("tcpNoDelay", true);
@@ -263,7 +263,7 @@ public class Server {
 			logger.info("Unknown host");
 			e.printStackTrace();
 		}
-		System.out.println(hostAddress);
+		//System.out.println(hostAddress);
 		BroadcastConnector bconnector = new BroadcastConnector(nodeId, hostAddress, port, mport, bport);
 		bconnector.initiateBroadcast();
 		logger.info("Broadcasting availability");

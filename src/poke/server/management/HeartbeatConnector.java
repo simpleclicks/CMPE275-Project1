@@ -98,6 +98,7 @@ public class HeartbeatConnector extends Thread {
 
 		while (forever) {
 			try {
+				validateConnection();
 				if (monitors.size() == 0) {
 					logger.info("HB connection monitor not started, no connections to establish");
 					Thread.sleep(sConnectRate);
@@ -108,7 +109,7 @@ public class HeartbeatConnector extends Thread {
 					Thread.sleep(sConnectRate);
 					// try to establish connections to our nearest nodes
 					for (HeartMonitor hb : monitors.values()) {
-						validateConnection();
+						//validateConnection();
 						if (!hb.isConnected()) {
 							try {
 								logger.info("attempting to connect to node: " + hb.getNodeInfo());
@@ -133,7 +134,7 @@ public class HeartbeatConnector extends Thread {
 		// validate connections this node wants to create
 		for (HeartbeatData hb : HeartbeatManager.getInstance().incomingHB.values()) {
 			// receive HB - need to check if the channel is readable
-			System.out.println("IncomingHB: "+hb.getStatus());
+			logger.info("IncomingHB: "+hb.getStatus()+" Node: "+ hb.getNodeId());
 			if (hb.channel == null) {
 				System.out.println("");
 				if (hb.getStatus() == BeatStatus.Active || hb.getStatus() == BeatStatus.Weak) {
@@ -144,11 +145,11 @@ public class HeartbeatConnector extends Thread {
 			} else if (hb.channel.isConnected()) {
 				if (hb.channel.isWritable()) {
 					if (System.currentTimeMillis() - hb.getLastBeat() >= hb.getBeatInterval()) {
-						System.out.println("IncomingHB: isconnected and iswritable" + hb.getLastBeat() + ":" + hb.getBeatInterval());
+						//System.out.println("IncomingHB: isconnected and iswritable" + hb.getLastBeat() + ":" + hb.getBeatInterval());
 						hb.incrementFailures();
 						hb.setStatus(BeatStatus.Weak);
 					} else {
-						System.out.println("IncomingHB else of isconnected and is writable");
+						//System.out.println("IncomingHB else of isconnected and is writable");
 						hb.setStatus(BeatStatus.Active);
 						hb.setFailures(0);
 					}
@@ -166,7 +167,7 @@ public class HeartbeatConnector extends Thread {
 		// validate connections this node wants to create
 		for (HeartbeatData hb : HeartbeatManager.getInstance().outgoingHB.values()) {
 			// emit HB - need to check if the channel is writable
-			System.out.println("OutgoingHB: "+hb.getStatus());
+			logger.info("OutgoingHB: "+hb.getStatus()+" Node: "+ hb.getNodeId());
 			if (hb.channel == null) {
 				if (hb.getStatus() == BeatStatus.Active || hb.getStatus() == BeatStatus.Weak) {
 					hb.setStatus(BeatStatus.Failed);
@@ -175,12 +176,12 @@ public class HeartbeatConnector extends Thread {
 				}
 			} else if (hb.channel.isConnected()) {
 				if (hb.channel.isWritable()) {
-					if (System.currentTimeMillis() - hb.getLastBeat() >= hb.getBeatInterval()) {
-						System.out.println("OutgoingHB: isconnected and iswritable " + hb.getLastBeat() + ":" + hb.getBeatInterval());
+					if (System.currentTimeMillis() - hb.getLastBeatSent() >= hb.getBeatInterval()) {
+						//System.out.println("OutgoingHB: isconnected and iswritable " + hb.getLastBeatSent() + ":" + hb.getBeatInterval());
 						hb.incrementFailures();
 						hb.setStatus(BeatStatus.Weak);
 					} else {
-						System.out.println("OutgoingHB: else of isconnected and is writable");
+						//System.out.println("OutgoingHB: else of isconnected and is writable");
 						hb.setStatus(BeatStatus.Active);
 						hb.setFailures(0);
 					}

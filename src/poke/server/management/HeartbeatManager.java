@@ -122,13 +122,9 @@ public class HeartbeatManager extends Thread {
 			heart.setConnection(ch, sa);
 			outgoingHB.put(ch, heart);
 			
-			//if(outgoingHB.size() >= 2)
-			//System.out.println("Random HB Status "+incomingHB.values().iterator().next().getStatus());
-
 			// when the channel closes, remove it from the outgoingHB
 			ch.getCloseFuture().addListener(new CloseHeartListener(heart));
 			
-			//HeartbeatConnector.getInstance().addConnectToThisNode(heart);
 		} else {
 			logger.error("Received a HB connection unknown to the server, node ID = ", nodeId);  // node already in outgoing channel
 			// TODO actions?
@@ -173,7 +169,7 @@ public class HeartbeatManager extends Thread {
 		HeartbeatData hd = incomingHB.get(nodeId);
 		if (hd != null) {
 			hd.setConnection(ch, sa);
-			//hd.setStatus(BeatStatus.Active);
+			hd.setStatus(BeatStatus.Active);
 
 			// when the channel closes, remove it from the incomingHB list
 			ch.getCloseFuture().addListener(new CloseHeartListener(hd));
@@ -267,9 +263,10 @@ public class HeartbeatManager extends Thread {
 			if (outgoingHB.containsValue(heart)) {
 				logger.warn("HB outgoing channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());
 				outgoingHB.remove(future.getChannel());
-			} else if (incomingHB.containsValue(heart)) {
+			} 
+			if (incomingHB.containsValue(heart)) {
 				logger.warn("HB incoming channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());
-				incomingHB.remove(future.getChannel());
+				incomingHB.remove(heart.getNodeId());
 			}
 			//remove the node from monitors
 			HeartbeatConnector.getInstance().removeNodeFromMonitor(heart);

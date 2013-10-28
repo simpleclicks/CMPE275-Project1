@@ -23,7 +23,19 @@ import org.jboss.netty.handler.codec.frame.LengthFieldPrepender;
 import org.jboss.netty.handler.codec.protobuf.ProtobufDecoder;
 import org.jboss.netty.handler.codec.protobuf.ProtobufEncoder;
 
+import poke.monitor.MonitorHandler;
+
 public class BroadcastPipeline implements ChannelPipelineFactory {
+	
+	private BroadcastHandler handler;
+	
+	public BroadcastPipeline(BroadcastHandler handler) {
+		this.handler = handler;
+	}
+	
+	public BroadcastPipeline() {
+		
+	}
 
 	public ChannelPipeline getPipeline() throws Exception {
 		ChannelPipeline pipeline = Channels.pipeline();
@@ -39,8 +51,8 @@ public class BroadcastPipeline implements ChannelPipelineFactory {
 		pipeline.addLast("frameEncoder", new LengthFieldPrepender(4));
 		pipeline.addLast("protobufEncoder", new ProtobufEncoder());
 
-		// our message processor (new instance for each connection)
-		pipeline.addLast("handler", new BroadcastHandler());
+		if(handler != null)
+		pipeline.addLast("handler", handler);
 
 		return pipeline;
 	}

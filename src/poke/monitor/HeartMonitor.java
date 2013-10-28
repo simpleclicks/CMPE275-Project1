@@ -162,7 +162,7 @@ public class HeartMonitor {
 		if (channel == null)
 			return false;
 		else
-		{	logger.info("HeartMonitor is coonector called "+ (channel.getChannel().isOpen() && channel.getChannel().isWritable()));
+		{	logger.info("HeartMonitor is connector called "+ (channel.getChannel().isOpen() && channel.getChannel().isWritable()));
 			return (channel.getChannel().isOpen() && channel.getChannel().isWritable());
 		}
 	}
