@@ -33,9 +33,9 @@ public class Jab {
 		ClientListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);
 
-		cc.docAddReq("Kaustubh", "E://OCBRM-Docs.rar");
+		cc.docAddReq("", "E://GTHub.flv");
 		
-		//cc.docRemove("275", "test3.txt");
+		//cc.docRemove("", "GTHub.flv");
 	
 	}
 

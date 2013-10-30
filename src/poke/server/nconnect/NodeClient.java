@@ -526,7 +526,7 @@ public class NodeClient {
 
 			String nameSpace = null;
 
-			if(body.getSpaces(0) !=null)
+			if(body.getSpacesCount() > 0)
 				nameSpace = body.getSpaces(0).getName();
 
 			String docName = body.getDocs(0).getDocName();

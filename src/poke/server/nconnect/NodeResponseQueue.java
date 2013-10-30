@@ -18,7 +18,7 @@ public class NodeResponseQueue {
 
 	static private volatile  ConcurrentHashMap<String, String> docAddHSResponseQueue =  new ConcurrentHashMap<String, String>();
 
-	private static final int MAXWAITFORRESPONSE = 3000;
+	private static final int MAXWAITFORRESPONSE = 5000;
 
 	protected static Logger logger = LoggerFactory.getLogger("NodeResponseQueue");
 
@@ -98,7 +98,7 @@ public class NodeResponseQueue {
 
 					try {
 
-						Thread.sleep(5000);
+						Thread.sleep(MAXWAITFORRESPONSE);
 
 					} catch (InterruptedException e) {
 
@@ -111,6 +111,7 @@ public class NodeResponseQueue {
 
 					if(addHSResponse.equalsIgnoreCase("Success")){
 						docAddHSResponseQueue.put(directory+fName, selectedNode.getNodeId());
+						logger.info(" inserting entry into docAddHSQueue with key as "+directory+fName);
 						break;
 					}
 				}
@@ -205,11 +206,17 @@ public class NodeResponseQueue {
 	public static String  fetchDocAddHSResult( String nameSpace , String fileName){
 
 		String key = nameSpace+fileName;
+		
+		logger.info(" fetchDocAddHSResult for key "+key);
 
-		if(docAddHSResponseQueue.contains(key))
+		if(docAddHSResponseQueue.containsKey(key)){
 			return docAddHSResponseQueue.get(key);
-		else
+		}
+		else{
+			logger.info("Key not found in docAddHSResponseQueue");
+			logger.info("size of docAddHSResponseQueue "+docAddHSResponseQueue.size());
 			return "NA";
+		}
 	}
 
 
@@ -248,7 +255,7 @@ public class NodeResponseQueue {
 				logger.info("Document remove successful for "+nameSpace+"/"+fileName+" by nodeId "+nc.getNodeId());
 				return true;
 			}else if(result.equalsIgnoreCase("NA")){
-				logger.warn("No response from node "+nc.getNodeId()+"for document upload validation of "+nameSpace+"/"+fileName);
+				logger.warn("No response from node "+nc.getNodeId()+"for document remove of "+nameSpace+"/"+fileName);
 			}else if(result.equalsIgnoreCase("Failure"))
 				logger.warn("DocRemoveResponse: Node "+nc.getNodeId()+" does not have "+nameSpace+"/"+fileName);
 		}

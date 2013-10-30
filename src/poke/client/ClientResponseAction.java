@@ -171,7 +171,9 @@ public class ClientResponseAction {
 
 			Payload.Builder docAddPLBuilder = Payload.newBuilder();
 
-			String nameSpace = docUpload.getSpaces(0).getName();
+			String nameSpace ="";
+			if(docUpload.getSpacesCount()>0)
+				nameSpace = docUpload.getSpaces(0).getName();
 
 			String filePath = docUpload.getDocs(0).getDocExtension();
 

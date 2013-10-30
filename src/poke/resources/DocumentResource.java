@@ -83,7 +83,9 @@ public class DocumentResource implements Resource {
 
 	private static final String REQUESTEDFILEDNEXISTSMSG = "Cluster does not have the requested file";
 
-	private static final int MAXWAITFORRESPONSE = 3000;
+	private static final int MAXWAITFORRESPONSE = 5000;
+	
+	private static final int MAXWAITFORADDRESPONSE = 7000;
 
 	private static final File homeDir = new File(HOMEDIR);
 
@@ -344,7 +346,7 @@ public class DocumentResource implements Resource {
 				logger.info(" DocAddHS: sleeping for 3000ms! witing for response for docAddHS");
 				
 				try {
-					Thread.sleep(MAXWAITFORRESPONSE);
+					Thread.sleep(MAXWAITFORADDRESPONSE);
 				} catch (InterruptedException e) {
 					e.printStackTrace(); 
 				}
@@ -356,6 +358,9 @@ public class DocumentResource implements Resource {
 					logger.info(" DocAddValidate: Received response for docAddValidate from "+nodeId+" as "+nodeId);
 					nodeFound = true;
 					break;
+				}else{
+					
+					logger.info(" DocAddValidate: Received response for docAddValidate from "+nodeId+" as "+nodeId);
 				}
 			}
 			
@@ -422,7 +427,7 @@ public class DocumentResource implements Resource {
 			
 			try {
 			
-				Thread.sleep(MAXWAITFORRESPONSE);
+				Thread.sleep(MAXWAITFORADDRESPONSE);
 		
 			} catch (InterruptedException e) {
 				
