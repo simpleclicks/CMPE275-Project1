@@ -61,6 +61,10 @@ public class NodeClient {
 	private ConcurrentHashMap<String, String> docRemoveResponseQueue =  new ConcurrentHashMap<String, String>();
 	
 	private ConcurrentHashMap<String, String> replicaRemoveResponseQueue =  new ConcurrentHashMap<String, String>();
+	
+	private ConcurrentHashMap<String, String> docAddHSResponseQueue =  new ConcurrentHashMap<String, String>();
+	
+	private ConcurrentHashMap<String, String> docAddResponseQueue =  new ConcurrentHashMap<String, String>();
 
 
 	public NodeClient(String host, int port, String nodeId) {
@@ -128,7 +132,7 @@ public class NodeClient {
 
 	public boolean queryFile(String nameSpace, String fileName){
 
-		Request docQueryRequest = createRequest(nameSpace , fileName , Header.Routing.DOCQUERY);
+		Request docQueryRequest = createRequest(nameSpace , fileName , Header.Routing.DOCQUERY ,0 ,0 ,0);
 
 		return enqueueRequest(docQueryRequest);
 
@@ -136,19 +140,35 @@ public class NodeClient {
 	
 	public boolean removeDoc(String nameSpace , String fileName){
 		
-		Request docRemoveRequest = createRequest(nameSpace , fileName , Header.Routing.DOCREMOVE);
+		Request docRemoveRequest = createRequest(nameSpace , fileName , Header.Routing.DOCREMOVE,0,0,0);
 		
 		return enqueueRequest(docRemoveRequest);
 	}
 	
+	public boolean docAddHandshake(String nameSpace , String fileName , long size){
+		
+		Request docAddHandshakeRequest = createRequest(nameSpace , fileName , Header.Routing.DOCADDHANDSHAKE , size , 0 ,0);
+		
+		return enqueueRequest(docAddHandshakeRequest);
+	}
+	
 	public boolean removeReplica(String nameSpace , String fileName){
 		
-		Request replicaRemoveRequest = createRequest(nameSpace , fileName , Header.Routing.REPLICAREMOVE);
+		Request replicaRemoveRequest = createRequest(nameSpace , fileName , Header.Routing.REPLICAREMOVE , 0 ,0 ,0);
 		
 		return enqueueRequest(replicaRemoveRequest);
 	}
 	
-	private Request createRequest(String nameSpace , String fileName , Header.Routing action){
+	public boolean docAdd(Header docAddHeader , Payload body){
+		
+		docAddHeader = docAddHeader.toBuilder().setOriginator(nodeId).build();
+		
+		Request docAddReq = Request.newBuilder().setBody(body).setHeader(docAddHeader).build();
+		
+		return enqueueRequest(docAddReq);
+	}
+	
+	private Request createRequest(String nameSpace , String fileName , Header.Routing action , long docSize , int totalChunks , int chunkId){
 		
 		Header.Builder docQueryHeaader = Header.newBuilder();
 
@@ -158,7 +178,7 @@ public class NodeClient {
 
 		Payload.Builder docPayloadBuilder = Payload.newBuilder();
 
-		docPayloadBuilder.setDoc(Document.newBuilder().setDocName(fileName));
+		docPayloadBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocSize(docSize).setTotalChunk(totalChunks).setChunkId(chunkId));
 
 		if(nameSpace !=null && nameSpace.length() > 0)
 			docPayloadBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace));
@@ -171,6 +191,38 @@ public class NodeClient {
 		
 		return docQueryReqBuilder.build();
 		
+	}
+	
+	public String checkDocADDHSResponse(String nameSpace , String fileName){
+		
+		String key = nameSpace+fileName;
+		
+		String noResult = "NA";
+		
+		if(docAddHSResponseQueue.containsKey(key)){
+			
+			return docAddHSResponseQueue.get(key);
+					
+		}else{
+			
+			return noResult;
+		}
+	}
+	
+	public String checkDocAddResponse(String nameSpace , String fileName){
+		
+		String key = nameSpace+fileName;
+		
+		String noResult = "NA";
+		
+		if(docAddResponseQueue.containsKey(key)){
+			
+			return docAddResponseQueue.remove(key);
+					
+		}else{
+			
+			return noResult;
+		}
 	}
 	
 	public String checkDocQueryResponse(String nameSpace , String fileName){
@@ -277,7 +329,6 @@ public class NodeClient {
 
 		public OutboundWorker(NodeClient conn) {
 			this.conn = conn;
-
 			if (conn.outboundRequestQueue == null)
 				throw new RuntimeException("OutboundWorker worker detected null request queue");
 		}
@@ -345,7 +396,7 @@ public class NodeClient {
 							conn.outboundRequestQueue.putFirst(msg);
 						}
 
-
+						System.gc();
 
 					} else{
 						conn.outboundRequestQueue.putFirst(msg);
@@ -394,8 +445,10 @@ public class NodeClient {
 
 				try {
 
+					System.gc();
+					
 					eye.Comm.Response msg = owner.inboundResponseQueue.take();
-
+					
 					if (msg.getHeader().getRoutingId() == Header.Routing.DOCQUERY) {
 
 						String msgKey = createKey(msg.getBody());
@@ -429,8 +482,29 @@ public class NodeClient {
 
 						owner.replicaRemoveResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
 
-					}
+					}else if(msg.getHeader().getRoutingId() == Header.Routing.DOCADDHANDSHAKE){
 
+						String msgKey = createKey(msg.getBody());
+						
+						if(msgKey.equalsIgnoreCase("Invalid")){
+							logger.error("Invalid ReplResponse from node "+owner.nodeId+" document name missing");
+							continue;
+						}
+
+						owner.docAddHSResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+
+					}else if(msg.getHeader().getRoutingId() == Header.Routing.DOCADD){
+
+						String msgKey = createKey(msg.getBody());
+						
+						if(msgKey.equalsIgnoreCase("Invalid")){
+							logger.error("Invalid ReplResponse from node "+owner.nodeId+" document name missing");
+							continue;
+						}
+
+						owner.docAddResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+
+					}
 
 				} catch (InterruptedException ie) {
 					logger.error("InboundWorker has been interrupted "+ie.getMessage());
