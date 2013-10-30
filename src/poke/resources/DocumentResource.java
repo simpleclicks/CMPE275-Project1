@@ -159,6 +159,10 @@ public class DocumentResource implements Resource {
 		String nameSpace = EMPTY_STRING;
 		
 		String originator = docAddValidateHeader.getOriginator();
+		
+		String self = HeartbeatManager.getInstance().getNodeId();
+		
+		logger.info("Received docAddValidate( docAddHS) from "+originator);
 
 		Response.Builder docAddValidateResponseBuilder = Response.newBuilder();
 
@@ -178,7 +182,7 @@ public class DocumentResource implements Resource {
 
 		if((newFileName == null || newFileName.length() ==0) || reqFileSize ==0){
 
-			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQMISSINGPARAMMSG));
+			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQMISSINGPARAMMSG).toBuilder().setOriginator(self));
 
 			return docAddValidateResponseBuilder.build();
 		}
@@ -211,7 +215,7 @@ public class DocumentResource implements Resource {
 
 					if(fileCheck){
 
-						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(self));
 
 						return docAddValidateResponseBuilder.build();
 
@@ -229,7 +233,7 @@ public class DocumentResource implements Resource {
 
 					if(fileCheck){
 
-						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+						docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(self));
 
 						return docAddValidateResponseBuilder.build();
 
@@ -241,7 +245,7 @@ public class DocumentResource implements Resource {
 
 				logger.error("Document Response: IO Exception while validating file add request "+e.getMessage());
 
-				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG).toBuilder().setOriginator(self));
 
 				return docAddValidateResponseBuilder.build();
 
@@ -259,7 +263,7 @@ public class DocumentResource implements Resource {
 
 				if(fileCheck){
 
-					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(self));
 
 					return docAddValidateResponseBuilder.build();
 
@@ -267,7 +271,7 @@ public class DocumentResource implements Resource {
 
 				if(visitorFileCheck){
 
-					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+					docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(self));
 
 					return docAddValidateResponseBuilder.build();
 				}
@@ -276,7 +280,7 @@ public class DocumentResource implements Resource {
 
 				logger.error("Document Response: IO Exception while validating file add request "+e.getMessage());
 
-				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG).toBuilder().setOriginator(self));
 
 				return docAddValidateResponseBuilder.build();
 			}
@@ -296,7 +300,7 @@ public class DocumentResource implements Resource {
 			boolean docQueryResult = NodeResponseQueue.fetchDocQueryResult(nameSpace , newFileName);
 
 			if(docQueryResult){
-				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG));
+				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(self));
 
 				return docAddValidateResponseBuilder.build();
 			}
@@ -321,7 +325,7 @@ public class DocumentResource implements Resource {
 
 			System.out.println("DpcumentResource:docAddValidate IOException while calculating free space");
 
-			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG).toBuilder().setOriginator(self));
 
 			return docAddValidateResponseBuilder.build();
 		}
@@ -356,18 +360,18 @@ public class DocumentResource implements Resource {
 			}
 			
 			if(nodeFound)
-				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.SUCCESS, FILEUPLOADREQVALIDATEDMSG));
+				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.SUCCESS, FILEUPLOADREQVALIDATEDMSG).toBuilder().setOriginator(self));
 			else
-				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILETOOLARGETOSAVEMSG));	
+				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILETOOLARGETOSAVEMSG).toBuilder().setOriginator(self));	
 
 			}else{
 				
-				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILETOOLARGETOSAVEMSG));
+				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILETOOLARGETOSAVEMSG).toBuilder().setOriginator(self));
 			}
 		
 		}else{
 
-			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.SUCCESS, FILEUPLOADREQVALIDATEDMSG));
+			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.SUCCESS, FILEUPLOADREQVALIDATEDMSG).toBuilder().setOriginator(self));
 		}
 
 		return docAddValidateResponseBuilder.build();

@@ -98,7 +98,7 @@ public class NodeResponseQueue {
 
 					try {
 
-						Thread.sleep(MAXWAITFORRESPONSE);
+						Thread.sleep(5000);
 
 					} catch (InterruptedException e) {
 
