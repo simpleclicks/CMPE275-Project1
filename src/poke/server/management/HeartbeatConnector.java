@@ -101,7 +101,7 @@ public class HeartbeatConnector extends Thread {
 
 			monitors.put(node.getHost(),hm);
 
-			writeConfToFile();
+			//writeConfToFile();
 		}
 	}
 
@@ -124,6 +124,10 @@ public class HeartbeatConnector extends Thread {
 			conf.addNearestNode(nearestNode);
 			writeConfToFile();
 		}
+		else {
+			logger.info("Broadcasted node already exists");
+		}
+			
 	}
 
 	public boolean addExternalNode(HeartbeatData node) {
@@ -154,8 +158,10 @@ public class HeartbeatConnector extends Thread {
 			conf.getNearest().remove(host);
 			writeConfToFile();
 		}
-		else
+		else {
 			logger.info("HeartbeatConnector: Cannot remove node. Monitor doesn't contain this node");
+			System.out.println(monitors);
+		}
 	}
 
 	@Override
