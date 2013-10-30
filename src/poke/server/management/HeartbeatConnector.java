@@ -15,6 +15,9 @@
  */
 package poke.server.management;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
@@ -24,6 +27,10 @@ import org.slf4j.LoggerFactory;
 
 import poke.monitor.HeartMonitor;
 import poke.monitor.MonitorHandler;
+import poke.server.conf.JsonUtil;
+import poke.server.conf.NodeDesc;
+import poke.server.conf.ServerConf;
+import poke.server.conf.ServerConfTest;
 import poke.server.management.HeartbeatData.BeatStatus;
 
 /**
@@ -42,6 +49,24 @@ public class HeartbeatConnector extends Thread {
 	private ConcurrentHashMap<String, HeartMonitor> monitors = new ConcurrentHashMap<String, HeartMonitor>();
 	private int sConnectRate = 2000; // msec
 	private boolean forever = true;
+	private static ServerConf conf;
+	private static String confPath;
+
+	public static String getConfPath() {
+		return confPath;
+	}
+
+	public static void setConfPath(String confPath) {
+		HeartbeatConnector.confPath = confPath;
+	}
+
+	public static ServerConf getConf() {
+		return conf;
+	}
+
+	public static void setConf(ServerConf conf) {
+		HeartbeatConnector.conf = conf;
+	}
 
 	public static HeartbeatConnector getInstance() {
 		instance.compareAndSet(null, new HeartbeatConnector());
@@ -61,7 +86,7 @@ public class HeartbeatConnector extends Thread {
 			throw new RuntimeException("Null nodes or IDs are not allowed");
 
 
-		if(!monitors.containsKey(node.getNodeId())) {
+		if(!monitors.containsKey(node.getHost())) {
 			// register the node to the manager that is used to determine if a
 			// connection is usable by the public messaging
 			HeartbeatManager.getInstance().addNearestNode(node);
@@ -74,10 +99,46 @@ public class HeartbeatConnector extends Thread {
 			handler.addListener(hbmon);
 			HeartMonitor hm = new HeartMonitor(node.getHost(), node.getMgmtport(), handler);
 
-			monitors.put(node.getNodeId(),hm);
+			monitors.put(node.getHost(),hm);
+
+			writeConfToFile();
 		}
 	}
 
+	public void addConnectByBroadcast(HeartbeatData node) {
+
+		if (node == null || node.getNodeId() == null)
+			throw new RuntimeException("Null nodes or IDs are not allowed");
+
+
+		if(!monitors.containsKey(node.getHost())) {
+
+			addConnectToThisNode(node);
+
+			NodeDesc nearestNode = new NodeDesc();
+			nearestNode.setHost(node.getHost());
+			nearestNode.setNodeId(node.getNodeId());
+			nearestNode.setPort(node.getPort());
+			nearestNode.setMgmtPort(node.getMgmtport());
+
+			conf.addNearestNode(nearestNode);
+			writeConfToFile();
+		}
+	}
+
+	public boolean addExternalNode(HeartbeatData node) {
+
+		if(!monitors.containsKey(node.getHost())) {
+
+			addConnectToThisNode(node);
+			return true;
+		}
+		else {
+
+			return false;
+		}
+
+	}
 	/**
 	 * After removing the node from incoming and outgoing HB queues
 	 * the node also has to be removed from monitor
@@ -85,14 +146,18 @@ public class HeartbeatConnector extends Thread {
 	 * 
 	 * @param heart
 	 */
-	public void removeNodeFromMonitor(HeartbeatData heart) {
-		
-		if(monitors.containsKey(heart.getNodeId())) {
-			
-			monitors.remove(heart.getNodeId());
+	public void removeNodeFromMonitor(String host) {
+
+		if(monitors.containsKey(host)) {
+
+			monitors.remove(host);
+			conf.getNearest().remove(host);
+			writeConfToFile();
 		}
+		else
+			logger.info("HeartbeatConnector: Cannot remove node. Monitor doesn't contain this node");
 	}
-	
+
 	@Override
 	public void run() {
 
@@ -108,15 +173,18 @@ public class HeartbeatConnector extends Thread {
 
 					Thread.sleep(sConnectRate);
 					// try to establish connections to our nearest nodes
+					//monitors.entrySet()
 					for (HeartMonitor hb : monitors.values()) {
 						//validateConnection();
 						if (!hb.isConnected()) {
 							try {
 								logger.info("attempting to connect to node: " + hb.getNodeInfo());
 								hb.initiateHeartbeat();
-								
+
 							} catch (Exception ie) {
 								// do nothing
+								logger.info("HeartMonitor: Cannot connect, Node doesn't exist");
+								//monitors.remove(hb.getHost());
 							}
 						}
 					}
@@ -196,4 +264,30 @@ public class HeartbeatConnector extends Thread {
 			}
 		}
 	}
+
+	public void writeConfToFile() {
+
+		String json = JsonUtil.encode(conf);
+		FileWriter fw = null;
+		try {
+			try {
+				fw = new FileWriter(new File(confPath));
+				fw.write(json);
+
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			System.out.println("JSON: " + json);
+		} finally {
+			try {
+				fw.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
 }

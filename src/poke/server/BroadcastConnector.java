@@ -16,18 +16,13 @@ package poke.server;
  * under the License.
  */
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
 
-import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.bootstrap.ConnectionlessBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.socket.DatagramChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioDatagramChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +30,8 @@ import org.slf4j.LoggerFactory;
 import eye.Comm.Broadcast;
 
 /**
- * The monitor is a client-side component to process responses from server
- * management messages/responses - heartbeats.
+ * 
+ * Sends Broadcast when server goes up.
  * 
  * @author gash
  * 
@@ -54,16 +49,6 @@ public class BroadcastConnector {
 	private int mgmtPort;
 	private int bport;
 
-	/**
-	 * most applications will supply a handler to process messages. This is the
-	 * prefered constructor.
-	 * 
-	 * @param handler
-	 * @param host
-	 *            the hostname
-	 * @param port
-	 *            This is the management port
-	 */
 	public BroadcastConnector(String nodeId, String hostAddress, int port, int mgmtPort, int bport) {
 		this.nodeId = nodeId;
 		this.hostAddress = hostAddress;
@@ -100,7 +85,8 @@ public class BroadcastConnector {
 			NetworkInterface ni;
 			try {
 				//ni = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
-				//String broadcastAddress = ni.getInterfaceAddresses().get(0).getBroadcast().toString().substring(1);
+				//System.out.println(ni.getInterfaceAddresses().get(0).getBroadcast().toString().substring(1));
+				
 				String broadcastAddress = "192.168.0.255";
 				logger.info("sending broadcast to " + broadcastAddress + ":" + bport+1);
 				channel = bootstrap.connect(new InetSocketAddress(broadcastAddress, bport+1));
@@ -131,7 +117,7 @@ public class BroadcastConnector {
 	}
 
 	/**
-	 * attempt to initialize (create) the connection to the node.
+	 * attempt to initialize the broadcast.
 	 * 
 	 * @return did a connect and message succeed
 	 */

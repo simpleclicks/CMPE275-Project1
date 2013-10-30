@@ -70,6 +70,7 @@ public class Server {
 	protected ChannelFactory cf, mgmtCF, broadcastCF;
 	protected ServerConf conf;
 	protected HeartbeatManager hbMgr;
+	private String confPath;
 
 	/**
 	 * static because we need to get a handle to the factory from the shutdown
@@ -106,6 +107,9 @@ public class Server {
 			br.read(raw);
 			conf = JsonUtil.decode(new String(raw), ServerConf.class);
 			ResourceFactory.initialize(conf);
+			confPath = cfg.getAbsolutePath();
+			System.out.println(confPath);
+			
 		} catch (Exception e) {
 		}
 
@@ -197,11 +201,6 @@ public class Server {
 		// Set up the pipeline factory.
 		bs.setPipelineFactory(new BroadcastPipeline(new BroadcastHandler()));
 
-		// tweak for performance
-		// bs.setOption("tcpNoDelay", true);
-		bs.setOption("child.tcpNoDelay", true);
-		bs.setOption("child.keepAlive", true);
-		
 		bootstrap.put(port, bs);
 
 		// Bind and start to accept incoming connections.
@@ -253,6 +252,8 @@ public class Server {
 
 		// manage hbMgr connections
 		HeartbeatConnector conn = HeartbeatConnector.getInstance();
+		HeartbeatConnector.setConf(conf);
+		HeartbeatConnector.setConfPath(confPath);
 		conn.start();
 		
 		String hostAddress = null;

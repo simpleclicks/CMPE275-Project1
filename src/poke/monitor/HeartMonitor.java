@@ -179,12 +179,12 @@ public class HeartMonitor {
 	 * 
 	 * @return did a connect and message succeed
 	 */
-	public boolean initiateHeartbeat() {
+	public boolean initiateHeartbeat() throws Exception{
 		// the join will initiate the other node's hbMgr to reply to
 		// this node's (caller) listeners.
 
 		boolean rtn = false;
-		try {
+		
 			System.out.println("Tracing code flow 1 : HeartMonitor.java intiateHeartbeat");
 			Channel ch = connect();
 			Network.Builder n = Network.newBuilder();
@@ -195,8 +195,7 @@ public class HeartMonitor {
 			m.setGraph(n.build());
 			ch.write(m.build());
 			rtn = true;
-		} catch (Exception e) {
-		}
+		
 
 		return rtn;
 	}

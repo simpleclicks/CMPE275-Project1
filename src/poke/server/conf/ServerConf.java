@@ -178,6 +178,10 @@ public class ServerConf {
 		public void setNearestNodes(TreeMap<String, NodeDesc> nearest) {
 			this.nearest = nearest;
 		}
+		
+		public void remove(String name) {
+			nearest.remove(name);
+		}
 	}
 
 	/**
