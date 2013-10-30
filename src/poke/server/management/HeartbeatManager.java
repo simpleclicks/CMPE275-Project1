@@ -71,6 +71,10 @@ public class HeartbeatManager extends Thread {
 	public static HeartbeatManager getInstance() {
 		return instance.get();
 	}
+	
+	public void removeNodeFromIncomingHB(String nodeId) {
+		incomingHB.remove(nodeId);
+	}
 
 	/**
 	 * initialize the hbMgr for this server
@@ -263,13 +267,15 @@ public class HeartbeatManager extends Thread {
 			if (outgoingHB.containsValue(heart)) {
 				logger.warn("HB outgoing channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());
 				outgoingHB.remove(future.getChannel());
+				
+				//remove the node from monitors
+				HeartbeatConnector.getInstance().removeNodeFromMonitor(heart.getNodeId(), heart.getHost());
 			} 
 			if (incomingHB.containsValue(heart)) {
 				logger.warn("HB incoming channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());
 				incomingHB.remove(heart.getNodeId());
 			}
-			//remove the node from monitors
-			HeartbeatConnector.getInstance().removeNodeFromMonitor(heart.getHost());
+			
 		}
 	}
 }

@@ -97,7 +97,7 @@ public class HeartbeatConnector extends Thread {
 			HeartbeatListener hbmon = new HeartbeatListener(node);
 			MonitorHandler handler = new MonitorHandler();
 			handler.addListener(hbmon);
-			HeartMonitor hm = new HeartMonitor(node.getHost(), node.getMgmtport(), handler);
+			HeartMonitor hm = new HeartMonitor(node.getHost(), node.getMgmtport(), handler, node.getNodeId());
 
 			monitors.put(node.getHost(),hm);
 
@@ -150,18 +150,18 @@ public class HeartbeatConnector extends Thread {
 	 * 
 	 * @param heart
 	 */
-	public void removeNodeFromMonitor(String host) {
+	public void removeNodeFromMonitor(String nodeId, String host) {
 
 		if(monitors.containsKey(host)) {
 
 			monitors.remove(host);
-			conf.getNearest().remove(host);
+			conf.getNearest().remove(nodeId);
 			writeConfToFile();
 		}
-		else {
+		/*else {
 			logger.info("HeartbeatConnector: Cannot remove node. Monitor doesn't contain this node");
 			System.out.println(monitors);
-		}
+		}*/
 	}
 
 	@Override
@@ -179,7 +179,7 @@ public class HeartbeatConnector extends Thread {
 
 					Thread.sleep(sConnectRate);
 					// try to establish connections to our nearest nodes
-					//monitors.entrySet()
+					
 					for (HeartMonitor hb : monitors.values()) {
 						//validateConnection();
 						if (!hb.isConnected()) {
@@ -190,7 +190,8 @@ public class HeartbeatConnector extends Thread {
 							} catch (Exception ie) {
 								// do nothing
 								logger.info("HeartMonitor: Cannot connect, Node doesn't exist");
-								//monitors.remove(hb.getHost());
+								removeNodeFromMonitor(hb.getNodeId(), hb.getHost());
+								HeartbeatManager.getInstance().removeNodeFromIncomingHB(hb.getNodeId());
 							}
 						}
 					}

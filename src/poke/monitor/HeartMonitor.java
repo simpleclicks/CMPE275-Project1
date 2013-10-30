@@ -51,6 +51,8 @@ public class HeartMonitor {
 	private String host;
 	private int port;
 	private MonitorHandler handler;
+	private int retry;
+	private String nodeId;
 
 	// protected ChannelFactory cf;
 
@@ -64,12 +66,18 @@ public class HeartMonitor {
 	 * @param port
 	 *            This is the management port
 	 */
-	public HeartMonitor(String host, int port, MonitorHandler handler) {
+	public HeartMonitor(String host, int port, MonitorHandler handler, String nodeId) {
 		this.handler = handler;
 		this.host = host;
 		this.port = port;
+		this.nodeId = nodeId;
 
+		retry = 0;
 		initTCP();
+	}
+
+	public String getNodeId() {
+		return nodeId;
 	}
 
 	/**
@@ -115,7 +123,7 @@ public class HeartMonitor {
 		bootstrap.setPipelineFactory(new MonitorPipeline(handler));
 	}
 
-	
+
 
 	protected void initTCP() {
 		bootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(Executors.newCachedThreadPool(),
@@ -163,7 +171,7 @@ public class HeartMonitor {
 			return false;
 		else
 		{	logger.info("HeartMonitor is connector called "+ (channel.getChannel().isOpen() && channel.getChannel().isWritable()));
-			return (channel.getChannel().isOpen() && channel.getChannel().isWritable());
+		return (channel.getChannel().isOpen() && channel.getChannel().isWritable());
 		}
 	}
 
@@ -178,26 +186,41 @@ public class HeartMonitor {
 	 * attempt to initialize (create) the connection to the node.
 	 * 
 	 * @return did a connect and message succeed
+	 * @throws Exception 
 	 */
-	public boolean initiateHeartbeat() throws Exception{
+	public boolean initiateHeartbeat() throws Exception {
 		// the join will initiate the other node's hbMgr to reply to
 		// this node's (caller) listeners.
 
 		boolean rtn = false;
 		
-			System.out.println("Tracing code flow 1 : HeartMonitor.java intiateHeartbeat");
-			Channel ch = connect();
-			Network.Builder n = Network.newBuilder();
-			n.setOriginId(HeartbeatManager.getInstance().getNodeId());
-			n.setNodeId(HeartbeatManager.getInstance().getNodeId());
-			n.setAction(Action.NODEJOIN);
-			Management.Builder m = Management.newBuilder();
-			m.setGraph(n.build());
-			ch.write(m.build());
-			rtn = true;
-		
+		if(retry < 5)
+		{
+			try {
 
+				System.out.println("Tracing code flow 1 : HeartMonitor.java intiateHeartbeat");
+				Channel ch = connect();
+				Network.Builder n = Network.newBuilder();
+				n.setOriginId(HeartbeatManager.getInstance().getNodeId());
+				n.setNodeId(HeartbeatManager.getInstance().getNodeId());
+				n.setAction(Action.NODEJOIN);
+				Management.Builder m = Management.newBuilder();
+				m.setGraph(n.build());
+				ch.write(m.build());
+				rtn = true;
+			}
+			catch(Exception e) {
+				logger.info("Cannot send NODEJOIN connect to node");
+				retry++;
+			}
+		}
+		else {
+			throw new Exception();
+		}
+		
 		return rtn;
+			
+		
 	}
 
 	public String getHost() {

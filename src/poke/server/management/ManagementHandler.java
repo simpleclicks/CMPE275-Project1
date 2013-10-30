@@ -61,7 +61,7 @@ public class ManagementHandler extends SimpleChannelUpstreamHandler {
 		logger.error(
 				"ManagementHandler error, closing channel, reason: "
 						+ e.getCause(), e);
-		e.getCause().printStackTrace();
+		//e.getCause().printStackTrace();
 		e.getChannel().close();
 	}
 
