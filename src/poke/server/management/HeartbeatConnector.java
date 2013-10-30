@@ -211,7 +211,6 @@ public class HeartbeatConnector extends Thread {
 			// receive HB - need to check if the channel is readable
 			logger.info("IncomingHB: "+hb.getStatus()+" Node: "+ hb.getNodeId());
 			if (hb.channel == null) {
-				System.out.println("");
 				if (hb.getStatus() == BeatStatus.Active || hb.getStatus() == BeatStatus.Weak) {
 					hb.setStatus(BeatStatus.Failed);
 					hb.setLastFailed(System.currentTimeMillis());

@@ -78,7 +78,7 @@ public class InboundBroadcastWorker extends Thread {
 				
 				if(!msg.nodeId.equals(nodeId)) {
 					//System.out.println(msg.ipAddress);
-				HeartbeatData node = new HeartbeatData(msg.nodeId, msg.ipAddress, null, msg.mgmtPort);
+				HeartbeatData node = new HeartbeatData(msg.nodeId, msg.ipAddress, msg.port, msg.mgmtPort);
 				HeartbeatConnector.getInstance().addConnectByBroadcast(node);
 				}
 				else {

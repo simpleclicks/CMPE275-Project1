@@ -271,7 +271,7 @@ public class HeartbeatManager extends Thread {
 				//remove the node from monitors
 				HeartbeatConnector.getInstance().removeNodeFromMonitor(heart.getNodeId(), heart.getHost());
 			} 
-			if (incomingHB.containsValue(heart)) {
+			if (incomingHB.containsKey(heart.getNodeId())) {
 				logger.warn("HB incoming channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());
 				incomingHB.remove(heart.getNodeId());
 			}
