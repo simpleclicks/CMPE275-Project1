@@ -108,7 +108,7 @@ public class Server {
 			conf = JsonUtil.decode(new String(raw), ServerConf.class);
 			ResourceFactory.initialize(conf);
 			confPath = cfg.getAbsolutePath();
-			System.out.println(confPath);
+			//System.out.println(confPath);
 			
 		} catch (Exception e) {
 		}
@@ -252,8 +252,8 @@ public class Server {
 
 		// manage hbMgr connections
 		HeartbeatConnector conn = HeartbeatConnector.getInstance();
-		HeartbeatConnector.setConf(conf);
-		HeartbeatConnector.setConfPath(confPath);
+		HeartbeatConnector.getInstance().setConf(conf);
+		HeartbeatConnector.getInstance().setConfPath(confPath);
 		conn.start();
 		
 		String hostAddress = null;

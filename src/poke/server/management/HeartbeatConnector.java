@@ -49,23 +49,23 @@ public class HeartbeatConnector extends Thread {
 	private ConcurrentHashMap<String, HeartMonitor> monitors = new ConcurrentHashMap<String, HeartMonitor>();
 	private int sConnectRate = 2000; // msec
 	private boolean forever = true;
-	private static ServerConf conf;
-	private static String confPath;
+	private ServerConf conf;
+	private String confPath;
 
-	public static String getConfPath() {
+	public String getConfPath() {
 		return confPath;
 	}
 
-	public static void setConfPath(String confPath) {
-		HeartbeatConnector.confPath = confPath;
+	public void setConfPath(String confPath) {
+		this.confPath = confPath;
 	}
 
-	public static ServerConf getConf() {
+	public ServerConf getConf() {
 		return conf;
 	}
 
-	public static void setConf(ServerConf conf) {
-		HeartbeatConnector.conf = conf;
+	public void setConf(ServerConf conf) {
+		this.conf = conf;
 	}
 
 	public static HeartbeatConnector getInstance() {
