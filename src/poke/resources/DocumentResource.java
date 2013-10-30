@@ -282,6 +282,8 @@ public class DocumentResource implements Resource {
 			}
 		}
 
+
+		if(!NodeResponseQueue.nodeExistCheck(originator)){
 		
 		NodeResponseQueue.broadcastDocQuery(nameSpace, newFileName);
 
@@ -304,12 +306,14 @@ public class DocumentResource implements Resource {
 			e1.printStackTrace();
 		}
 
-	
+		}
 		
 		try {
 			spaceAvailable = FileSystemUtils.freeSpaceKb()*1024;
 
-			bufferredLimit = spaceAvailable - bufferMemSize;
+			//bufferredLimit = spaceAvailable - bufferMemSize; // commented temporarily for testing
+			
+			bufferredLimit = 25;
 
 			logger.info("DocumentResource: Free Space available " + spaceAvailable);
 
@@ -338,13 +342,14 @@ public class DocumentResource implements Resource {
 				try {
 					Thread.sleep(MAXWAITFORRESPONSE);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					e.printStackTrace(); 
 				}
 				
 				String nodeId = NodeResponseQueue.fetchDocAddHSResult(nameSpace, newFileName);
 				
 				if(!nodeId.equalsIgnoreCase("NA")){
 					docAddHSResponseQueue.put(nameSpace+newFileName, nodeId);
+					logger.info(" DocAddValidate: Received response for docAddValidate from "+nodeId+" as "+nodeId);
 					nodeFound = true;
 					break;
 				}
@@ -407,6 +412,8 @@ public class DocumentResource implements Resource {
 						
 			NodeResponseQueue.forwardDocADDRequest(nodeId , docAddHeader , docAddBody );
 			
+			logger.info("DocAdd: forwarding docAdd to "+nodeId+" due to insufficient space");
+			
 			logger.info(" DocAdd: Sleeping for 3000ms! waiting to receive response from "+nodeId+" for "+nameSpace+"/"+fileName);
 			
 			try {
@@ -421,6 +428,8 @@ public class DocumentResource implements Resource {
 			logger.info(" DocAdd: checking the response from "+nodeId+" for "+nameSpace+"/"+fileName);
 			
 			boolean docAddResponse = NodeResponseQueue.fetchDocAddResult(nodeId, nameSpace, fileName);
+			
+			logger.info(" DocAdd: Response from "+nodeId+" for "+nameSpace+"/"+fileName+" is "+docAddResponse);
 			
 			if(docAddResponse){
 				docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);

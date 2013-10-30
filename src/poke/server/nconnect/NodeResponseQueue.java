@@ -84,7 +84,7 @@ public class NodeResponseQueue {
 			public void run(){
 				int activeNodeCount = activeNodesCount();
 
-				for(int i=1 ; i <= activeNodeCount ; i++){
+				for(int i=0 ; i < activeNodeCount ; i++){
 
 					//int index = nodeIdSelector.nextInt(activeNodeCount);
 
