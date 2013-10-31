@@ -379,13 +379,18 @@ public class NameSpaceResource implements Resource {
         PayloadReply.Builder namespaceListQueryRespBody = PayloadReply.newBuilder();
 
 		
-		NameSpace space = namespaceListQueryBody.getSpace();
+		String space = namespaceListQueryBody.getSpace().getName();
 		namespaceListQueryResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListQueryHeader, ReplyStatus.SUCCESS, NAMESPACEDOESNOTEXIST).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
 		
 		logger.info("namespaceListQuery(): recieved namespace" + space);
 		String namespacePath = HOMEDIR+File.separator+space;
+		
+		logger.info("namespaceListQuery(): recieved namespacePath : " + namespacePath);
+
 		int index = 0;
 		File namespaceDir = new File (namespacePath);
+		logger.info("namespaceListQuery(): recieved namespaceDir : " + namespaceDir);
+
 		String filename = null;
 		String filePath = null;
 		String fileExt = null;
