@@ -139,6 +139,9 @@ public class ClientResponseAction {
 							}
 						}
 
+					}else if(msg.getHeader().getRoutingId() == Header.Routing.DOCREMOVE){
+						
+						System.out.println("ClientResponseHandler: Recieved the response to docRemove from the server and the response is "+msg.getHeader().getReplyCode()+" with Message from server as "+msg.getHeader().getReplyMsg());
 					}
 
 				} catch (InterruptedException ie) {
@@ -168,7 +171,9 @@ public class ClientResponseAction {
 
 			Payload.Builder docAddPLBuilder = Payload.newBuilder();
 
-			String nameSpace = docUpload.getSpaces(0).getName();
+			String nameSpace ="";
+			if(docUpload.getSpacesCount()>0)
+				nameSpace = docUpload.getSpaces(0).getName();
 
 			String filePath = docUpload.getDocs(0).getDocExtension();
 
@@ -209,7 +214,7 @@ public class ClientResponseAction {
 				}
 
 				docAddPLBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocExtension(filePath).
-						setChunkContent(ByteString.copyFrom(fileContents)).setDocSize(fileSize).setTotalChunk(totalChunk).setChunkId(0));
+						setChunkContent(ByteString.copyFrom(fileContents)).setDocSize(fileSize).setTotalChunk(totalChunk).setChunkId(1));
 
 				docAddReqBuilder.setBody(docAddPLBuilder);
 

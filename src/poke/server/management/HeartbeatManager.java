@@ -49,6 +49,10 @@ public class HeartbeatManager extends Thread {
 	static final int sHeartRate = 5000; // msec
 
 	String nodeId;
+	public String getNodeId() {
+		return nodeId;
+	}
+
 	ManagementQueue mqueue;
 	boolean forever = true;
 
@@ -60,10 +64,6 @@ public class HeartbeatManager extends Thread {
 		return instance.get();
 	}
 
-	public String getNodeId() {
-		return nodeId;
-	}
-
 	public void setNodeId(String nodeId) {
 		this.nodeId = nodeId;
 	}
@@ -72,8 +72,15 @@ public class HeartbeatManager extends Thread {
 		return instance.get();
 	}
 	
+
 	public void removeNodeFromIncomingHB(String nodeId) {
 		incomingHB.remove(nodeId);
+	}
+		
+	public boolean checkNearest(String nodeId){
+		
+		return incomingHB.containsKey(nodeId);
+
 	}
 
 	/**
@@ -124,8 +131,10 @@ public class HeartbeatManager extends Thread {
 		if (!outgoingHB.containsKey(ch)) {
 			HeartbeatData heart = new HeartbeatData(nodeId, host, null, mgmtport);
 			heart.setConnection(ch, sa);
+			heart.setStatus(BeatStatus.Init);  // added by Kaustubh
 			outgoingHB.put(ch, heart);
 			
+
 			// when the channel closes, remove it from the outgoingHB
 			ch.getCloseFuture().addListener(new CloseHeartListener(heart));
 			
@@ -158,6 +167,14 @@ public class HeartbeatManager extends Thread {
 			node.setStatus(BeatStatus.Init);
 			incomingHB.put(node.getNodeId(), node);
 		}
+	}
+
+	public ConcurrentHashMap<String, HeartbeatData> getIncomingHB() {
+		return incomingHB;
+	}
+
+	public void setIncomingHB(ConcurrentHashMap<String, HeartbeatData> incomingHB) {
+		this.incomingHB = incomingHB;
 	}
 
 	/**
