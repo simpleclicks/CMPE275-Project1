@@ -291,7 +291,7 @@ public class DocumentResource implements Resource {
 
 		if(!NodeResponseQueue.nodeExistCheck(originator)){
 		
-		NodeResponseQueue.broadcastDocQuery(nameSpace, newFileName);
+		NodeResponseQueue.broadcastDocQuery(nameSpace, newFileName , true);
 
 		try {
 
@@ -299,7 +299,7 @@ public class DocumentResource implements Resource {
 
 			Thread.sleep(MAXWAITFORRESPONSE);
 
-			boolean docQueryResult = NodeResponseQueue.fetchDocQueryResult(nameSpace , newFileName);
+			boolean docQueryResult = NodeResponseQueue.fetchDocQueryResult(nameSpace , newFileName , true);
 
 			if(docQueryResult){
 				docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, FILEADDREQDUPLICATEFILEMSG).toBuilder().setOriginator(self));
@@ -651,15 +651,12 @@ public class DocumentResource implements Resource {
 							fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.SUCCESS, FILEDELETESUCCESSFULMSG).toBuilder().setOriginator(self));
 
 							return fileRemoveResponseBuilder.build();
-
 						}else{
 
 							fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEDELETEUNSUCCESSFULMSG).toBuilder().setOriginator(self));
 
 							return fileRemoveResponseBuilder.build();
-
 						}
-
 					}else{
 
 						fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, NAMESPACEINEXISTENTMSG).toBuilder().setOriginator(self));
@@ -667,7 +664,6 @@ public class DocumentResource implements Resource {
 						return fileRemoveResponseBuilder.build();
 					}
 				}
-
 			} catch (IOException e) {
 
 				logger.error("Document Response: IO Exception while processing file delete request "+e.getMessage());
@@ -884,7 +880,7 @@ public class DocumentResource implements Resource {
 
 				logger.info(" Doc Query: Broadcasting DOCQuery to active nodes ");
 
-				NodeResponseQueue.broadcastDocQuery(nameSpace, fileName);
+				NodeResponseQueue.broadcastDocQuery(nameSpace, fileName , true);
 
 				try {
 
@@ -892,7 +888,7 @@ public class DocumentResource implements Resource {
 
 					Thread.sleep(MAXWAITFORRESPONSE);
 
-					boolean docQueryResult = NodeResponseQueue.fetchDocQueryResult(nameSpace , fileName);
+					boolean docQueryResult = NodeResponseQueue.fetchDocQueryResult(nameSpace , fileName , true);
 
 					if(docQueryResult){
 

@@ -4625,6 +4625,10 @@ public final class Comm {
     // optional int64 remainingHopCount = 9;
     boolean hasRemainingHopCount();
     long getRemainingHopCount();
+    
+    // optional bool isExternal = 10 [default = false];
+    boolean hasIsExternal();
+    boolean getIsExternal();
   }
   public static final class Header extends
       com.google.protobuf.GeneratedMessage
@@ -5030,6 +5034,16 @@ public final class Comm {
       return remainingHopCount_;
     }
     
+    // optional bool isExternal = 10 [default = false];
+    public static final int ISEXTERNAL_FIELD_NUMBER = 10;
+    private boolean isExternal_;
+    public boolean hasIsExternal() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    public boolean getIsExternal() {
+      return isExternal_;
+    }
+    
     private void initFields() {
       routingId_ = eye.Comm.Header.Routing.FINGER;
       originator_ = "";
@@ -5040,6 +5054,7 @@ public final class Comm {
       path_ = java.util.Collections.emptyList();
       toNode_ = "";
       remainingHopCount_ = 0L;
+      isExternal_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -5094,6 +5109,9 @@ public final class Comm {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeInt64(9, remainingHopCount_);
       }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeBool(10, isExternal_);
+      }
       getUnknownFields().writeTo(output);
     }
     
@@ -5138,6 +5156,10 @@ public final class Comm {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(9, remainingHopCount_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(10, isExternal_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -5286,6 +5308,8 @@ public final class Comm {
         bitField0_ = (bitField0_ & ~0x00000080);
         remainingHopCount_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000100);
+        isExternal_ = false;
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
       
@@ -5365,6 +5389,10 @@ public final class Comm {
           to_bitField0_ |= 0x00000080;
         }
         result.remainingHopCount_ = remainingHopCount_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.isExternal_ = isExternal_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -5430,6 +5458,9 @@ public final class Comm {
         }
         if (other.hasRemainingHopCount()) {
           setRemainingHopCount(other.getRemainingHopCount());
+        }
+        if (other.hasIsExternal()) {
+          setIsExternal(other.getIsExternal());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -5532,6 +5563,11 @@ public final class Comm {
             case 72: {
               bitField0_ |= 0x00000100;
               remainingHopCount_ = input.readInt64();
+              break;
+            }
+            case 80: {
+              bitField0_ |= 0x00000200;
+              isExternal_ = input.readBool();
               break;
             }
           }
@@ -5956,6 +5992,27 @@ public final class Comm {
       public Builder clearRemainingHopCount() {
         bitField0_ = (bitField0_ & ~0x00000100);
         remainingHopCount_ = 0L;
+        onChanged();
+        return this;
+      }
+      
+      // optional bool isExternal = 10 [default = false];
+      private boolean isExternal_ ;
+      public boolean hasIsExternal() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      public boolean getIsExternal() {
+        return isExternal_;
+      }
+      public Builder setIsExternal(boolean value) {
+        bitField0_ |= 0x00000200;
+        isExternal_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearIsExternal() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        isExternal_ = false;
         onChanged();
         return this;
       }
@@ -10074,6 +10131,10 @@ public final class Comm {
     boolean hasBeat();
     eye.Comm.Heartbeat getBeat();
     eye.Comm.HeartbeatOrBuilder getBeatOrBuilder();
+    
+    // optional bool isExternal = 3 [default = false];
+    boolean hasIsExternal();
+    boolean getIsExternal();
   }
   public static final class Management extends
       com.google.protobuf.GeneratedMessage
@@ -10130,9 +10191,20 @@ public final class Comm {
       return beat_;
     }
     
+    // optional bool isExternal = 3 [default = false];
+    public static final int ISEXTERNAL_FIELD_NUMBER = 3;
+    private boolean isExternal_;
+    public boolean hasIsExternal() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    public boolean getIsExternal() {
+      return isExternal_;
+    }
+    
     private void initFields() {
       graph_ = eye.Comm.Network.getDefaultInstance();
       beat_ = eye.Comm.Heartbeat.getDefaultInstance();
+      isExternal_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -10164,6 +10236,9 @@ public final class Comm {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeMessage(2, beat_);
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBool(3, isExternal_);
+      }
       getUnknownFields().writeTo(output);
     }
     
@@ -10180,6 +10255,10 @@ public final class Comm {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, beat_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(3, isExternal_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -10319,6 +10398,8 @@ public final class Comm {
           beatBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
+        isExternal_ = false;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
       
@@ -10373,6 +10454,10 @@ public final class Comm {
         } else {
           result.beat_ = beatBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.isExternal_ = isExternal_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -10394,6 +10479,9 @@ public final class Comm {
         }
         if (other.hasBeat()) {
           mergeBeat(other.getBeat());
+        }
+        if (other.hasIsExternal()) {
+          setIsExternal(other.getIsExternal());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -10454,6 +10542,11 @@ public final class Comm {
               }
               input.readMessage(subBuilder, extensionRegistry);
               setBeat(subBuilder.buildPartial());
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              isExternal_ = input.readBool();
               break;
             }
           }
@@ -10642,6 +10735,27 @@ public final class Comm {
         return beatBuilder_;
       }
       
+      // optional bool isExternal = 3 [default = false];
+      private boolean isExternal_ ;
+      public boolean hasIsExternal() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      public boolean getIsExternal() {
+        return isExternal_;
+      }
+      public Builder setIsExternal(boolean value) {
+        bitField0_ |= 0x00000004;
+        isExternal_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearIsExternal() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        isExternal_ = false;
+        onChanged();
+        return this;
+      }
+      
       // @@protoc_insertion_point(builder_scope:Management)
     }
     
@@ -10752,36 +10866,38 @@ public final class Comm {
       "\001(\t\"+\n\013DocumentSet\022\034\n\tdocuments\030\001 \003(\0132\t." +
       "Document\"*\n\014NameSpaceSet\022\032\n\006spaces\030\001 \003(\013" +
       "2\n.NameSpace\")\n\013RoutingPath\022\014\n\004node\030\001 \002(" +
-      "\t\022\014\n\004time\030\002 \002(\003\"\274\004\n\006Header\022#\n\nrouting_id" +
+      "\t\022\014\n\004time\030\002 \002(\003\"\327\004\n\006Header\022#\n\nrouting_id" +
       "\030\001 \002(\0162\017.Header.Routing\022\022\n\noriginator\030\002 " +
       "\002(\t\022\013\n\003tag\030\003 \001(\t\022\014\n\004time\030\004 \001(\003\022\'\n\nreply_" +
       "code\030\005 \001(\0162\023.Header.ReplyStatus\022\021\n\treply" +
       "_msg\030\006 \001(\t\022\032\n\004path\030\007 \003(\0132\014.RoutingPath\022\016",
       "\n\006toNode\030\010 \001(\t\022\031\n\021remainingHopCount\030\t \001(" +
-      "\003\"\203\002\n\007Routing\022\n\n\006FINGER\020\002\022\t\n\005STATS\020\003\022\020\n\014" +
-      "NAMESPACEADD\020\n\022\021\n\rNAMESPACELIST\020\013\022\023\n\017NAM" +
-      "ESPACEUPDATE\020\014\022\023\n\017NAMESPACEREMOVE\020\r\022\023\n\017D" +
-      "OCREPLICATEREQ\020\022\022\020\n\014DOCREPLICATE\020\023\022\n\n\006DO" +
-      "CADD\020\024\022\013\n\007DOCFIND\020\025\022\r\n\tDOCUPDATE\020\026\022\r\n\tDO" +
-      "CREMOVE\020\027\022\023\n\017DOCADDHANDSHAKE\020\030\022\014\n\010DOCQUE" +
-      "RY\020\031\022\021\n\rREPLICAREMOVE\020\032\"U\n\013ReplyStatus\022\013" +
-      "\n\007SUCCESS\020\001\022\013\n\007FAILURE\020\002\022\n\n\006NOAUTH\020\003\022\016\n\n" +
-      "MISSINGARG\020\004\022\020\n\014NOCONNECTION\020\005\"U\n\007Payloa",
-      "d\022\027\n\006finger\030\001 \001(\0132\007.Finger\022\026\n\003doc\030\002 \001(\0132" +
-      "\t.Document\022\031\n\005space\030\003 \001(\0132\n.NameSpace\"v\n" +
-      "\014PayloadReply\022\027\n\006finger\030\001 \001(\0132\007.Finger\022\027" +
-      "\n\004docs\030\002 \003(\0132\t.Document\022\032\n\006spaces\030\003 \003(\0132" +
-      "\n.NameSpace\022\030\n\005stats\030\004 \001(\0132\t.Document\":\n" +
-      "\007Request\022\027\n\006header\030\001 \002(\0132\007.Header\022\026\n\004bod" +
-      "y\030\002 \002(\0132\010.Payload\"@\n\010Response\022\027\n\006header\030" +
-      "\001 \002(\0132\007.Header\022\033\n\004body\030\002 \002(\0132\r.PayloadRe" +
-      "ply\",\n\tHeartbeat\022\016\n\006nodeId\030\001 \002(\t\022\017\n\007time" +
-      "Ref\030\002 \002(\003\"\225\001\n\007Network\022\016\n\006nodeId\030\001 \002(\t\022\037\n",
-      "\006action\030\002 \002(\0162\017.Network.Action\"Y\n\006Action" +
-      "\022\014\n\010NODEJOIN\020\001\022\r\n\tNODELEAVE\020\002\022\014\n\010NODEDEA" +
-      "D\020\003\022\007\n\003MAP\0207\022\014\n\010ANNOUNCE\0208\022\r\n\010SHUTDOWN\020\347" +
-      "\007\"?\n\nManagement\022\027\n\005graph\030\001 \001(\0132\010.Network" +
-      "\022\030\n\004beat\030\002 \001(\0132\n.HeartbeatB\007\n\003eyeH\001"
+      "\003\022\031\n\nisExternal\030\n \001(\010:\005false\"\203\002\n\007Routing" +
+      "\022\n\n\006FINGER\020\002\022\t\n\005STATS\020\003\022\020\n\014NAMESPACEADD\020" +
+      "\n\022\021\n\rNAMESPACELIST\020\013\022\023\n\017NAMESPACEUPDATE\020" +
+      "\014\022\023\n\017NAMESPACEREMOVE\020\r\022\023\n\017DOCREPLICATERE" +
+      "Q\020\022\022\020\n\014DOCREPLICATE\020\023\022\n\n\006DOCADD\020\024\022\013\n\007DOC" +
+      "FIND\020\025\022\r\n\tDOCUPDATE\020\026\022\r\n\tDOCREMOVE\020\027\022\023\n\017" +
+      "DOCADDHANDSHAKE\020\030\022\014\n\010DOCQUERY\020\031\022\021\n\rREPLI" +
+      "CAREMOVE\020\032\"U\n\013ReplyStatus\022\013\n\007SUCCESS\020\001\022\013" +
+      "\n\007FAILURE\020\002\022\n\n\006NOAUTH\020\003\022\016\n\nMISSINGARG\020\004\022",
+      "\020\n\014NOCONNECTION\020\005\"U\n\007Payload\022\027\n\006finger\030\001" +
+      " \001(\0132\007.Finger\022\026\n\003doc\030\002 \001(\0132\t.Document\022\031\n" +
+      "\005space\030\003 \001(\0132\n.NameSpace\"v\n\014PayloadReply" +
+      "\022\027\n\006finger\030\001 \001(\0132\007.Finger\022\027\n\004docs\030\002 \003(\0132" +
+      "\t.Document\022\032\n\006spaces\030\003 \003(\0132\n.NameSpace\022\030" +
+      "\n\005stats\030\004 \001(\0132\t.Document\":\n\007Request\022\027\n\006h" +
+      "eader\030\001 \002(\0132\007.Header\022\026\n\004body\030\002 \002(\0132\010.Pay" +
+      "load\"@\n\010Response\022\027\n\006header\030\001 \002(\0132\007.Heade" +
+      "r\022\033\n\004body\030\002 \002(\0132\r.PayloadReply\",\n\tHeartb" +
+      "eat\022\016\n\006nodeId\030\001 \002(\t\022\017\n\007timeRef\030\002 \002(\003\"\225\001\n",
+      "\007Network\022\016\n\006nodeId\030\001 \002(\t\022\037\n\006action\030\002 \002(\016" +
+      "2\017.Network.Action\"Y\n\006Action\022\014\n\010NODEJOIN\020" +
+      "\001\022\r\n\tNODELEAVE\020\002\022\014\n\010NODEDEAD\020\003\022\007\n\003MAP\0207\022" +
+      "\014\n\010ANNOUNCE\0208\022\r\n\010SHUTDOWN\020\347\007\"Z\n\nManageme" +
+      "nt\022\027\n\005graph\030\001 \001(\0132\010.Network\022\030\n\004beat\030\002 \001(" +
+      "\0132\n.Heartbeat\022\031\n\nisExternal\030\003 \001(\010:\005false" +
+      "B\007\n\003eyeH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -10849,7 +10965,7 @@ public final class Comm {
           internal_static_Header_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Header_descriptor,
-              new java.lang.String[] { "RoutingId", "Originator", "Tag", "Time", "ReplyCode", "ReplyMsg", "Path", "ToNode", "RemainingHopCount", },
+              new java.lang.String[] { "RoutingId", "Originator", "Tag", "Time", "ReplyCode", "ReplyMsg", "Path", "ToNode", "RemainingHopCount", "IsExternal", },
               eye.Comm.Header.class,
               eye.Comm.Header.Builder.class);
           internal_static_Payload_descriptor =
@@ -10905,7 +11021,7 @@ public final class Comm {
           internal_static_Management_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Management_descriptor,
-              new java.lang.String[] { "Graph", "Beat", },
+              new java.lang.String[] { "Graph", "Beat", "IsExternal", },
               eye.Comm.Management.class,
               eye.Comm.Management.Builder.class);
           return null;

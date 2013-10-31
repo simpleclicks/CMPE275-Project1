@@ -66,13 +66,14 @@ message Header {
     // a new message is not created.
     optional ReplyStatus reply_code = 5;
     optional string reply_msg = 6;
-    
+           
     // the path a message takes - to handle cycles in the network
     repeated RoutingPath path = 7;
 
     // if the message is for a specific node, this will be set
     optional string toNode = 8;
     optional int64 remainingHopCount = 9;
+    optional bool isExternal = 10 [default = false];
 
     enum Routing {
         FINGER = 2;
@@ -146,4 +147,5 @@ message Network {
 message Management {
 	optional Network graph = 1;
 	optional Heartbeat beat = 2;
+	optional bool isExternal = 3 [default = false];
 }	

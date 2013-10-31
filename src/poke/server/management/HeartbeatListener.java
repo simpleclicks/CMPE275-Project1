@@ -61,15 +61,25 @@ public class HeartbeatListener implements MonitorListener {
 			logger.info("Tracing code flow 2: HeartbeatLisner Received HB response from " + msg.getBeat().getNodeId());
 			data.setLastBeat(System.currentTimeMillis());
 			
-			if(!NodeResponseQueue.nodeExistCheck(data.getNodeId())){
+			if(!NodeResponseQueue.nodeExistCheck(data.getNodeId()) && !msg.getIsExternal()){
 				
-				NodeClient activeNode = new NodeClient(data.getHost(), data.getPort(), data.getNodeId());
+				NodeClient activeNode = new NodeClient(data.getHost(), data.getPort(), data.getNodeId()); // creates public TCP connection with internal node
 				
 				NodeResponseQueue.addActiveNode(data.getNodeId(), activeNode);
 				
-				logger.info("New node with nodeId "+data.getNodeId()+" has been added to activeNode map");
+				logger.info("New internal node with nodeId "+data.getNodeId()+" has been added to activeNode map");
 				
 				logger.info("number of active nodes in the network "+NodeResponseQueue.activeNodesCount());
+			}else{
+				
+				if(!NodeResponseQueue.externalNodeExistCheck(data.getNodeId())){
+					
+					NodeClient activeNode = new NodeClient(data.getHost(), data.getPort(), data.getNodeId()); // creates public TCP connection with external node
+					
+					NodeResponseQueue.addExternalNode(data.getNodeId(), activeNode);
+					
+					logger.info("New external node with nodeId "+data.getNodeId()+" has been added to externalNode map");
+				}
 			}
 		
 		} else

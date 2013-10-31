@@ -15,6 +15,8 @@ import eye.Comm.Response;
 public class NodeResponseQueue {
 
 	static private volatile ConcurrentHashMap<String, NodeClient> activeNodeMap = new ConcurrentHashMap<String, NodeClient>();
+	
+	static private volatile ConcurrentHashMap<String, NodeClient> activeExternalNodeMap = new ConcurrentHashMap<String, NodeClient>();
 
 	static private volatile  ConcurrentHashMap<String, String> docAddHSResponseQueue =  new ConcurrentHashMap<String, String>();
 
@@ -29,15 +31,32 @@ public class NodeResponseQueue {
 		activeNodeMap.put(nodeId, node);
 	}
 
+	public static void addExternalNode(String nodeId , NodeClient node){
+
+		activeExternalNodeMap.put(nodeId, node);
+	}
+
 	public static NodeClient getActiveNode(String nodeId){
 
 		return activeNodeMap.get(nodeId);
+	}
+	
+	public static NodeClient getExternalNode(String nodeId){
+
+		return activeExternalNodeMap.get(nodeId);
 	}
 
 	public static void removeInactiveNode(String nodeId){
 
 		activeNodeMap.remove(nodeId);
 	}
+	
+	public static void removeExternalNode(String nodeId){
+
+		activeExternalNodeMap.remove(nodeId);
+	}
+
+	
 
 	//	public static void addDocQueryReponse(String docNameSpace , Response docQueryResponse){
 	//		
@@ -58,10 +77,25 @@ public class NodeResponseQueue {
 
 		return activeNodeMap.size();
 	}
+	
+	public static boolean externalNodeExistCheck(String nodeId){
 
-	public static NodeClient[] getActiveNodeInterface(){
+		return activeExternalNodeMap.containsKey(nodeId);
+	}
 
-		Collection<NodeClient> activeNodes = activeNodeMap.values();
+	public static int externalNodesCount(){
+
+		return activeExternalNodeMap.size();
+	}
+
+	public static NodeClient[] getActiveNodeInterface(boolean internal){
+
+		Collection<NodeClient> activeNodes = null;
+		
+		if(internal)
+			activeNodes = activeNodeMap.values();
+		else
+			activeNodes =  activeExternalNodeMap.values();
 
 		NodeClient[] activeNodeArray = new NodeClient[activeNodes.size()];
 
@@ -88,7 +122,7 @@ public class NodeResponseQueue {
 
 					//int index = nodeIdSelector.nextInt(activeNodeCount);
 
-					NodeClient[] nc = getActiveNodeInterface();
+					NodeClient[] nc = getActiveNodeInterface(true);
 
 					NodeClient selectedNode = nc[i];
 
@@ -160,9 +194,9 @@ public class NodeResponseQueue {
 			return false;
 	}
 	
-	public static void broadcastDocQuery(String nameSpace , String fileName){
+	public static void broadcastDocQuery(String nameSpace , String fileName , boolean internal){
 
-		NodeClient[] activeNodeArray = getActiveNodeInterface();
+		NodeClient[] activeNodeArray = getActiveNodeInterface(internal);
 
 		for(NodeClient nc: activeNodeArray){
 
@@ -172,7 +206,7 @@ public class NodeResponseQueue {
 
 	public static void broadcastDocRemoveQuery(String nameSpace , String fileName){
 
-		NodeClient[] activeNodeArray = getActiveNodeInterface();
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
 
 		for(NodeClient nc: activeNodeArray){
 
@@ -184,7 +218,7 @@ public class NodeResponseQueue {
 
 	public static void multicastReplicaRemoveQuery(String nameSpace , String fileName){
 
-		NodeClient[] activeNodeArray = getActiveNodeInterface();
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
 
 		// int nodeId[] = fetch the node id list where this file has been replicated
 
@@ -220,11 +254,9 @@ public class NodeResponseQueue {
 	}
 
 
-	public static boolean fetchDocQueryResult( String nameSpace , String fileName){
+	public static boolean fetchDocQueryResult( String nameSpace , String fileName , boolean internal){
 
-
-
-		NodeClient[] activeNodeArray = getActiveNodeInterface();
+		NodeClient[] activeNodeArray = getActiveNodeInterface(internal);
 
 		for(NodeClient nc: activeNodeArray){
 
@@ -245,7 +277,7 @@ public class NodeResponseQueue {
 
 		boolean queryResult = false;
 
-		NodeClient[] activeNodeArray = getActiveNodeInterface();
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
 
 		for(NodeClient nc: activeNodeArray){
 
@@ -277,7 +309,7 @@ public class NodeResponseQueue {
 		//			
 		//		}
 
-		NodeClient[] activeNodeArray = getActiveNodeInterface();
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
 
 		for(NodeClient nc: activeNodeArray){
 
