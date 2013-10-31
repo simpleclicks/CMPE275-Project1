@@ -28,7 +28,7 @@ public class Jab {
 	}
 
 	public void run() {
-		ClientConnection cc = ClientConnection.initConnection("localhost", 5570);
+		ClientConnection cc = ClientConnection.initConnection("localhost", 5571);
 		System.out.println("Adding listener");
 		ClientListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);
@@ -42,7 +42,7 @@ public class Jab {
 	
 		//cc.docAddReq("TestChunk", "E://Movies//Easy A (2010).avi");
 		
-		cc.docFind("TestChunk", "JB.zip");
+		cc.docFind("test", "test.txt");
 		
 		//cc.docRemove("", "Kaustubh1");
 	

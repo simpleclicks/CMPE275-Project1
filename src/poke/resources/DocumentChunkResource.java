@@ -23,6 +23,7 @@ import eye.Comm.Payload;
 import eye.Comm.PayloadReply;
 import eye.Comm.Request;
 import eye.Comm.Response;
+import poke.server.management.HeartbeatManager;
 import poke.server.nconnect.NodeClient;
 import poke.server.nconnect.NodeResponseQueue;
 import poke.server.resources.ChunkedResource;
@@ -45,6 +46,8 @@ public class DocumentChunkResource implements ChunkedResource {
 
  	private static final int MAX_UNCHUNKED_FILE_SIZE = 26214400;
 
+	private static final long MAXWAITFORRESPONSE = 3000;
+
 	private static DatabaseStorage dbInstance;
 
 	@Override
@@ -60,7 +63,13 @@ public class DocumentChunkResource implements ChunkedResource {
 		switch (opChoice) {
 		
 		 case 21:
-             responses = docFind(docOpHeader, docOpBody);
+			 try {
+				 responses = docFind(docOpHeader, docOpBody); 
+			 }
+			 catch (InterruptedException e) {
+				// TODO: handle exception
+				 		
+			}
              break;
              
 			default:
@@ -72,7 +81,7 @@ public class DocumentChunkResource implements ChunkedResource {
 		return responses;
 	}
 
-	private List<Response> docFind(Header docFindHeader, Payload docFindBody) {
+	private List<Response> docFind(Header docFindHeader, Payload docFindBody) throws InterruptedException {
 		
 		List<Response> responses = new ArrayList<Response>();
 		String fileName = HOMEDIR + File.separator
@@ -83,7 +92,7 @@ public class DocumentChunkResource implements ChunkedResource {
 		PayloadReply.Builder docFindRespPayload = PayloadReply.newBuilder();
 		Header.Builder docFindRespHeader = Header.newBuilder();
 		String nameSpace = docFindBody.getSpace().getName();
-		
+		String self = HeartbeatManager.getInstance().getNodeId();
 		
 		try {
 			fileExists = FileUtils.directoryContains(homeDir,
@@ -98,25 +107,39 @@ public class DocumentChunkResource implements ChunkedResource {
 				NodeResponseQueue.broadcastDocFind(nameSpace, docFindBody.getDoc().getDocName());
                 
                 try {
-                		while(true){
-                			logger.info(" Document resousrce sleeping for 2000ms! Witing for responses from the other nodes for DOCQUERY ");
-                            Thread.sleep(2000);
-                		}
-                        
-                        
-                        //TODO check the database to see if the file is completely
-                        //written to temp directory
-                        
-                
-                } catch (InterruptedException e1) {
-                        // TODO Auto-generated catch block
-                        e1.printStackTrace();
-                }
+
+					logger.info(" DocQuery: sleeping for 3000ms! Waiting for responses from the other nodes for DOCQUERY ");
+
+					Thread.sleep(MAXWAITFORRESPONSE);
+
+					boolean docFindResult = NodeResponseQueue.fetchDocFindResult(nameSpace , fileName);
+
+					if(docFindResult){
+						String tempfname = "temp" + File.separator
+						+ docFindBody.getSpace().getName() + File.separator
+						+ docFindBody.getDoc().getDocName();
+						responses = docFindClient(docFindHeader, responses, tempfname,
+								docFindResponse, docFindRespPayload, docFindRespHeader,
+								nameSpace);
+						//docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, "Document created in temp").toBuilder().setOriginator(self));
+
+					}else{
+
+						docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not found").toBuilder().setOriginator(self));
+						 docFindResponse.setBody(docFindRespPayload.build());
+			              
+			             responses.add(docFindResponse.build());
+					}
+
+				} catch (InterruptedException e1) {
+
+					e1.printStackTrace();
+				}
 			} else if(!fileExists && !docFindHeader.getOriginator().contains("Client")){
 				 docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
 
 	             docFindRespHeader.setReplyMsg("Server could not find the file.");
-	             docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not Found"));
+	             docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not Found").toBuilder().setOriginator(self));
 	              docFindResponse.setBody(docFindRespPayload.build());
 	              
 	             responses.add(docFindResponse.build());
