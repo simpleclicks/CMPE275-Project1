@@ -19,18 +19,14 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import poke.monitor.HeartMonitor;
 import poke.monitor.MonitorHandler;
 import poke.server.conf.JsonUtil;
 import poke.server.conf.NodeDesc;
 import poke.server.conf.ServerConf;
-import poke.server.conf.ServerConfTest;
 import poke.server.management.HeartbeatData.BeatStatus;
 
 /**
@@ -127,23 +123,16 @@ public class HeartbeatConnector extends Thread {
 		else {
 			logger.info("Broadcasted node already exists");
 		}
-			
 	}
 
 	public boolean addExternalNode(HeartbeatData node) {
 
-		logger.info("Node != null"+ (node!=null)+ " ");
 		if(!monitors.containsKey(node.getHost())) {
-
-			
 			addConnectToThisNode(node);
 			return true;
 		}
-		else {
-
+		else 
 			return false;
-		}
-
 	}
 	/**
 	 * After removing the node from incoming and outgoing HB queues
