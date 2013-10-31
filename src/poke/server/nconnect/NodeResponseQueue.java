@@ -1,6 +1,7 @@
 package poke.server.nconnect;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -15,6 +16,8 @@ public class NodeResponseQueue {
 	//static private volatile ConcurrentHashMap<String, Response> docQueryResponseQueue =  new ConcurrentHashMap<String, Response>();
 	
 	protected static Logger logger = LoggerFactory.getLogger("NodeResponseQueue");
+	
+	static private HashMap<String, String> responseToChunkMap = new HashMap<String, String>();
 	
 	public static void addActiveNode(String nodeId , NodeClient node){
 		
@@ -67,6 +70,16 @@ public class NodeResponseQueue {
 			nc.queryFile(nameSpace, fileName);
 		}
 	}
+	
+	public static void broadcastDocFind(String nameSpace , String fileName){
+		
+		NodeClient[] activeNodeArray = getActiveNodeInterface();
+
+		for(NodeClient nc: activeNodeArray){
+
+			nc.findFile(nameSpace, fileName);
+		}
+	}
 
 	public static boolean fetchDocQueryResult( String nameSpace , String fileName){
 		
@@ -89,5 +102,7 @@ public class NodeResponseQueue {
 			return queryResult;
 		
 	}
+	
+	//public static void fetchDocFindResponse
 	
 }

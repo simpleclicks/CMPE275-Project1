@@ -57,7 +57,8 @@ public class NodeClient {
 	private  LinkedBlockingDeque<Request> outboundRequestQueue = new LinkedBlockingDeque<Request>();
 
 	private ConcurrentHashMap<String, String> docQueryResponseQueue =  new ConcurrentHashMap<String, String>();
-
+	
+	private ConcurrentHashMap<String, Long> nodeToDocFind = new ConcurrentHashMap<String, Long>();
 
 	public NodeClient(String host, int port, String nodeId) {
 		super();
@@ -144,6 +145,33 @@ public class NodeClient {
 		docQueryReqBuilder.setBody(docPayloadBuilder.build());
 
 		return enqueueRequest(docQueryReqBuilder.build());
+
+	}
+	
+	public boolean findFile(String nameSpace, String fileName){
+
+		Header.Builder docFindHeader = Header.newBuilder();
+
+		docFindHeader.setRoutingId(Header.Routing.DOCFIND);
+
+		docFindHeader.setOriginator(HeartbeatManager.getInstance().getNodeId());
+		
+		nodeToDocFind.put(HeartbeatManager.getInstance().getNodeId(), (long) 0);
+
+		Payload.Builder docFindPayloadBuilder = Payload.newBuilder();
+
+		docFindPayloadBuilder.setDoc(Document.newBuilder().setDocName(fileName));
+
+		if(nameSpace !=null && nameSpace.length() > 0)
+			docFindPayloadBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace));
+
+		Request.Builder docFindReqBuilder = Request.newBuilder();
+
+		docFindReqBuilder.setHeader(docFindHeader.build());
+
+		docFindReqBuilder.setBody(docFindPayloadBuilder.build());
+
+		return enqueueRequest(docFindReqBuilder.build());
 
 	}
 	
@@ -375,6 +403,18 @@ public class NodeClient {
 
 						}
 
+					}
+					else if(msg.getHeader().getRoutingId() == Header.Routing.DOCFIND){
+						System.out.println("In NodeClientResponseHandler : DOCFIND response recieved from node" + msg.getHeader().getOriginator());
+						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
+							System.out.println("File "+msg.getBody().getDocs(0).getDocName()+" found at node : " + msg.getHeader().getOriginator() + "chunkID is" + msg.getBody().getDocs(0).getChunkId());
+							nodeToDocFind.put(msg.getHeader().getOriginator(), msg.getBody().getDocs(0).getTotalChunk());
+						}
+						else{
+							System.out.println("File not found at node : " + msg.getHeader().getOriginator());
+							nodeToDocFind.put(msg.getHeader().getOriginator(), (long) -1);
+						}
+						System.out.println(nodeToDocFind.toString());
 					}
 
 				} catch (InterruptedException ie) {

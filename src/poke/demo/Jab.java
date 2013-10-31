@@ -42,7 +42,7 @@ public class Jab {
 	
 		//cc.docAddReq("TestChunk", "E://Movies//Easy A (2010).avi");
 		
-		cc.docFind("TestChunk", "docFindTest.txt");
+		cc.docFind("TestChunk", "JB.zip");
 		
 		//cc.docRemove("", "Kaustubh1");
 	

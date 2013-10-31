@@ -271,68 +271,78 @@ public class PerChannelQueue implements ChannelQueue {
 							logger.error("failed to obtain resource for " + req);
 							reply = ResourceUtil.buildError(req.getHeader(), ReplyStatus.FAILURE,
 									"Request not processed");
-						} else if(req.getHeader().getRoutingId() == Routing.DOCFIND){
+						} else if(req.getHeader().getRoutingId() == Routing.DOCFIND ){
 							responses = crsc.process(req, ResourceFactory.dbInstance);
-							String fname = responses.get(0).getBody().getDocs(0).getDocName();
-							String namespaceName = responses.get(0).getBody().getSpaces(0).getName();
-							FileInputStream chunkeFIS = new FileInputStream(new File(fname));
-							String fileExt = FilenameUtils.getExtension(fname);
+							if(responses.get(0).getHeader().getReplyCode() == ReplyStatus.SUCCESS){
+								String fname = responses.get(0).getBody().getDocs(0).getDocName();
+								String namespaceName = responses.get(0).getBody().getSpaces(0).getName();
+								FileInputStream chunkeFIS = new FileInputStream(new File(fname));
+								String fileExt = FilenameUtils.getExtension(fname);
 
-							java.io.File file = FileUtils.getFile(fname);
+								java.io.File file = FileUtils.getFile(fname);
 
-							long fileSize = FileUtils.sizeOf(file);
+								long fileSize = FileUtils.sizeOf(file);
 
-							logger.info("Size of the file to be sent " + fileSize);
+								logger.info("Size of the file to be sent " + fileSize);
 
-							long totalChunk = ((fileSize / MAX_UNCHUNKED_FILE_SIZE)) + 1;
+								long totalChunk = ((fileSize / MAX_UNCHUNKED_FILE_SIZE)) + 1;
 
-							for (Response response : responses) {
+								for (Response response : responses) {
+									if(response.getHeader().getReplyCode() == ReplyStatus.SUCCESS){
+										if(response.getBody().getDocs(0).getTotalChunk() <= 1){
+											sq.enqueueResponse(response);
+										}
+										else{
+											Response.Builder respEnqueue = Response.newBuilder();
+											//TODO read each chunk from the file and enqueue
+											int bytesRead = 0;
+
+
+												byte[] chunckContents = new byte[26214400];
+
+												bytesRead = IOUtils.read(chunkeFIS, chunckContents, 0,
+														26214400);
+
+												logger.info("CHUNKED Contents of the chunk "+response.getBody().getDocs(0).getChunkId()+" : "+chunckContents);
+												
+												respEnqueue.setHeader(response.getHeader());
+												PayloadReply.Builder respEnqueuePL = PayloadReply.newBuilder();
+												
+												respEnqueuePL.addDocsBuilder();
+												respEnqueuePL.addSpacesBuilder();
+												respEnqueuePL.setSpaces(0, NameSpace.newBuilder().setName(namespaceName));
+												respEnqueuePL.setDocs(0,Document
+														.newBuilder()
+														.setDocName(fname)
+														.setDocExtension(fileExt)
+														.setDocSize(fileSize).setTotalChunk(totalChunk)
+														.setChunkContent(ByteString.copyFrom(chunckContents))
+														.setChunkId(response.getBody().getDocs(0).getChunkId()));
+												
+												respEnqueue.setBody(respEnqueuePL.build());
+
+												chunckContents = null;
+
+												System.gc();
+
+												//chunkId++;
+												
+												logger.info("CHUNKED engueuing response for client request for : " + response.getBody().getDocs(0).getChunkId());
+												Response tbE = respEnqueue.build();
+												sq.enqueueResponse(tbE);
+												
+												Thread.sleep(1000);
+										}
+									}
+									else{
+										sq.enqueueResponse(response);
+									}
+								}
 								
-								if(response.getBody().getDocs(0).getTotalChunk() <= 1){
-									sq.enqueueResponse(response);
-								}
-								else{
-									Response.Builder respEnqueue = Response.newBuilder();
-									//TODO read each chunk from the file and enqueue
-									int bytesRead = 0;
-
-
-										byte[] chunckContents = new byte[26214400];
-
-										bytesRead = IOUtils.read(chunkeFIS, chunckContents, 0,
-												26214400);
-
-										logger.info("CHUNKED Contents of the chunk "+response.getBody().getDocs(0).getChunkId()+" : "+chunckContents);
-										
-										respEnqueue.setHeader(response.getHeader());
-										PayloadReply.Builder respEnqueuePL = PayloadReply.newBuilder();
-										
-										respEnqueuePL.addDocsBuilder();
-										respEnqueuePL.addSpacesBuilder();
-										respEnqueuePL.setSpaces(0, NameSpace.newBuilder().setName(namespaceName));
-										respEnqueuePL.setDocs(0,Document
-												.newBuilder()
-												.setDocName(fname)
-												.setDocExtension(fileExt)
-												.setDocSize(fileSize).setTotalChunk(totalChunk)
-												.setChunkContent(ByteString.copyFrom(chunckContents))
-												.setChunkId(response.getBody().getDocs(0).getChunkId()));
-										
-										respEnqueue.setBody(respEnqueuePL.build());
-
-										chunckContents = null;
-
-										System.gc();
-
-										//chunkId++;
-										
-										logger.info("CHUNKED engueuing response for client request for : " + response.getBody().getDocs(0).getChunkId());
-										Response tbE = respEnqueue.build();
-										sq.enqueueResponse(tbE);
-										
-										Thread.sleep(1000);
-								}
 							}
+							else
+								sq.enqueueResponse(responses.get(0));
+							
 						}
 						else {
 							reply = rsc.process(req, ResourceFactory.dbInstance);

@@ -60,8 +60,8 @@ public class DatabaseStorage implements Storage {
 			Class.forName(cfg.getProperty(sDriver));
 			BoneCPConfig config = new BoneCPConfig();
 			config.setJdbcUrl(cfg.getProperty(sUrl));
-			config.setUsername(cfg.getProperty(sUser, "sa"));
-			config.setPassword(cfg.getProperty(sPass, ""));
+			config.setUsername(cfg.getProperty(sUser));
+			config.setPassword(cfg.getProperty(sPass));
 			config.setMinConnectionsPerPartition(5);
 			config.setMaxConnectionsPerPartition(10);
 			config.setPartitionCount(1);
