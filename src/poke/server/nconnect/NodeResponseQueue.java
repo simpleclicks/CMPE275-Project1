@@ -1,11 +1,15 @@
 package poke.server.nconnect;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eye.Comm.Document;
 import eye.Comm.Response;
 
 public class NodeResponseQueue {
@@ -78,6 +82,17 @@ public static void broadcastNamespaceQuery(String nameSpace){
 		}
 	}
 	
+public static void broadcastNamespaceListQuery(String nameSpace) {
+	// TODO Auto-generated method stub
+	
+	NodeClient[] activeNodeArray = getActiveNodeInterface();
+
+	for(NodeClient nc: activeNodeArray){
+
+		nc.queryNamespaceList(nameSpace);
+	}
+	
+}
 	
 
 	public static boolean fetchDocQueryResult( String nameSpace , String fileName){
@@ -97,9 +112,20 @@ public static void broadcastNamespaceQuery(String nameSpace){
 				logger.warn("No response from node "+nc.getNodeId()+"for document upload validation for "+nameSpace+"/"+fileName);
 				
 		}
-		
 			return queryResult;
+	}
+
+	public static List fetchNamespaceList(String namespace){
 		
+		List fileList= new ArrayList();
+		
+		NodeClient[] activeNodeArray = getActiveNodeInterface();
+		
+		for(NodeClient nc: activeNodeArray){
+			fileList = nc.sendNamespaceList(namespace);
+		}
+		
+		return fileList;
 	}
 	
 }

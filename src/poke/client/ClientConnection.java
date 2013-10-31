@@ -420,8 +420,33 @@ public class ClientConnection {
 
 	}
 
-	public void namespaceList(String namespace) {
+	public void namespaceList(String nameSpace) {
 		// To list the namespace and files in it
+		
+		Header.Builder namespaceListReqHeader = Header.newBuilder();
+		namespaceListReqHeader.setRoutingId(Routing.NAMESPACELIST);
+		namespaceListReqHeader.setOriginator("namespace List test");
+        Payload.Builder namespaceListReqBody = Payload.newBuilder();
+
+        if (nameSpace != null && nameSpace.length() > 0)
+        	namespaceListReqBody.setSpace(NameSpace.newBuilder().setName(nameSpace)
+                                .build());
+
+
+        Request.Builder namespaceListRequest = Request.newBuilder();
+        namespaceListRequest.setBody(namespaceListReqBody.build());
+        namespaceListRequest.setHeader(namespaceListReqHeader.build());
+
+        try {
+
+                outbound.put(namespaceListRequest.build());
+
+        } catch (InterruptedException e) {
+                logger.warn("Unable to deliver namespace list message, queuing "
+                                + e.getMessage());
+        }
+        
+        System.gc();
 		
 	}
 	

@@ -1,7 +1,10 @@
 package poke.server.nconnect;
 
+import java.io.File;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -57,6 +60,8 @@ public class NodeClient {
 	private  LinkedBlockingDeque<Request> outboundRequestQueue = new LinkedBlockingDeque<Request>();
 
 	private ConcurrentHashMap<String, String> docQueryResponseQueue =  new ConcurrentHashMap<String, String>();
+	
+	private ConcurrentHashMap<String, List<Document>> listFiles = new ConcurrentHashMap<String, List<Document>>(); 
 
 
 	public NodeClient(String host, int port, String nodeId) {
@@ -172,6 +177,30 @@ public class NodeClient {
 
 	}
 	
+	public boolean queryNamespaceList(String nameSpace) {
+		// TODO Auto-generated method stub
+
+		Header.Builder namespaceListQueryHeader = Header.newBuilder();
+
+		namespaceListQueryHeader.setRoutingId(Header.Routing.NAMESPACELISTQUERY);
+
+		namespaceListQueryHeader.setOriginator(HeartbeatManager.getInstance().getNodeId());
+
+		Payload.Builder namespacePayloadBuilder = Payload.newBuilder();
+
+		if(nameSpace !=null && nameSpace.length() > 0)
+			namespacePayloadBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace));
+
+		Request.Builder namespaceListQueryReqBuilder = Request.newBuilder();
+
+		namespaceListQueryReqBuilder.setHeader(namespaceListQueryHeader.build());
+
+		namespaceListQueryReqBuilder.setBody(namespacePayloadBuilder.build());
+
+		return enqueueRequest(namespaceListQueryReqBuilder.build());
+		
+	}
+	
 	public String checkDocQueryResponse(String nameSpace , String fileName){
 		
 		String key = nameSpace+fileName;
@@ -188,7 +217,15 @@ public class NodeClient {
 		}
 	}
 	
-
+	public List sendNamespaceList(String namespace) {
+		
+		List<Document> Files = new ArrayList<Document>();
+		Files = listFiles.get(namespace);
+		return Files;
+		
+	}
+	
+	
 	public String getNodeId() {
 		return nodeId;
 	}
@@ -412,6 +449,21 @@ public class NodeClient {
 						}
 
 					}
+					
+					else if(msg.getHeader().getRoutingId() == Header.Routing.NAMESPACELISTQUERY){
+						String namespace = null;
+						PayloadReply response =  msg.getBody();
+						System.out.println("NodeClientResponseHandler: Recieved the response to namespaceListQuery from the server and the response is "+msg.getHeader().getReplyCode()+" with Message fom server as "+msg.getHeader().getReplyMsg());
+
+						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
+							namespace = response.getSpaces(0).getName();
+						//	listFiles = msg.getBody().getDocsList();
+							owner.listFiles.put(namespace, msg.getBody().getDocsList() );
+							logger.info("Document list recieved from node "+ owner.getNodeId());
+
+						}
+
+					}
 
 				} catch (InterruptedException ie) {
 					logger.error("InboundWorker has been interrupted "+ie.getMessage());
@@ -427,4 +479,6 @@ public class NodeClient {
 			}
 		}
 	}
+
+	
 }

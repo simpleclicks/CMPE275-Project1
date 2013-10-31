@@ -149,6 +149,12 @@ public class ClientResponseAction {
 						
 						System.out.println("Server response to namespaceRemove "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
 					}
+					
+					else if (msg.getHeader().getRoutingId() == Header.Routing.NAMESPACELIST){
+						
+						System.out.println("Server response to namespaceList "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg()+
+											"Document List "+ msg.getBody().getDocsList());
+					}
 
 				} catch (InterruptedException ie) {
 					break;
