@@ -309,8 +309,10 @@ public class NameSpaceResource implements Resource {
          PayloadReply.Builder namespaceListRespBody = PayloadReply.newBuilder();
          Header.Builder namespaceListRespHeader = Header.newBuilder();
          String nameSpace = namespaceListBody.getSpace().getName();
-         List<File> files = new ArrayList<File>();
-		
+         List<File> listOne = new ArrayList<File>();
+         List<File> listTwo = new ArrayList<File>();
+         List<File> newList = new ArrayList<File>();
+
          String namespacePath = HOMEDIR+File.separator+nameSpace;
 
 			File namespaceDir = new File (namespacePath);
@@ -329,15 +331,17 @@ public class NameSpaceResource implements Resource {
 				
 			//	boolean docQueryResult = NodeResponseQueue.fetchDocQueryResult(nameSpace , newFileName);
 				
-				files = NodeResponseQueue.fetchNamespaceList(nameSpace);
+				listOne = NodeResponseQueue.fetchNamespaceList(nameSpace);
 				
 				boolean checkNamespace = FileUtils.directoryContains(homeDir, namespaceDir);
 				if(checkNamespace){
 					
-					files = (List<File>) FileUtils.listFiles(namespaceDir, TrueFileFilter.INSTANCE,
+					listTwo = (List<File>) FileUtils.listFiles(namespaceDir, TrueFileFilter.INSTANCE,
 																		TrueFileFilter.INSTANCE);
 					
-					for (File file : files) {
+					newList.addAll(listOne);
+					newList.addAll(listTwo);
+					for (File file : newList) {
 						filename = file.getName();
 						filePath = file.getCanonicalPath();
 						fileExt = FilenameUtils.getExtension(filePath);
@@ -408,6 +412,8 @@ public class NameSpaceResource implements Resource {
 					logger.info("inside for loop " );
 
 					filename = file.getName();
+					
+					logger.info("filename is " + filename);
 					filePath = file.getCanonicalPath();
 					fileExt = FilenameUtils.getExtension(filePath);
 					namespaceListQueryRespBody.addDocsBuilder();
