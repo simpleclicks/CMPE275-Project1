@@ -116,14 +116,43 @@ public static void broadcastNamespaceListQuery(String nameSpace) {
 	}
 
 	public static List fetchNamespaceList(String namespace){
-		
-		List fileList= new ArrayList();
-		
+		boolean queryResult = true;
+		List<File> fileList= new ArrayList<File>();
+		logger.info("In fetchNameSpaceList");
 		NodeClient[] activeNodeArray = getActiveNodeInterface();
 		
-		for(NodeClient nc: activeNodeArray){
-			fileList = nc.sendNamespaceList(namespace);
-		}
+		
+		for (NodeClient nc : activeNodeArray) {
+            String result = "NA";
+            
+          //  while(result.equalsIgnoreCase("NA")){
+            	fileList = nc.sendNamespaceList(namespace);
+            	
+            	try {
+					Thread.sleep(2000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					logger.error("Thread exception in fetchNamespaceList "+e.getMessage());
+					}
+                  //  logger.warn("No response from node " + nc.getNodeId()
+                    //                + "for list namespace for " + namespace);
+           // }
+            
+
+//            if (result.equalsIgnoreCase("Failure")) {
+//                    logger.info("No files found in the namespace "
+//                      + namespace);
+//                    fileList = null;
+//            } else if (result.equalsIgnoreCase("Success"))
+            	
+                    return fileList;                
+
+    }
+		
+		
+//		for(NodeClient nc: activeNodeArray){
+//			fileList = nc.sendNamespaceList(namespace);
+//		}
 		
 		return fileList;
 	}

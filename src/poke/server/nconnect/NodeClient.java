@@ -217,10 +217,28 @@ public class NodeClient {
 		}
 	}
 	
+	public List checkNamespaceList(String namespace){
+		String key = namespace;
+
+        String noResult = "NA";
+
+        if (listFiles.containsKey(key)) {
+
+                return listFiles.get(key);
+
+        } else {
+        		
+                return null;
+        }
+	}
+	
 	public List sendNamespaceList(String namespace) {
 		
 		List<Document> Files = new ArrayList<Document>();
-		Files = listFiles.get(namespace);
+		String noResult = "NA";
+		if (listFiles.containsKey(namespace)){
+			Files = listFiles.get(namespace);
+		}
 		return Files;
 		
 	}
@@ -452,15 +470,18 @@ public class NodeClient {
 					
 					else if(msg.getHeader().getRoutingId() == Header.Routing.NAMESPACELISTQUERY){
 						String namespace = null;
+						System.out.println("NodeClientResponseHandler:");
 						PayloadReply response =  msg.getBody();
 						System.out.println("NodeClientResponseHandler: Recieved the response to namespaceListQuery from the server and the response is "+msg.getHeader().getReplyCode()+" with Message fom server as "+msg.getHeader().getReplyMsg());
 
 						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
+							logger.info("inside if ");
 							namespace = response.getSpaces(0).getName();
+							logger.info("namespace " + namespace);
 						//	listFiles = msg.getBody().getDocsList();
-							owner.listFiles.put(namespace, msg.getBody().getDocsList() );
+							owner.listFiles.put(namespace, msg.getBody().getDocsList());
 							logger.info("Document list recieved from node "+ owner.getNodeId());
-
+							logger.info("List contains " + listFiles);
 						}
 
 					}

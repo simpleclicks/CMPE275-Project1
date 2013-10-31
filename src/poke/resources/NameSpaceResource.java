@@ -16,6 +16,7 @@
 package poke.resources;
 
 import java.io.File;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -328,10 +329,10 @@ public class NameSpaceResource implements Resource {
 				logger.info(" Document resousrce sleeping for 2000ms! Witing for responses from the other nodes for DOCQUERY ");
 				
 				Thread.sleep(2000);
-				
+				logger.info("recieved response from node client");
 			//	boolean docQueryResult = NodeResponseQueue.fetchDocQueryResult(nameSpace , newFileName);
 				
-				listOne = NodeResponseQueue.fetchNamespaceList(nameSpace);
+				listOne = (List<File>)NodeResponseQueue.fetchNamespaceList(nameSpace);
 				
 				boolean checkNamespace = FileUtils.directoryContains(homeDir, namespaceDir);
 				if(checkNamespace){
@@ -407,7 +408,6 @@ public class NameSpaceResource implements Resource {
 				List<File> files = (List<File>) FileUtils.listFiles(namespaceDir, TrueFileFilter.INSTANCE,
 																	TrueFileFilter.INSTANCE);
 				logger.info("inside try checknamespace, before listfiles " );
-
 				for (File file : files) {
 					logger.info("inside for loop " );
 
@@ -421,6 +421,8 @@ public class NameSpaceResource implements Resource {
 										 .setDocName(filename).setDocExtension(fileExt));
 					index++;
 				}
+				namespaceListQueryRespBody.addSpacesBuilder();
+				namespaceListQueryRespBody.setSpaces(0, NameSpace.newBuilder().setName(space));
 				namespaceListQueryResponse.setBody(namespaceListQueryRespBody.build());
 				namespaceListQueryResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListQueryHeader, ReplyStatus.SUCCESS, DOCLISTFOUND));
 				
@@ -431,7 +433,7 @@ public class NameSpaceResource implements Resource {
 		}
      
 		
-		
+		logger.info("successfully returned the list");
 		
 		return namespaceListQueryResponse.build();
 	}
