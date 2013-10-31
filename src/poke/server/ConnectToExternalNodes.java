@@ -1,42 +1,95 @@
 package poke.server;
 
-import java.util.Scanner;
-
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
 import poke.server.management.HeartbeatConnector;
 import poke.server.management.HeartbeatData;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class ConnectToExternalNodes {
-	
-	private HeartbeatData hd;
-	private static ConnectToExternalNodes cn;
+public class ConnectToExternalNodes extends Thread{
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+	protected static Logger logger = LoggerFactory.getLogger("ConnectToExternalNodes");
 
-		Scanner scanner = new Scanner(System.in);
-		System.out.println("Enter the Host Address of the node");
-		String hostAddress = scanner.next();
-		System.out.println("Enter the Management Port of the node");
-		int mgmtPort = scanner.nextInt();
-		System.out.println("Enter the Port of the node");
-		int port = scanner.nextInt();
-		
-		cn = new ConnectToExternalNodes();
-		cn.hd = new HeartbeatData(hostAddress, hostAddress, port, mgmtPort);
-		
-		System.out.println(hostAddress+" "+mgmtPort+" "+port);
-		//HeartbeatConnector.getInstance().addExternalNode(hd);
-		if(HeartbeatConnector.getInstance().addExternalNode(cn.hd)) {
-			
-			System.out.println("Node added Successfully");
-		}
-		else {
-			
-			System.out.println("Cannot add node: Host Address already exists");
-		}
-		
-		scanner.close();
-		
+	@Override
+	public void run(){
+
+		String fileName = "conf//externalNode.conf";
+
+		File file = new File(fileName);
+
+		while(true){
+
+			if(file.length()==0){
+				try {
+					Thread.sleep(8000);
+				} catch (InterruptedException e) {
+
+					e.printStackTrace();
+				}
+				continue;
+			}else{
+
+				try {
+
+					List<String> fileContents = FileUtils.readLines(file);
+
+					System.out.println("Number of lines in conf file "+fileContents.size());
+
+					if(fileContents.size() ==4){
+
+						String nodeId = fileContents.get(0);
+
+						String host = fileContents.get(1);
+
+						int port = Integer.valueOf(fileContents.get(2));
+
+						int mgmtPort = Integer.valueOf(fileContents.get(3));
+
+						HeartbeatData hd = new HeartbeatData(nodeId , host , port , mgmtPort );
+
+						if(HeartbeatConnector.getInstance().addExternalNode(hd)) {
+
+							System.out.println("Node added Successfully");
+							FileUtils.writeStringToFile(file, "");
+						}
+						else {
+
+							System.out.println("Cannot add node: Host Address already exists");
+						}
+
+
+					}else{
+						logger.error("Invalid connection information: Verify the info provided");
+						FileUtils.writeStringToFile(file, "");
+					}
+
+					Thread.sleep(8000);
+
+				} catch (FileNotFoundException e) {
+
+					logger.error("File not found exception in connect to external node "+e.toString());
+					e.printStackTrace();
+				} catch (IOException e) {
+					logger.error("IO found exception in connect to external node "+e.toString());
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					
+					e.printStackTrace();
+				}catch (Exception e){
+
+					logger.info("General exception occurred in ConnectToExternalNodes "+e.getMessage());
+					logger.info("please check the data provided");
+
+					e.printStackTrace();
+				}
+
+			}
+		}	
+
 	}
 
 }

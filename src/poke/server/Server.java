@@ -272,7 +272,8 @@ public class Server {
 		createBroadcastBoot(bport);
 		BroadcastQueue.startup(conf.getServer().getProperty("node.id"));
 		logger.info("Broadcast listener started");
-		
+		ConnectToExternalNodes externalNodeThread = new ConnectToExternalNodes();
+		externalNodeThread.start();
 		logger.info("Server ready");
 		
 	}
