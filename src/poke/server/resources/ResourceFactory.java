@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import poke.server.conf.ServerConf;
 import poke.server.conf.ServerConf.ResourceConf;
+import poke.server.storage.jdbc.DatabaseStorage;
 import eye.Comm.Header;
 
 /**
@@ -44,6 +45,7 @@ import eye.Comm.Header;
  */
 public class ResourceFactory {
 	protected static Logger logger = LoggerFactory.getLogger("server");
+	
 
 	private static ServerConf cfg;
 	private static AtomicReference<ResourceFactory> factory = new AtomicReference<ResourceFactory>();
@@ -52,6 +54,7 @@ public class ResourceFactory {
 		try {
 			ResourceFactory.cfg = cfg;
 			factory.compareAndSet(null, new ResourceFactory());
+			
 		} catch (Exception e) {
 			logger.error("failed to initialize ResourceFactory", e);
 		}

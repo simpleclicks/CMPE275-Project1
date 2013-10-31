@@ -17,7 +17,9 @@ package poke.server.storage.jdbc;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -28,10 +30,12 @@ import poke.server.storage.Storage;
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
 
-import eye.Comm.Document;
-import eye.Comm.NameSpace;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.dbutils.handlers.BeanHandler;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
 
-public class DatabaseStorage implements Storage {
+public class DatabaseStorage {
 	protected static Logger logger = LoggerFactory.getLogger("database");
 
 	public static final String sDriver = "jdbc.driver";
@@ -41,27 +45,27 @@ public class DatabaseStorage implements Storage {
 
 	protected Properties cfg;
 	protected BoneCP cpool;
+	
+	private static DatabaseStorage ds = new DatabaseStorage();
 
-	protected DatabaseStorage() {
+	public DatabaseStorage() {
+		init();
+	}
+	
+	public static DatabaseStorage getInstance() {
+		return ds;
 	}
 
-	public DatabaseStorage(Properties cfg) {
-		init(cfg);
-	}
-
-	@Override
-	public void init(Properties cfg) {
+	public void init() {
 		if (cpool != null)
 			return;
 
-		this.cfg = cfg;
-
 		try {
-			Class.forName(cfg.getProperty(sDriver));
+			Class.forName("com.mysql.jdbc.Driver");
 			BoneCPConfig config = new BoneCPConfig();
-			config.setJdbcUrl(cfg.getProperty(sUrl));
-			config.setUsername(cfg.getProperty(sUser, "sa"));
-			config.setPassword(cfg.getProperty(sPass, ""));
+			config.setJdbcUrl("jdbc:mysql://127.0.0.1:3306/thunderbolts ");
+			config.setUsername("root");
+			config.setPassword("root");
 			config.setMinConnectionsPerPartition(5);
 			config.setMaxConnectionsPerPartition(10);
 			config.setPartitionCount(1);
@@ -77,7 +81,6 @@ public class DatabaseStorage implements Storage {
 	 * 
 	 * @see gash.jdbc.repo.Repository#release()
 	 */
-	@Override
 	public void release() {
 		if (cpool == null)
 			return;
@@ -86,125 +89,424 @@ public class DatabaseStorage implements Storage {
 		cpool = null;
 	}
 
-	@Override
-	public NameSpace getNameSpaceInfo(long spaceId) {
-		NameSpace space = null;
-
+	public String getOwner(String namespace, String documentname) {
+		
+		QueryRunner qr = new QueryRunner();
+		ResultSetHandler<Document> getOwnerRsh = new BeanHandler<Document>(Document.class);
+		Document document= null;
 		Connection conn = null;
+		
 		try {
+			
 			conn = cpool.getConnection();
-			conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
-			// TODO complete code to retrieve through JDBC/SQL
-			// select * from space where id = spaceId
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			logger.error("failed/exception on looking up space " + spaceId, ex);
-			try {
-				conn.rollback();
-			} catch (SQLException e) {
+			String sql = "select * from document where documentname = ? and namespacename = ?";
+			document = qr.query(conn, sql, getOwnerRsh, documentname, namespace);
+			
+			if(document == null) {
+				
+				return "NA";
 			}
+			
+		} catch (SQLException e) {
+			logger.info("getOwner: Cannot get Owner for document "+documentname);
+			e.printStackTrace();
 		} finally {
-			if (conn != null) {
-				try {
-					conn.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
-
-		return space;
+		
+		return document.getOwner();
 	}
-
-	@Override
-	public List<NameSpace> findNameSpaces(NameSpace criteria) {
-		List<NameSpace> list = null;
-
+	
+	public boolean isReplicated(String namespace, String documentname) {
+		
+		QueryRunner qr = new QueryRunner();
+		ResultSetHandler<Document> isReplicatedRsh = new BeanHandler<Document>(Document.class);
+		Document document= null;
 		Connection conn = null;
+		
 		try {
+			
 			conn = cpool.getConnection();
-			conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
-			// TODO complete code to search through JDBC/SQL
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			logger.error("failed/exception on find", ex);
-			try {
-				conn.rollback();
-			} catch (SQLException e) {
+			String sql = "select * from document where documentname = ? and namespacename = ?";
+			document = qr.query(cpool.getConnection(), sql, isReplicatedRsh, documentname, namespace);
+			
+			if(document == null) {
+				
+				return false;
+			} else {
+				
+				return document.isReplicated();
 			}
+			
+		} catch (SQLException e) {
+			logger.info("isReplicated: Cannot check whether document is replicated for document"+documentname);
+			e.printStackTrace();
 		} finally {
-			if (conn != null) {
-				try {
-					conn.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
-
-		return list;
+		
+		return false;
 	}
-
-	@Override
-	public NameSpace createNameSpace(NameSpace space) {
-		if (space == null)
-			return space;
-
+	
+	public int countReplicate(String namespace, String documentname) {
+		
+		QueryRunner qr = new QueryRunner();
+		ResultSetHandler<Document> countReplicateRsh = new BeanHandler<Document>(Document.class);
+		Document document= null;
 		Connection conn = null;
+		
 		try {
+			
 			conn = cpool.getConnection();
-			conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
-			// TODO complete code to use JDBC
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			logger.error("failed/exception on creating space " + space, ex);
-			try {
-				conn.rollback();
-			} catch (SQLException e) {
+			String sql = "select * from document where documentname = ? and namespacename = ?";
+			document = qr.query(cpool.getConnection(), sql, countReplicateRsh, documentname, namespace);
+			
+			if(document == null) {
+				return 0;
+			} else {
+				return document.getReplicationCount();
 			}
-
-			// indicate failure
-			return null;
+			
+		} catch (SQLException e) {
+			logger.info("countReplicate: Cannot retrieve replication count for document "+documentname);
+			e.printStackTrace();
 		} finally {
-			if (conn != null) {
-				try {
-					conn.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
-
-		return space;
+		
+		return 0;
 	}
+	
+	public String getReplicatedNode(String namespace, String documentname) {
+		
+		QueryRunner qr = new QueryRunner();
+		ResultSetHandler<Document> getReplicatedNodeRsh = new BeanHandler<Document>(Document.class);
+		Document document= null;
+		Connection conn = null;
+		
+		try {
+			
+			conn = cpool.getConnection();
+			String sql = "select * from document where documentname = ? and namespacename = ?";
+			document = qr.query(cpool.getConnection(), sql, getReplicatedNodeRsh, documentname, namespace);
+			
+			if(document == null) {
+				return "NA";
+			} else {
+				return document.getReplicatedNode();
+			}
+			
+		} catch (SQLException e) {
+			logger.info("getReplicatedNode: Cannot get replicated node for document "+documentname);
+			e.printStackTrace();
+		} finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		return "NA";
+	}
+	
+	public String getPreviousReplicatedNode(String namespace, String documentname) {
+		
+		QueryRunner qr = new QueryRunner();
+		ResultSetHandler<Document> getPreviousReplicatedNodeRsh = new BeanHandler<Document>(Document.class);
+		Document document= null;
+		Connection conn = null;
+		
+		try {
+			
+			conn = cpool.getConnection();
+			String sql = "select * from document where documentname = ? and namespacename = ?";
+			document = qr.query(cpool.getConnection(), sql, getPreviousReplicatedNodeRsh, documentname, namespace);
+			
+			if(document == null) {
+				return "NA";
+			} else {
+				return document.getPreviousReplicatedNode();
+			}
+			
+		} catch (SQLException e) {
+			logger.info("getPreviousReplicatedNode: Cannot get previous replicated node for document "+documentname);
+			e.printStackTrace();
+		} finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		return "NA";
+	}
+	
+	
+	
+	public boolean addDocumentInDatabase(String namespaceName, String documentname, boolean isReplicated, int replicationCount, String owner) {
 
-	@Override
-	public boolean removeNameSpace(long spaceId) {
-		// TODO Auto-generated method stub
+		QueryRunner qr = new QueryRunner();
+		Connection conn = null;
+		int insertCount = 0;
+		
+		try {
+			
+			conn = cpool.getConnection();
+						
+			if(namespaceName != null) {
+				String sql = "INSERT INTO Document(DocumentName, NamespaceName, IsReplicated, ReplicationCount, Owner) VALUES (?, ?, ?, ?, ?)";
+				insertCount = qr.update(conn, sql, documentname, namespaceName, isReplicated, replicationCount, owner);
+			} else {
+				String sql = "INSERT INTO Document(DocumentName, IsReplicated, ReplicationCount, Owner) VALUES (?, ?, ?, ?)";	
+				insertCount = qr.update(conn, sql, documentname, isReplicated, replicationCount, owner);
+			}
+			
+			if(insertCount < 1) {
+				return false;
+			}
+			else {
+				return true;
+			}
+						
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			logger.info("addDocumentInDatabase: Cannot add document in database for document: "+documentname);
+			e.printStackTrace();			
+		} finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		return false;
+	}
+	
+	public boolean addReplicaInDatabase(String namespaceName, String documentname, int replicationCount, String owner, String replicatedNode, String previousReplicatedNode) {
+
+		QueryRunner qr = new QueryRunner();
+		Connection conn = null;
+		int insertCount = 0;
+		
+		try {
+			
+			conn = cpool.getConnection();
+						
+			if(namespaceName != null) {
+				String sql = "INSERT INTO Document(DocumentName, NamespaceName, ReplicationCount, IsReplicated, ToBeReplicated, Owner, ReplicatedNode, PreviousReplicatedNode) VALUES (?, ?, ?, false, false, ?, ?, ?)";
+				insertCount = qr.update(conn, sql, documentname, namespaceName, replicationCount,  owner, replicatedNode, previousReplicatedNode);
+			} else {
+				String sql = "INSERT INTO Document(DocumentName, ReplicationCount, IsReplicated, ToBeReplicated, Owner, ReplicatedNode, PreviousReplicatedNode) VALUES (?, ?, false, false, ?, ?, ?)";
+				insertCount = qr.update(conn, sql, documentname, replicationCount,  owner, replicatedNode, previousReplicatedNode);
+			}
+			
+			if(insertCount < 1) {
+				return false;
+			}
+			else {
+				return true;
+			}
+						
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			logger.info("addReplicaInDatabase: Cannot add replica in database for document "+documentname);
+			e.printStackTrace();			
+		} finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 		return false;
 	}
 
-	@Override
-	public boolean addDocument(String namespace, Document doc) {
-		// TODO Auto-generated method stub
+	public boolean deleteDocumentInDatabase(String namespaceName, String documentname) {
+
+		QueryRunner qr = new QueryRunner();
+		Connection conn = null;
+		int insertCount = 0;
+		
+		try {
+			
+			conn = cpool.getConnection();
+							
+			String sql = "Delete from Document where DocumentName = ? and NamespaceName = ?";
+			insertCount = qr.update(conn, sql, documentname, namespaceName);
+			
+			if(insertCount < 1) {
+				return false;
+			}
+			else {
+				return true;
+			}
+						
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			logger.info("addDocumentInDatabase: Cannot delete document in database for document "+documentname);
+			e.printStackTrace();			
+		} finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 		return false;
 	}
+	
+	public boolean updateReplicationCount(String namespaceName, String documentname, String replicatedNode, int replicationCount) {
 
-	@Override
-	public boolean removeDocument(String namespace, long docId) {
-		// TODO Auto-generated method stub
+		QueryRunner qr = new QueryRunner();
+		Connection conn = null;
+		int insertCount = 0;
+		
+		try {
+			
+			conn = cpool.getConnection();
+							
+			String sql = "Update Document set ReplicatedNode = ?,ReplicationCount =? where DocumentName = ? and NamespaceName = ?";
+			insertCount = qr.update(conn, sql, replicatedNode, replicationCount, documentname, namespaceName);
+			
+			if(insertCount < 1) {
+				return false;
+			}
+			else {
+				return true;
+			}
+						
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			logger.info("addDocumentInDatabase: Cannot update replication count in database for document "+documentname);
+			e.printStackTrace();			
+		} finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 		return false;
 	}
-
-	@Override
-	public boolean updateDocument(String namespace, Document doc) {
-		// TODO Auto-generated method stub
-		return false;
+	
+	public List<String> getDocuments(String replicatedNode) {
+		
+		QueryRunner qr = new QueryRunner();
+		ResultSetHandler<List<Document>> getDocumentsRsh = new BeanListHandler<Document>(Document.class);
+		
+		Connection conn = null;
+		List<String> returnDocument = null;
+		
+		try {
+			
+			conn = cpool.getConnection();
+			String sql = "select * from document where replicatedNode = ?";
+			List<Document> documentList = qr.query(cpool.getConnection(), sql, getDocumentsRsh, replicatedNode);
+			
+			if(documentList == null) {
+				return returnDocument;
+			} else {
+				ListIterator<Document> listIterator = documentList.listIterator();
+				int index = 0;
+				returnDocument = new ArrayList<String>();
+				while (listIterator.hasNext()) {
+					returnDocument.add(documentList.get(index).getNamespaceName()+"/"+documentList.get(index).getDocumentName());
+					index++;
+				}
+				return returnDocument; 
+			}
+			
+		} catch (SQLException e) {
+			logger.info("getReplicatedNode: Cannot get documents for replicated node "+replicatedNode);
+			e.printStackTrace();
+		} finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		return returnDocument;
+	}
+	
+	public List<String> documentsToBeReplicated(String owner) {
+		
+		QueryRunner qr = new QueryRunner();
+		ResultSetHandler<List<Document>> getDocumentsRsh = new BeanListHandler<Document>(Document.class);
+		
+		Connection conn = null;
+		List<String> returnDocument = null;
+		
+		try {
+			
+			conn = cpool.getConnection();
+			String sql = "select * from document where owner = ? and ToBeReplicated = true and isReplicated = false";
+			List<Document> documentList = qr.query(cpool.getConnection(), sql, getDocumentsRsh, owner);
+			
+			if(documentList == null) {
+				return returnDocument;
+			} else {
+				ListIterator<Document> listIterator = documentList.listIterator();
+				int index = 0;
+				returnDocument = new ArrayList<String>();
+				while (listIterator.hasNext()) {
+					returnDocument.add(documentList.get(index).getNamespaceName()+"/"+documentList.get(index).getDocumentName());
+					index++;
+				}
+				return returnDocument; 
+			}
+			
+		} catch (SQLException e) {
+			logger.info("getReplicatedNode: Cannot get documents for owner "+owner);
+			e.printStackTrace();
+		} finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		return returnDocument;
 	}
 
-	@Override
-	public List<Document> findDocuments(String namespace, Document criteria) {
-		// TODO Auto-generated method stub
-		return null;
+
+	public static void main(String args[]) {
+		
+		DatabaseStorage ds = new DatabaseStorage();
+		//ds.addDocumentInDatabase(null, "abc.txt", false, 0, "four");
+		//System.out.println(ds.getOwner("EMPTY", "abc.txt"));
+		//ds.addReplicaInDatabase(null, "abc.txt", 1, "four", "five", null);
 	}
+
 }

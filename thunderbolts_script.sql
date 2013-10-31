@@ -29,12 +29,15 @@ USE `thunderbolts`;
 --
 
 CREATE TABLE IF NOT EXISTS `document` (
-  `DocumentID` int(11) NOT NULL AUTO_INCREMENT,
   `DocumentName` varchar(250) NOT NULL,
-  `NamespaceName` varchar(250) NOT NULL,
-  `NodeID` varchar(250) NOT NULL,
+  `NamespaceName` varchar(250) NOT NULL DEFAULT 'EMPTY',
+  `Owner` varchar(250) NOT NULL,
+  `ReplicatedNode` varchar(250),
+  `PreviousReplicatedNode` varchar(250),
   `ReplicationCount` int(3) NOT NULL,
-  PRIMARY KEY (`DocumentID`)
+  `IsReplicated` boolean,
+  `ToBeReplicated` boolean DEFAULT TRUE,
+  CONSTRAINT C_DOCUMENT_NAMESPACE UNIQUE (DocumentName, NamespaceName)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

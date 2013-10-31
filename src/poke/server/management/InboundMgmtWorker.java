@@ -104,9 +104,9 @@ public class InboundMgmtWorker extends Thread {
 								int port = Integer.valueOf(HeartbeatConnector.getInstance().getConf().getServer().getProperty("port"));
 								int mgmtPort = Integer.valueOf(HeartbeatConnector.getInstance().getConf().getServer().getProperty("port.mgmt"));
 								String remoteAddress =  msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0];
-								System.out.println(port);
-								System.out.println(mgmtPort);
-								System.out.println(remoteAddress);
+								//System.out.println(port);
+								//System.out.println(mgmtPort);
+								//System.out.println(remoteAddress);
 								
 								HeartbeatData heart = new HeartbeatData(n.getNodeId(), remoteAddress, port, mgmtPort);
 								HeartbeatConnector.getInstance().addConnectByBroadcast(heart);
