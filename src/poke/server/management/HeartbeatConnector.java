@@ -132,8 +132,10 @@ public class HeartbeatConnector extends Thread {
 
 	public boolean addExternalNode(HeartbeatData node) {
 
+		logger.info("Node != null"+ (node!=null)+ " ");
 		if(!monitors.containsKey(node.getHost())) {
 
+			
 			addConnectToThisNode(node);
 			return true;
 		}
@@ -222,6 +224,7 @@ public class HeartbeatConnector extends Thread {
 						//System.out.println("IncomingHB: isconnected and iswritable" + hb.getLastBeat() + ":" + hb.getBeatInterval());
 						hb.incrementFailures();
 						hb.setStatus(BeatStatus.Weak);
+						//hb.isGood();
 					} else {
 						//System.out.println("IncomingHB else of isconnected and is writable");
 						hb.setStatus(BeatStatus.Active);
@@ -254,6 +257,7 @@ public class HeartbeatConnector extends Thread {
 						//System.out.println("OutgoingHB: isconnected and iswritable " + hb.getLastBeatSent() + ":" + hb.getBeatInterval());
 						hb.incrementFailures();
 						hb.setStatus(BeatStatus.Weak);
+						//hb.isGood();
 					} else {
 						//System.out.println("OutgoingHB: else of isconnected and is writable");
 						hb.setStatus(BeatStatus.Active);

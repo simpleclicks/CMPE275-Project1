@@ -6,6 +6,9 @@ import poke.server.management.HeartbeatConnector;
 import poke.server.management.HeartbeatData;
 
 public class ConnectToExternalNodes {
+	
+	private HeartbeatData hd;
+	private static ConnectToExternalNodes cn;
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -18,9 +21,12 @@ public class ConnectToExternalNodes {
 		System.out.println("Enter the Port of the node");
 		int port = scanner.nextInt();
 		
-		HeartbeatData hd = new HeartbeatData(hostAddress, hostAddress, port, mgmtPort);
+		cn = new ConnectToExternalNodes();
+		cn.hd = new HeartbeatData(hostAddress, hostAddress, port, mgmtPort);
 		
-		if(HeartbeatConnector.getInstance().addExternalNode(hd)) {
+		System.out.println(hostAddress+" "+mgmtPort+" "+port);
+		//HeartbeatConnector.getInstance().addExternalNode(hd);
+		if(HeartbeatConnector.getInstance().addExternalNode(cn.hd)) {
 			
 			System.out.println("Node added Successfully");
 		}
