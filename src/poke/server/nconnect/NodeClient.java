@@ -340,7 +340,7 @@ public class NodeClient {
 				try {
 
 					Request msg = conn.outboundRequestQueue.take();
-
+					logger.info("Message is in the outbound queue: Node client");
 					if (ch.isWritable()) {
 						logger.info("Sending request to the nodeId "+nodeId);
 						ChannelFuture cf = ch.write(msg);

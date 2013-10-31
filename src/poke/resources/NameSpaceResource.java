@@ -374,7 +374,7 @@ public class NameSpaceResource implements Resource {
 	
 	private Response namespaceListQuery(Header namespaceListQueryHeader, Payload namespaceListQueryBody) {
 		// TODO Auto-generated method stub
-		
+		System.out.println("NameSpaceResource.namespaceListQuery()");
 		Response.Builder namespaceListQueryResponse = Response.newBuilder();
         PayloadReply.Builder namespaceListQueryRespBody = PayloadReply.newBuilder();
 
@@ -382,21 +382,26 @@ public class NameSpaceResource implements Resource {
 		NameSpace space = namespaceListQueryBody.getSpace();
 		namespaceListQueryResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListQueryHeader, ReplyStatus.SUCCESS, NAMESPACEDOESNOTEXIST).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
 		
+		logger.info("namespaceListQuery(): recieved namespace" + space);
 		String namespacePath = HOMEDIR+File.separator+space;
 		int index = 0;
 		File namespaceDir = new File (namespacePath);
 		String filename = null;
 		String filePath = null;
 		String fileExt = null;
-		
+		logger.info("before try checknamespace, before listfiles " );
+
 		try {
 			boolean checkNamespace = FileUtils.directoryContains(homeDir, namespaceDir);
 			if(checkNamespace){
-				
+				logger.info("inside try checknamespace, before listfiles " );
 				List<File> files = (List<File>) FileUtils.listFiles(namespaceDir, TrueFileFilter.INSTANCE,
 																	TrueFileFilter.INSTANCE);
-				
+				logger.info("inside try checknamespace, before listfiles " );
+
 				for (File file : files) {
+					logger.info("inside for loop " );
+
 					filename = file.getName();
 					filePath = file.getCanonicalPath();
 					fileExt = FilenameUtils.getExtension(filePath);
