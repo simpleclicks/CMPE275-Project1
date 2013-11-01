@@ -83,7 +83,7 @@ public class DocumentResource implements Resource {
 
 	private static final String REQUESTEDFILEDNEXISTSMSG = "Cluster does not have the requested file";
 
-	private static final int MAXWAITFORRESPONSE = 5000;
+	private static final int MAXWAITFORRESPONSE = 6000;
 	
 	private static final int MAXWAITFORADDRESPONSE = 7000;
 

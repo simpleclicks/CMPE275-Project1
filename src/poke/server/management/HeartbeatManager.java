@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import poke.server.conf.ServerConf.NearestConf;
 import poke.server.management.HeartbeatData.BeatStatus;
+import poke.server.nconnect.NodeResponseQueue;
 
 import com.google.protobuf.GeneratedMessage;
 
@@ -284,7 +285,6 @@ public class HeartbeatManager extends Thread {
 			if (outgoingHB.containsValue(heart)) {
 				logger.warn("HB outgoing channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());
 				outgoingHB.remove(future.getChannel());
-				
 				//remove the node from monitors
 				HeartbeatConnector.getInstance().removeNodeFromMonitor(heart.getNodeId(), heart.getHost());
 			} 
@@ -292,6 +292,10 @@ public class HeartbeatManager extends Thread {
 				logger.warn("HB incoming channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());
 				incomingHB.remove(heart.getNodeId());
 			}
+			if(NodeResponseQueue.nodeExistCheck(heart.getNodeId()))
+				NodeResponseQueue.removeInactiveNode(heart.getNodeId());
+			if(NodeResponseQueue.externalNodeExistCheck(heart.getNodeId()))
+				NodeResponseQueue.removeExternalNode(heart.getNodeId());
 			
 		}
 	}

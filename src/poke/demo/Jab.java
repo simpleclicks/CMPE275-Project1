@@ -33,7 +33,7 @@ public class Jab {
 		ClientListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);
 
-		//cc.docAddReq("", "E://GTHub.flv");
+		//cc.docAddReq("jhaksau", "E://GTHub.flv");
 		
 		cc.docRemove("jhaksau", "GTHub.flv");
 	
