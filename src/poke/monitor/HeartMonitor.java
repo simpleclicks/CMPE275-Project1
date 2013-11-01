@@ -52,8 +52,18 @@ public class HeartMonitor {
 	private MonitorHandler handler;
 	private int retry;
 	private String nodeId;
+	
+	private boolean isExternal = false;
 
 	// protected ChannelFactory cf;
+
+	public boolean isExternal() {
+		return isExternal;
+	}
+
+	public void setExternal(boolean isExternal) {
+		this.isExternal = isExternal;
+	}
 
 	/**
 	 * most applications will supply a handler to process messages. This is the
@@ -198,20 +208,6 @@ public class HeartMonitor {
 		{
 			try {
 
-		try {
-			System.out.println("Tracing code flow 1 : HeartMonitor.java intiateHeartbeat");
-			Channel ch = connect();
-			Network.Builder n = Network.newBuilder();
-			n.setNodeId(HeartbeatManager.getInstance().getNodeId());
-			n.setAction(Action.NODEJOIN);
-			Management.Builder m = Management.newBuilder();
-			m.setGraph(n.build());
-			ch.write(m.build());
-			rtn = true;
-		} catch (Exception e) {
-		}
-
-
 				System.out.println("Tracing code flow 1 : HeartMonitor.java intiateHeartbeat");
 				Channel ch = connect();
 				Network.Builder n = Network.newBuilder();
@@ -219,6 +215,7 @@ public class HeartMonitor {
 				n.setNodeId(HeartbeatManager.getInstance().getNodeId());
 				n.setAction(Action.NODEJOIN);
 				Management.Builder m = Management.newBuilder();
+				m.setIsExternal(isExternal);
 				m.setGraph(n.build());
 				ch.write(m.build());
 				rtn = true;

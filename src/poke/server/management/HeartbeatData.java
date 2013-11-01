@@ -63,6 +63,16 @@ public class HeartbeatData {
 	private long lastBeat;
 	private long lastBeatSent;
 	private long lastFailed;
+	
+	private boolean isExternal = false;
+
+	public boolean isExternal() {
+		return isExternal;
+	}
+
+	public void setExternal(boolean isExternal) {
+		this.isExternal = isExternal;
+	}
 
 	// the connection
 	public SocketAddress sa;

@@ -94,7 +94,7 @@ public class HeartbeatConnector extends Thread {
 			MonitorHandler handler = new MonitorHandler();
 			handler.addListener(hbmon);
 			HeartMonitor hm = new HeartMonitor(node.getHost(), node.getMgmtport(), handler, node.getNodeId());
-
+			hm.setExternal(node.isExternal());
 			monitors.put(node.getHost(),hm);
 
 			//writeConfToFile();

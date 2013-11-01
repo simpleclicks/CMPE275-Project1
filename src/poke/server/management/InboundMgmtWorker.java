@@ -109,6 +109,7 @@ public class InboundMgmtWorker extends Thread {
 								//System.out.println(remoteAddress);
 								
 								HeartbeatData heart = new HeartbeatData(n.getNodeId(), remoteAddress, port, mgmtPort);
+								heart.setExternal(req.getIsExternal());
 								HeartbeatConnector.getInstance().addConnectByBroadcast(heart);
 									
 							}

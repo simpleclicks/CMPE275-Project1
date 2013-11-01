@@ -17,7 +17,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre7"/>
 	<classpathentry kind="lib" path="lib/slf4j-simple-1.7.2.jar"/>
 	<classpathentry kind="lib" path="lib/commons-io-2.4.jar"/>
-	<classpathentry kind="lib" path="D:/CMPE275-Project1/CMPE275-Project1/lib/commons-dbutils-1.5.jar"/>
-	<classpathentry kind="lib" path="D:/CMPE275-Project1/CMPE275-Project1/lib/mysql-connector-java-5.0.8-bin.jar"/>
+	<classpathentry kind="lib" path="lib/commons-dbutils-1.5.jar"/>
+	<classpathentry kind="lib" path="lib/mysql-connector-java-5.0.8-bin.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

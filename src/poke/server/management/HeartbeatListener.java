@@ -71,7 +71,7 @@ public class HeartbeatListener implements MonitorListener {
 				HeartbeatManager.getInstance().addNearestNodeChannel(msg.getBeat().getNodeId(), channel, socketaddress);
 			}
 			
-			if(!NodeResponseQueue.nodeExistCheck(data.getNodeId()) && !msg.getIsExternal()){
+			if(!NodeResponseQueue.nodeExistCheck(data.getNodeId()) && (!msg.getIsExternal() || !data.isExternal())){
 				
 				NodeClient activeNode = new NodeClient(data.getHost(), data.getPort(), data.getNodeId()); // creates public TCP connection with internal node
 				
@@ -82,7 +82,7 @@ public class HeartbeatListener implements MonitorListener {
 				logger.info("number of active nodes in the network "+NodeResponseQueue.activeNodesCount());
 			}else{
 				
-				if(!NodeResponseQueue.externalNodeExistCheck(data.getNodeId())){
+				if(!NodeResponseQueue.externalNodeExistCheck(data.getNodeId()) && (msg.getIsExternal()|| data.isExternal())){
 					
 					NodeClient activeNode = new NodeClient(data.getHost(), data.getPort(), data.getNodeId()); // creates public TCP connection with external node
 					

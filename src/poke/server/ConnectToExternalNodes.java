@@ -50,6 +50,7 @@ public class ConnectToExternalNodes extends Thread{
 						int mgmtPort = Integer.valueOf(fileContents.get(3));
 
 						HeartbeatData hd = new HeartbeatData(nodeId , host , port , mgmtPort );
+						hd.setExternal(true);
 
 						if(HeartbeatConnector.getInstance().addExternalNode(hd)) {
 
