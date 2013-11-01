@@ -239,6 +239,9 @@ public class NodeClient {
 		if (listFiles.containsKey(namespace)){
 			Files = listFiles.get(namespace);
 		}
+		
+    	logger.info("Files returned from sendNamespaceList " +Files);
+
 		return Files;
 		
 	}
@@ -481,7 +484,6 @@ public class NodeClient {
 						//	listFiles = msg.getBody().getDocsList();
 							owner.listFiles.put(namespace, msg.getBody().getDocsList());
 							logger.info("Document list recieved from node "+ owner.getNodeId());
-							logger.info("List contains " + listFiles);
 						}
 
 					}
