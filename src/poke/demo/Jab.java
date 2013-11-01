@@ -28,14 +28,14 @@ public class Jab {
 	}
 
 	public void run() {
-		ClientConnection cc = ClientConnection.initConnection("localhost", 5570);
+		ClientConnection cc = ClientConnection.initConnection("localhost", 5575);
 		System.out.println("Adding listener");
 		ClientListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);
 
-		cc.docAddReq("", "E://GTHub.flv");
+		//cc.docAddReq("", "E://GTHub.flv");
 		
-		//cc.docRemove("", "GTHub.flv");
+		cc.docRemove("jhaksau", "GTHub.flv");
 	
 	}
 
