@@ -110,19 +110,17 @@ public class NodeResponseQueue {
 	}
 
 	public static boolean fetchDocFindResult(String nameSpace, String fileName) {
-		boolean queryResult = true;
+		boolean queryResult = false;
 
 		NodeClient[] activeNodeArray = getActiveNodeInterface();
-
+		try{
 		for (NodeClient nc : activeNodeArray) {
 			String result = "NA";
 			
-			while(result.equalsIgnoreCase("NA")){
+			do{
 				result = nc.checkDocFindResponse(nameSpace, fileName);
-				logger.warn("No response from node " + nc.getNodeId()
-						+ "for document find for " + nameSpace
-						+ "/" + fileName);
-			}
+				Thread.sleep(1000);
+			}while(result.equalsIgnoreCase("NA"));
 			
 
 			if (result.equalsIgnoreCase("Failure")) {
@@ -132,6 +130,10 @@ public class NodeResponseQueue {
 			} else if (result.equalsIgnoreCase("Success"))
 				return true;		
 
+		}
+		}
+		catch(InterruptedException ex){
+			ex.printStackTrace();
 		}
 		return queryResult;
 	}

@@ -211,6 +211,8 @@ public class NodeClient {
 		String key = nameSpace + fileName;
 
 		String noResult = "NA";
+		
+		//System.out.println("Finding key " + key + " in " +docFindResponseQueue.toString());
 
 		if (docFindResponseQueue.containsKey(key)) {
 
@@ -447,6 +449,7 @@ public class NodeClient {
 
 					} else if (msg.getHeader().getRoutingId() == Header.Routing.DOCFIND) {
 						boolean addToQueue = false;
+						//System.out.println(msg.toString());
 						System.out
 								.println("In NodeClientResponseHandler : DOCFIND response recieved from node"
 										+ msg.getHeader().getOriginator());
@@ -478,12 +481,14 @@ public class NodeClient {
 
 							PayloadReply response = msg.getBody();
 
-							String nameSpace = null;
-
+							String nameSpace = "";
+							
+							if(response.getSpacesCount()>0){
 							if (response.getSpaces(0) != null)
 								nameSpace = response.getSpaces(0).getName();
-
+							}
 							String docName = response.getDocs(0).getDocName();
+							String[] fnameSplit = docName.split("\\\\");
 
 							if (docName == null || docName.length() == 0) {
 								logger.error("Invalid DocQueryResponse from node "
@@ -494,7 +499,7 @@ public class NodeClient {
 							if (nameSpace != null && nameSpace.length() > 0)
 								msgKey = nameSpace;
 
-							msgKey = msgKey + docName;
+							msgKey = msgKey + fnameSplit[fnameSplit.length - 1];
 
 							owner.docFindResponseQueue.put(msgKey, msg.getHeader()
 									.getReplyCode().name());
@@ -519,18 +524,20 @@ public class NodeClient {
 
 		private void writeToTemp(String docName, String nameSpace,
 				long chunkId, long totalChunk, byte[] chunkContent) {
-			File file = new File(docName);
-
+			String[] fnamesplit = docName.split("\\\\");
+			String fname = fnamesplit[fnamesplit.length-1];
+			File file = new File(fname);
+			File dir = new File("temp" + File.separator + nameSpace);
 			logger.info("Creating directory with name " + nameSpace);
 
 			//String nameDir = "temp" + File.separator + nameSpace;
 
 			try {
-				FileUtils.forceMkdir(file);
-				logger.info("Creating file with name " + docName
+				FileUtils.forceMkdir(dir);
+				logger.info("Creating file with name " + fname
 						+ " and writing the content sent by client to it");
 
-				FileUtils.writeByteArrayToFile(file, chunkContent, true);
+				FileUtils.writeByteArrayToFile(new File(dir + File.separator + fname), chunkContent, true);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

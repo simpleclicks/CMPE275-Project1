@@ -111,8 +111,8 @@ public class DocumentChunkResource implements ChunkedResource {
 					logger.info(" DocQuery: sleeping for 3000ms! Waiting for responses from the other nodes for DOCQUERY ");
 
 					Thread.sleep(MAXWAITFORRESPONSE);
-
-					boolean docFindResult = NodeResponseQueue.fetchDocFindResult(nameSpace , fileName);
+					
+					boolean docFindResult = NodeResponseQueue.fetchDocFindResult(nameSpace , docFindBody.getDoc().getDocName());
 
 					if(docFindResult){
 						String tempfname = "temp" + File.separator
@@ -140,6 +140,7 @@ public class DocumentChunkResource implements ChunkedResource {
 
 	             docFindRespHeader.setReplyMsg("Server could not find the file.");
 	             docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not Found").toBuilder().setOriginator(self));
+	             docFindRespPayload.addSpacesBuilder();
 	              docFindResponse.setBody(docFindRespPayload.build());
 	              
 	             responses.add(docFindResponse.build());
@@ -240,10 +241,10 @@ public class DocumentChunkResource implements ChunkedResource {
 					bytesRead = IOUtils.read(chunkeFIS, chunckContents, 0,
 							26214400);
 
-					//logger.info("Total number of bytes read for chunk "
-						//	+ chunkId + ": " + bytesRead);
+					logger.info("Total number of bytes read for chunk "
+							+ chunkId + ": " + bytesRead);
 
-					// logger.info("Contents of the chunk "+chunkId+" : "+chunckContents);
+					logger.info("Contents of the chunk "+chunkId+" : "+chunckContents);
 					
 					docFindRespPayload.addDocsBuilder();
 
