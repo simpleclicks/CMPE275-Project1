@@ -13,57 +13,57 @@ import eye.Comm.Document;
 import eye.Comm.Response;
 
 public class NodeResponseQueue {
-	
+
 	static private volatile ConcurrentHashMap<String, NodeClient> activeNodeMap = new ConcurrentHashMap<String, NodeClient>();
-	
+
 	//static private volatile ConcurrentHashMap<String, Response> docQueryResponseQueue =  new ConcurrentHashMap<String, Response>();
-	
+
 	protected static Logger logger = LoggerFactory.getLogger("NodeResponseQueue");
-	
+
 	public static void addActiveNode(String nodeId , NodeClient node){
-		
+
 		activeNodeMap.put(nodeId, node);
 	}
-	
+
 	public static void removeInactiveNode(String nodeId){
-		
+
 		activeNodeMap.remove(nodeId);
 	}
-	
-//	public static void addDocQueryReponse(String docNameSpace , Response docQueryResponse){
-//		
-//		docQueryResponseQueue.put(docNameSpace, docQueryResponse);
-//	}
-//	
-//	public static boolean docQueryCheck(String docNameSpace){
-//		
-//		return docQueryResponseQueue.contains(docNameSpace);
-//	}
-	
+
+	//	public static void addDocQueryReponse(String docNameSpace , Response docQueryResponse){
+	//		
+	//		docQueryResponseQueue.put(docNameSpace, docQueryResponse);
+	//	}
+	//	
+	//	public static boolean docQueryCheck(String docNameSpace){
+	//		
+	//		return docQueryResponseQueue.contains(docNameSpace);
+	//	}
+
 	public static boolean nodeExistCheck(String nodeId){
-		
+
 		return activeNodeMap.containsKey(nodeId);
 	}
-	
+
 	public static int activeNodesCount(){
-		
+
 		return activeNodeMap.size();
 	}
-	
+
 	public static NodeClient[] getActiveNodeInterface(){
-		
+
 		Collection<NodeClient> activeNodes = activeNodeMap.values();
 
 		NodeClient[] activeNodeArray = new NodeClient[activeNodes.size()];
 
 		activeNodes.toArray(activeNodeArray);
-		
+
 		return activeNodeArray;
-		
+
 	}
-	
+
 	public static void broadcastDocQuery(String nameSpace , String fileName){
-		
+
 		NodeClient[] activeNodeArray = getActiveNodeInterface();
 
 		for(NodeClient nc: activeNodeArray){
@@ -71,9 +71,9 @@ public class NodeResponseQueue {
 			nc.queryFile(nameSpace, fileName);
 		}
 	}
-	
-public static void broadcastNamespaceQuery(String nameSpace){
-		
+
+	public static void broadcastNamespaceQuery(String nameSpace){
+
 		NodeClient[] activeNodeArray = getActiveNodeInterface();
 
 		for(NodeClient nc: activeNodeArray){
@@ -81,67 +81,67 @@ public static void broadcastNamespaceQuery(String nameSpace){
 			nc.queryNamespace(nameSpace);
 		}
 	}
-	
-public static void broadcastNamespaceListQuery(String nameSpace) {
-	// TODO Auto-generated method stub
-	
-	NodeClient[] activeNodeArray = getActiveNodeInterface();
 
-	for(NodeClient nc: activeNodeArray){
+	public static void broadcastNamespaceListQuery(String nameSpace) {
+		// TODO Auto-generated method stub
 
-		nc.queryNamespaceList(nameSpace);
+		NodeClient[] activeNodeArray = getActiveNodeInterface();
+
+		for(NodeClient nc: activeNodeArray){
+
+			nc.queryNamespaceList(nameSpace);
+		}
+
 	}
-	
-}
-	
+
 
 	public static boolean fetchDocQueryResult( String nameSpace , String fileName){
-		
+
 		boolean queryResult = true;
-		
+
 		NodeClient[] activeNodeArray = getActiveNodeInterface();
-		
+
 		for(NodeClient nc: activeNodeArray){
 
 			String result = nc.checkDocQueryResponse(nameSpace, fileName);
-			
+
 			if(result.equalsIgnoreCase("Failure")){
 				logger.info("Document upload validation failed for "+nameSpace+"/"+fileName);
 				return false;
 			}else if(result.equalsIgnoreCase("NA"))
 				logger.warn("No response from node "+nc.getNodeId()+"for document upload validation for "+nameSpace+"/"+fileName);
-				
+
 		}
-			return queryResult;
+		return queryResult;
 	}
 
 	public static List fetchNamespaceList(String namespace){
 		boolean queryResult = true;
-		List<File> fileList= new ArrayList<File>();
-		List<File> newFileList = new ArrayList<File>();
+		List<Document> fileList= new ArrayList<Document>();
+		List<Document> newFileList = new ArrayList<Document>();
 		logger.info("In fetchNameSpaceList");
 		NodeClient[] activeNodeArray = getActiveNodeInterface();
-		
-		
-		for (NodeClient nc : activeNodeArray) {
-            String result = "NA";
-            
-          //  while(result.equalsIgnoreCase("NA")){
-            	fileList = (List<File>) (nc.sendNamespaceList(namespace));
-            	try {
-					Thread.sleep(3000);
-					newFileList.addAll(fileList);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					logger.error("Thread exception in fetchNamespaceList "+e.getMessage());
-					}
-                 
-            	logger.info("Files returned from fetchNameSpaceList " +newFileList);
-                    return newFileList;                
 
-    }
-		
+
+		for (NodeClient nc : activeNodeArray) {
+			String result = "NA";
+
+			//  while(result.equalsIgnoreCase("NA")){
+			fileList = (List<Document>) (nc.sendNamespaceList(namespace));
+			try {
+				Thread.sleep(3000);
+				newFileList.addAll(fileList);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				logger.error("Thread exception in fetchNamespaceList "+e.getMessage());
+			}
+
+			logger.info("Files returned from fetchNameSpaceList " +newFileList);
+			return newFileList;                
+
+		}
+
 		return fileList;
 	}
-	
+
 }
