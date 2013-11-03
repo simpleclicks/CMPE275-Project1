@@ -88,8 +88,6 @@ public class NodeResponseQueue {
 		}
 	}
 
-	public static boolean fetchDocQueryResult(String nameSpace, String fileName) {
-
 	public static void broadcastNamespaceQuery(String nameSpace){
 
 		NodeClient[] activeNodeArray = getActiveNodeInterface();

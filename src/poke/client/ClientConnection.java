@@ -183,8 +183,6 @@ public class ClientConnection {
 
 	}
 
-	public void docAddReq(String nameSpace,String filePath){
-
 
 	public void docAddReq(String nameSpace, String filePath) {
 

@@ -212,12 +212,7 @@ public class NodeClient {
 
 		return enqueueRequest(namespaceListQueryReqBuilder.build());
 		
-	}
-	
-	public String checkDocQueryResponse(String nameSpace , String fileName){
-		
-		String key = nameSpace+fileName;
-		
+	}		
 
 	public boolean findFile(String nameSpace, String fileName) {
 

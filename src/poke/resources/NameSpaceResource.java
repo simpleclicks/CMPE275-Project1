@@ -33,6 +33,7 @@ import poke.server.management.HeartbeatManager;
 import poke.server.nconnect.NodeResponseQueue;
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
+import poke.server.storage.jdbc.DatabaseStorage;
 import eye.Comm.Document;
 import eye.Comm.Header;
 import eye.Comm.NameSpace;
@@ -61,7 +62,7 @@ public class NameSpaceResource implements Resource {
 
 
 	@Override
-	public Response process(Request request) {
+	public Response process(Request request, DatabaseStorage dbConn) {
 		// TODO Auto-generated method stub
 
 		int opChoice = 0;
