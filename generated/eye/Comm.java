@@ -4675,6 +4675,9 @@ public final class Comm {
       DOCADDHANDSHAKE(12, 24),
       DOCQUERY(13, 25),
       REPLICAREMOVE(14, 26),
+      REPLICAHANDSHAKE(15, 27),
+      ADDREPLICA(16, 28),
+      REPLICAQUERY(17, 29),
       ;
       
       public static final int FINGER_VALUE = 2;
@@ -4692,6 +4695,9 @@ public final class Comm {
       public static final int DOCADDHANDSHAKE_VALUE = 24;
       public static final int DOCQUERY_VALUE = 25;
       public static final int REPLICAREMOVE_VALUE = 26;
+      public static final int REPLICAHANDSHAKE_VALUE = 27;
+      public static final int ADDREPLICA_VALUE = 28;
+      public static final int REPLICAQUERY_VALUE = 29;
       
       
       public final int getNumber() { return value; }
@@ -4713,6 +4719,9 @@ public final class Comm {
           case 24: return DOCADDHANDSHAKE;
           case 25: return DOCQUERY;
           case 26: return REPLICAREMOVE;
+          case 27: return REPLICAHANDSHAKE;
+          case 28: return ADDREPLICA;
+          case 29: return REPLICAQUERY;
           default: return null;
         }
       }
@@ -4743,7 +4752,7 @@ public final class Comm {
       }
       
       private static final Routing[] VALUES = {
-        FINGER, STATS, NAMESPACEADD, NAMESPACELIST, NAMESPACEUPDATE, NAMESPACEREMOVE, DOCREPLICATEREQ, DOCREPLICATE, DOCADD, DOCFIND, DOCUPDATE, DOCREMOVE, DOCADDHANDSHAKE, DOCQUERY, REPLICAREMOVE, 
+        FINGER, STATS, NAMESPACEADD, NAMESPACELIST, NAMESPACEUPDATE, NAMESPACEREMOVE, DOCREPLICATEREQ, DOCREPLICATE, DOCADD, DOCFIND, DOCUPDATE, DOCREMOVE, DOCADDHANDSHAKE, DOCQUERY, REPLICAREMOVE, REPLICAHANDSHAKE, ADDREPLICA, REPLICAQUERY, 
       };
       
       public static Routing valueOf(
@@ -11588,40 +11597,42 @@ public final class Comm {
       "\001(\t\"+\n\013DocumentSet\022\034\n\tdocuments\030\001 \003(\0132\t." +
       "Document\"*\n\014NameSpaceSet\022\032\n\006spaces\030\001 \003(\013" +
       "2\n.NameSpace\")\n\013RoutingPath\022\014\n\004node\030\001 \002(" +
-      "\t\022\014\n\004time\030\002 \002(\003\"\327\004\n\006Header\022#\n\nrouting_id" +
+      "\t\022\014\n\004time\030\002 \002(\003\"\217\005\n\006Header\022#\n\nrouting_id" +
       "\030\001 \002(\0162\017.Header.Routing\022\022\n\noriginator\030\002 " +
       "\002(\t\022\013\n\003tag\030\003 \001(\t\022\014\n\004time\030\004 \001(\003\022\'\n\nreply_" +
       "code\030\005 \001(\0162\023.Header.ReplyStatus\022\021\n\treply" +
       "_msg\030\006 \001(\t\022\032\n\004path\030\007 \003(\0132\014.RoutingPath\022\016",
       "\n\006toNode\030\010 \001(\t\022\031\n\021remainingHopCount\030\t \001(" +
-      "\003\022\031\n\nisExternal\030\n \001(\010:\005false\"\203\002\n\007Routing" +
+      "\003\022\031\n\nisExternal\030\n \001(\010:\005false\"\273\002\n\007Routing" +
       "\022\n\n\006FINGER\020\002\022\t\n\005STATS\020\003\022\020\n\014NAMESPACEADD\020" +
       "\n\022\021\n\rNAMESPACELIST\020\013\022\023\n\017NAMESPACEUPDATE\020" +
       "\014\022\023\n\017NAMESPACEREMOVE\020\r\022\023\n\017DOCREPLICATERE" +
       "Q\020\022\022\020\n\014DOCREPLICATE\020\023\022\n\n\006DOCADD\020\024\022\013\n\007DOC" +
       "FIND\020\025\022\r\n\tDOCUPDATE\020\026\022\r\n\tDOCREMOVE\020\027\022\023\n\017" +
       "DOCADDHANDSHAKE\020\030\022\014\n\010DOCQUERY\020\031\022\021\n\rREPLI" +
-      "CAREMOVE\020\032\"U\n\013ReplyStatus\022\013\n\007SUCCESS\020\001\022\013" +
-      "\n\007FAILURE\020\002\022\n\n\006NOAUTH\020\003\022\016\n\nMISSINGARG\020\004\022",
-      "\020\n\014NOCONNECTION\020\005\"U\n\007Payload\022\027\n\006finger\030\001" +
-      " \001(\0132\007.Finger\022\026\n\003doc\030\002 \001(\0132\t.Document\022\031\n" +
-      "\005space\030\003 \001(\0132\n.NameSpace\"v\n\014PayloadReply" +
-      "\022\027\n\006finger\030\001 \001(\0132\007.Finger\022\027\n\004docs\030\002 \003(\0132" +
-      "\t.Document\022\032\n\006spaces\030\003 \003(\0132\n.NameSpace\022\030" +
-      "\n\005stats\030\004 \001(\0132\t.Document\":\n\007Request\022\027\n\006h" +
-      "eader\030\001 \002(\0132\007.Header\022\026\n\004body\030\002 \002(\0132\010.Pay" +
-      "load\"@\n\010Response\022\027\n\006header\030\001 \002(\0132\007.Heade" +
-      "r\022\033\n\004body\030\002 \002(\0132\r.PayloadReply\",\n\tHeartb" +
-      "eat\022\016\n\006nodeId\030\001 \002(\t\022\017\n\007timeRef\030\002 \002(\003\"\247\001\n",
-      "\007Network\022\016\n\006nodeId\030\001 \002(\t\022\037\n\006action\030\002 \002(\016" +
-      "2\017.Network.Action\022\020\n\010originId\030\003 \002(\t\"Y\n\006A" +
-      "ction\022\014\n\010NODEJOIN\020\001\022\r\n\tNODELEAVE\020\002\022\014\n\010NO" +
-      "DEDEAD\020\003\022\007\n\003MAP\0207\022\014\n\010ANNOUNCE\0208\022\r\n\010SHUTD" +
-      "OWN\020\347\007\"Z\n\nManagement\022\027\n\005graph\030\001 \001(\0132\010.Ne" +
-      "twork\022\030\n\004beat\030\002 \001(\0132\n.Heartbeat\022\031\n\nisExt" +
-      "ernal\030\003 \001(\010:\005false\"N\n\tBroadcast\022\016\n\006nodeI" +
-      "d\030\001 \002(\t\022\021\n\tipAddress\030\002 \002(\t\022\014\n\004port\030\003 \002(\005" +
-      "\022\020\n\010mgmtPort\030\004 \002(\005B\007\n\003eyeH\001"
+      "CAREMOVE\020\032\022\024\n\020REPLICAHANDSHAKE\020\033\022\016\n\nADDR" +
+      "EPLICA\020\034\022\020\n\014REPLICAQUERY\020\035\"U\n\013ReplyStatu",
+      "s\022\013\n\007SUCCESS\020\001\022\013\n\007FAILURE\020\002\022\n\n\006NOAUTH\020\003\022" +
+      "\016\n\nMISSINGARG\020\004\022\020\n\014NOCONNECTION\020\005\"U\n\007Pay" +
+      "load\022\027\n\006finger\030\001 \001(\0132\007.Finger\022\026\n\003doc\030\002 \001" +
+      "(\0132\t.Document\022\031\n\005space\030\003 \001(\0132\n.NameSpace" +
+      "\"v\n\014PayloadReply\022\027\n\006finger\030\001 \001(\0132\007.Finge" +
+      "r\022\027\n\004docs\030\002 \003(\0132\t.Document\022\032\n\006spaces\030\003 \003" +
+      "(\0132\n.NameSpace\022\030\n\005stats\030\004 \001(\0132\t.Document" +
+      "\":\n\007Request\022\027\n\006header\030\001 \002(\0132\007.Header\022\026\n\004" +
+      "body\030\002 \002(\0132\010.Payload\"@\n\010Response\022\027\n\006head" +
+      "er\030\001 \002(\0132\007.Header\022\033\n\004body\030\002 \002(\0132\r.Payloa",
+      "dReply\",\n\tHeartbeat\022\016\n\006nodeId\030\001 \002(\t\022\017\n\007t" +
+      "imeRef\030\002 \002(\003\"\247\001\n\007Network\022\016\n\006nodeId\030\001 \002(\t" +
+      "\022\037\n\006action\030\002 \002(\0162\017.Network.Action\022\020\n\010ori" +
+      "ginId\030\003 \002(\t\"Y\n\006Action\022\014\n\010NODEJOIN\020\001\022\r\n\tN" +
+      "ODELEAVE\020\002\022\014\n\010NODEDEAD\020\003\022\007\n\003MAP\0207\022\014\n\010ANN" +
+      "OUNCE\0208\022\r\n\010SHUTDOWN\020\347\007\"Z\n\nManagement\022\027\n\005" +
+      "graph\030\001 \001(\0132\010.Network\022\030\n\004beat\030\002 \001(\0132\n.He" +
+      "artbeat\022\031\n\nisExternal\030\003 \001(\010:\005false\"N\n\tBr" +
+      "oadcast\022\016\n\006nodeId\030\001 \002(\t\022\021\n\tipAddress\030\002 \002" +
+      "(\t\022\014\n\004port\030\003 \002(\005\022\020\n\010mgmtPort\030\004 \002(\005B\007\n\003ey",
+      "eH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

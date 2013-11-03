@@ -9,7 +9,12 @@ import org.slf4j.LoggerFactory;
 
 import eye.Comm.Response;
 
-
+/**
+ * @author Kaustubh
+ * @version 2.3
+ * {@code : Public TCP response handler - en-queue the responses for further processing by NodeClient }
+ * 
+ */
 public class NodeResponseHandler  extends SimpleChannelUpstreamHandler {
 	
 	protected static Logger logger = LoggerFactory.getLogger("NodeResponseHandler");

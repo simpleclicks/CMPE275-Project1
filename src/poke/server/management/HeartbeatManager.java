@@ -83,6 +83,11 @@ public class HeartbeatManager extends Thread {
 		return incomingHB.containsKey(nodeId);
 
 	}
+	
+	public HeartbeatData.BeatStatus checkNodeStatus(String nodeId){
+		
+		return incomingHB.get(nodeId).getStatus();
+	}
 
 	/**
 	 * initialize the hbMgr for this server

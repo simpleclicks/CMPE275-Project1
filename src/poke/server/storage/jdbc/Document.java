@@ -1,5 +1,7 @@
 package poke.server.storage.jdbc;
 
+import java.sql.Time;
+
 public class Document {
 	
 
@@ -16,6 +18,16 @@ public class Document {
 	private int replicationCount;
 	  
 	private boolean isReplicated;
+	
+	private Time modifiedTS;
+
+	public Time getModifiedTS() {
+		return modifiedTS;
+	}
+
+	public void setModifiedTS(Time modifiedTS) {
+		this.modifiedTS = modifiedTS;
+	}
 
 	public String getDocumentName() {
 		return documentName;

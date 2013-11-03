@@ -15,6 +15,10 @@
  */
 package poke.demo;
 
+
+
+import java.io.File;
+
 import poke.client.ClientConnection;
 import poke.client.ClientListener;
 import poke.client.ClientPrintListener;
@@ -22,6 +26,7 @@ import poke.client.ClientPrintListener;
 public class Jab {
 	private String tag;
 	private int count;
+	private String sep = File.separator;
 
 	public Jab(String tag) {
 		this.tag = tag;
@@ -33,9 +38,9 @@ public class Jab {
 		ClientListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);
 
-		//cc.docAddReq("jhaksau", "E://GTHub.flv");
+		cc.docAddReq("\\hello2\\", "E://test3.txt");
 		
-		cc.docRemove("jhaksau", "GTHub.flv");
+	//cc.docRemove("work1sepwork2sepwork3sepwork4", "test3.txt");
 	
 	}
 

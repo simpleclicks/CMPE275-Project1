@@ -91,6 +91,9 @@ message Header {
         DOCADDHANDSHAKE = 24; // prior DOCADDREQ
         DOCQUERY = 25;
         REPLICAREMOVE = 26;
+        REPLICAHANDSHAKE = 27;
+        ADDREPLICA = 28;
+        REPLICAQUERY = 29;
         }
         
      enum ReplyStatus {

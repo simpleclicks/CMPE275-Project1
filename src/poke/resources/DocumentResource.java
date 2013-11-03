@@ -17,25 +17,16 @@ package poke.resources;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.commons.io.FileSystemUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.monitor.FileEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.protobuf.ByteString;
-
-import poke.server.management.HeartbeatData;
 import poke.server.management.HeartbeatManager;
-import poke.server.nconnect.NodeClient;
 import poke.server.nconnect.NodeResponseQueue;
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
+import poke.server.storage.jdbc.DatabaseStorage;
 import eye.Comm.Document;
 import eye.Comm.Header;
 import eye.Comm.NameSpace;
@@ -73,8 +64,6 @@ public class DocumentResource implements Resource {
 
 	private static final String FILEDELETESUCCESSFULMSG = "Requested file has been deleted successfully";
 
-	private static final String REPLICADELETESUCCESSFULMSG = "Requested file replica has been deleted successfully";
-
 	private static final String FILEDELETEUNSUCCESSFULMSG = "Requested file can not be deleted at this time: Please try again later";
 
 	private static final String OPERATIONNOTALLOWEDMSG = "Requested Operation is not allowed with the 'request' type ";
@@ -96,7 +85,11 @@ public class DocumentResource implements Resource {
 	private static final int bufferMemSize = 1073741824;
 	
 	static private volatile  ConcurrentHashMap<String, String> docAddHSResponseQueue =  new ConcurrentHashMap<String, String>();
-
+	
+	static final private String self = HeartbeatManager.getInstance().getNodeId();
+	
+	static final private DatabaseStorage dbAct = DatabaseStorage.getInstance();
+	
 	@Override
 	public Response process(Request request) {
 
@@ -137,10 +130,7 @@ public class DocumentResource implements Resource {
 		case 25:
 			docOpResponse = docQuery(docOpHeader, docOpBody);
 			break;
-		case 26:
-			docOpResponse = replicaRemove(docOpHeader, docOpBody);
-			break;	
-
+		
 		default:
 			System.out.println("DpcumentResource: No matching doc op id found");
 
@@ -162,8 +152,6 @@ public class DocumentResource implements Resource {
 		
 		String originator = docAddValidateHeader.getOriginator();
 		
-		String self = HeartbeatManager.getInstance().getNodeId();
-		
 		logger.info("Received docAddValidate( docAddHS) from "+originator);
 
 		Response.Builder docAddValidateResponseBuilder = Response.newBuilder();
@@ -171,13 +159,13 @@ public class DocumentResource implements Resource {
 		if(docAddValidateBody.getSpace() !=null && docAddValidateBody.getSpace().getName().length() > 0){
 
 			nameSpace = docAddValidateBody.getSpace().getName();
-
+			
 			docAddValidateResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(repDoc).addSpaces(docAddValidateBody.getSpace()));
 
 		}else{
 			docAddValidateResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(repDoc));
 		}
-
+		
 		long spaceAvailable = 0;
 
 		long  bufferredLimit = 0;
@@ -194,8 +182,6 @@ public class DocumentResource implements Resource {
 			String effNS = HOMEDIR+File.separator+nameSpace; 
 
 			String effVisitorNS = VISITORDIR+File.separator+nameSpace;
-
-			logger.info("Validating "+effVisitorNS+" for "+newFileName);
 
 			File targetNS = new File (effNS);
 
@@ -293,12 +279,7 @@ public class DocumentResource implements Resource {
 		
 		NodeResponseQueue.broadcastDocQuery(nameSpace, newFileName , true);
 
-		try {
-
-			logger.info(" docAddValidate: sleeping for 3000ms! Witing for responses from the other nodes for DOCQUERY ");
-
-			Thread.sleep(MAXWAITFORRESPONSE);
-
+					
 			boolean docQueryResult = NodeResponseQueue.fetchDocQueryResult(nameSpace , newFileName , true);
 
 			if(docQueryResult){
@@ -306,34 +287,23 @@ public class DocumentResource implements Resource {
 
 				return docAddValidateResponseBuilder.build();
 			}
-
-		} catch (InterruptedException e1) {
-
-			e1.printStackTrace();
-		}
-
 		}
 		
 		try {
 			spaceAvailable = FileSystemUtils.freeSpaceKb()*1024;
 
-			//bufferredLimit = spaceAvailable - bufferMemSize; // commented temporarily for testing
+			bufferredLimit = spaceAvailable - bufferMemSize; // commented temporarily for testing
 			
-			bufferredLimit = 25;
-
-			logger.info("DocumentResource: Free Space available " + spaceAvailable);
+			//bufferredLimit = 25;
 
 		} catch (IOException e) {
 
-			System.out.println("DpcumentResource:docAddValidate IOException while calculating free space");
-
+			logger.error("DpcumentResource:docAddValidate IOException while calculating free space "+e.getMessage());
 			docAddValidateResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docAddValidateHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG).toBuilder().setOriginator(self));
-
 			return docAddValidateResponseBuilder.build();
 		}
 
 		if(reqFileSize > bufferredLimit){
-			
 			
 			if(!NodeResponseQueue.nodeExistCheck(originator)){
 				
@@ -394,22 +364,26 @@ public class DocumentResource implements Resource {
 		if(docAddBody.getSpace() !=null && docAddBody.getSpace().getName().length() > 0){
 
 			nameSpace = docAddBody.getSpace().getName();
-
+			
+			if(nameSpace.startsWith(File.separator))
+				effNS = HOMEDIR+nameSpace;
+			else
 			effNS = HOMEDIR+File.separator+nameSpace;
+			
 		}else
 			effNS = HOMEDIR;
 
 		String fileName = docAddBody.getDoc().getDocName();
 
 		logger.info("DocAdd: Received file "+fileName+" from "+originator);
-
+		
 		File nameDir = new File(effNS);
 
 		File file = new File(effNS+File.separator+fileName);
 
 		Header.Builder docAddHeaderBuilder = Header.newBuilder(docAddHeader);
 
-		Document recivedFile = docAddBody.getDoc();
+		Document receivedFile = docAddBody.getDoc();
 
 		Document toBesent= null;
 		
@@ -423,7 +397,7 @@ public class DocumentResource implements Resource {
 			
 			logger.info("DocAdd: forwarding docAdd to "+nodeId+" due to insufficient space");
 			
-			logger.info(" DocAdd: Sleeping for 3000ms! waiting to receive response from "+nodeId+" for "+nameSpace+"/"+fileName);
+			logger.info(" DocAdd: Sleeping for 3000ms! waiting to receive response from "+nodeId+" for "+nameSpace+File.separator+fileName);
 			
 			try {
 			
@@ -434,15 +408,19 @@ public class DocumentResource implements Resource {
 				e.printStackTrace();
 			}
 			
-			logger.info(" DocAdd: checking the response from "+nodeId+" for "+nameSpace+"/"+fileName);
+			logger.info(" DocAdd: checking the response from "+nodeId+" for "+nameSpace+""+fileName);
 			
 			boolean docAddResponse = NodeResponseQueue.fetchDocAddResult(nodeId, nameSpace, fileName);
 			
-			logger.info(" DocAdd: Response from "+nodeId+" for "+nameSpace+"/"+fileName+" is "+docAddResponse);
+			logger.info(" DocAdd: Response from "+nodeId+" for "+nameSpace+File.separator+fileName+" is "+docAddResponse);
 			
 			if(docAddResponse){
 				docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);
 				docAddHeaderBuilder.setReplyMsg("File(chunk) Uploaded Successfully");
+				
+				//if(receivedFile.getChunkId() == receivedFile.getTotalChunk())
+						//dbAct.addDocumentInDatabase(nameSpace, fileName);
+				
 			}
 			else{
 				docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.FAILURE);
@@ -462,13 +440,23 @@ public class DocumentResource implements Resource {
 
 			}
 
-			logger.info("DocAdd: Creating file with name "+effNS+"/"+fileName+" and writing the content sent by client to it" );
+			logger.info("DocAdd: Creating file with name "+effNS+File.separator+fileName+" and writing the content sent by client to it" );
 
-			FileUtils.writeByteArrayToFile(file, recivedFile.getChunkContent().toByteArray(), true);
+			FileUtils.writeByteArrayToFile(file, receivedFile.getChunkContent().toByteArray(), true);
 
 			docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);
-
-			docAddHeaderBuilder.setReplyMsg("File Uploaded Successfully");
+			
+			if(receivedFile.getChunkId() == receivedFile.getTotalChunk()){
+			 
+				if(effNS.endsWith(File.separator))
+					dbAct.addDocumentInDatabase(effNS, fileName);
+				else
+					dbAct.addDocumentInDatabase(effNS+File.separator, fileName);
+			}
+			 
+			docAddHeaderBuilder.setReplyMsg("File (Chunk) Uploaded Successfully");
+			
+			
 
 		} catch (IOException e) {
 
@@ -486,7 +474,7 @@ public class DocumentResource implements Resource {
 		
 		System.gc();
 		
-		toBesent = recivedFile.toBuilder().clearChunkContent().build();
+		toBesent = receivedFile.toBuilder().clearChunkContent().build();
 
 		Response.Builder docAddRespBuilder = Response.newBuilder();
 
@@ -498,7 +486,6 @@ public class DocumentResource implements Resource {
 			docAddRespBuilder.setBody(PayloadReply.newBuilder().addDocs(toBesent).addSpaces(docAddBody.getSpace()));
 		else
 			docAddRespBuilder.setBody(PayloadReply.newBuilder().addDocs(toBesent));
-
 
 		System.gc();
 
@@ -520,8 +507,6 @@ public class DocumentResource implements Resource {
 	private Response docRemove(Header docRemoveHeader , Payload docRemoveBody){
 
 		String fileToBeDeleted = docRemoveBody.getDoc().getDocName();
-
-		String self = HeartbeatManager.getInstance().getNodeId();
 
 		String nameSpece = EMPTY_STRING; 
 
@@ -573,19 +558,31 @@ public class DocumentResource implements Resource {
 							return fileRemoveResponseBuilder.build();
 						}
 
+						String response = NodeResponseQueue.multicastReplicaRemoveQuery(HOMEDIR+File.separator+nameSpece+File.separator, fileToBeDeleted);
+						
+						boolean replicasDeleted = false;
+						
+						if(response.equals("DNE")){
+							
+							fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEDELETEUNSUCCESSFULMSG).toBuilder().setOriginator(self));
+							return fileRemoveResponseBuilder.build();
+
+						}else if (response.equals("NR"))
+							 replicasDeleted = true;
+						else{
 						logger.info(" docRemove: Requested file found: Forwarding requets to other nodes to delete replicas");
-
-						NodeResponseQueue.multicastReplicaRemoveQuery(nameSpece, fileToBeDeleted);
-
 						logger.info(" docRemove: Sleeping for 3000ms...Witing for responses from other nodes regarding replica removal");
-
-						Thread.sleep(MAXWAITFORRESPONSE);
-
-						boolean replicasDeleted = NodeResponseQueue.fetchReplicaRemoveResult(nameSpece, fileToBeDeleted);
+						Thread.sleep(10000);
+						replicasDeleted = NodeResponseQueue.fetchReplicaRemoveResult(nameSpece, fileToBeDeleted);
+						}
 
 						if(replicasDeleted){
 
 							FileUtils.forceDelete(targetFile);
+							
+							logger.info("Deleteing document from DB "+effNS+File.separator+fileToBeDeleted);
+							
+							dbAct.deleteDocumentInDatabase(effNS+File.separator, fileToBeDeleted);
 
 							fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.SUCCESS, FILEDELETESUCCESSFULMSG).toBuilder().setOriginator(self));
 
@@ -609,7 +606,7 @@ public class DocumentResource implements Resource {
 
 							logger.info(" docRemove: Sleeping for 3000ms...Witing for responses from other nodes");
 
-							Thread.sleep(MAXWAITFORRESPONSE);
+							Thread.sleep(12000);
 
 							boolean docRemoveBroadcastResult = NodeResponseQueue.fetchDocRemoveResult(nameSpece, fileToBeDeleted);
 
@@ -700,19 +697,31 @@ public class DocumentResource implements Resource {
 						return fileRemoveResponseBuilder.build();
 					}
 
+					
+					String response = NodeResponseQueue.multicastReplicaRemoveQuery(HOMEDIR+File.separator, fileToBeDeleted);
+					
+					boolean replicasDeleted = false;
+					
+					if(response.equals("DNE")){
+						
+						fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.FAILURE, FILEDELETEUNSUCCESSFULMSG).toBuilder().setOriginator(self));
+						return fileRemoveResponseBuilder.build();
+
+					}else if (response.equals("NR"))
+						 replicasDeleted = true;
+					else{
+										
 					logger.info(" docRemove: Requested file found: Forwarding requets to other nodes to delete replicas");
-
-					NodeResponseQueue.multicastReplicaRemoveQuery(nameSpece, fileToBeDeleted);
-
 					logger.info(" docRemove: Sleeping for 3000ms...Witing for responses from other nodes regarding replica removal");
-
 					Thread.sleep(MAXWAITFORRESPONSE);
-
-					boolean replicasDeleted = NodeResponseQueue.fetchReplicaRemoveResult(nameSpece, fileToBeDeleted);
+					replicasDeleted = NodeResponseQueue.fetchReplicaRemoveResult(nameSpece, fileToBeDeleted);
+					}
 
 					if(replicasDeleted){
 
 						FileUtils.forceDelete(targetFile);
+						
+						dbAct.deleteDocumentInDatabase(HOMEDIR+File.separator, fileToBeDeleted);
 
 						fileRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docRemoveHeader, ReplyStatus.SUCCESS, FILEDELETESUCCESSFULMSG).toBuilder().setOriginator(self));
 
@@ -788,17 +797,15 @@ public class DocumentResource implements Resource {
 	}
 
 
-	private String returnEffNS(String parent , String child){
-
-		if(child != null && child.length() > 0)
-			return  parent+File.separator+child;
-		else
-			return parent;
-	}
+//	private String returnEffNS(String parent , String child){
+//
+//		if(child != null && child.length() > 0)
+//			return  parent+File.separator+child;
+//		else
+//			return parent;
+//	}
 
 	private Response docQuery(Header docQueryHeader , Payload docQueryBody){
-
-		String self = HeartbeatManager.getInstance().getNodeId();
 
 		String originator = docQueryHeader.getOriginator();
 
@@ -873,7 +880,7 @@ public class DocumentResource implements Resource {
 
 
 		if(fileHome || fileAway)
-			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, REQUESTEDFILEEXISTSMSG+" "+nameSpace+"/"+fileName).toBuilder().setOriginator(self));
+			docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, REQUESTEDFILEEXISTSMSG+" "+nameSpace+File.separator+fileName).toBuilder().setOriginator(self));
 		else{
 
 			if(!NodeResponseQueue.nodeExistCheck(originator)){
@@ -892,7 +899,7 @@ public class DocumentResource implements Resource {
 
 					if(docQueryResult){
 
-						docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, REQUESTEDFILEEXISTSMSG+" "+nameSpace+"/"+fileName).toBuilder().setOriginator(self));
+						docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.SUCCESS, REQUESTEDFILEEXISTSMSG+" "+nameSpace+File.separator+fileName).toBuilder().setOriginator(self));
 
 					}else{
 
@@ -912,75 +919,5 @@ public class DocumentResource implements Resource {
 		}
 
 		return docQueryResponseBuilder.build();
-	}
-
-	private Response replicaRemove(Header replicaRemoveHeader , Payload replicaRemoveBody){
-
-		String nameSpace = EMPTY_STRING ;
-
-		String self = HeartbeatManager.getInstance().getNodeId();
-
-		Response.Builder replicaRemoveResponseBuilder = Response.newBuilder();
-
-		if(replicaRemoveBody.getSpace() !=null && replicaRemoveBody.getSpace().getName().length() > 0){
-			nameSpace = replicaRemoveBody.getSpace().getName();
-			replicaRemoveResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(replicaRemoveBody.getDoc()).addSpaces(replicaRemoveBody.getSpace()));
-		}else{
-			replicaRemoveResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(replicaRemoveBody.getDoc()));
-		}
-
-		String replicaName = replicaRemoveBody.getDoc().getDocName();
-
-		File parentDir = null;
-
-		File targetFile = null;
-
-		try{
-
-			if(nameSpace !=null && nameSpace.length() >0){
-				parentDir = new File(VISITORDIR+File.separator+nameSpace);
-				targetFile = new File(VISITORDIR+File.separator+nameSpace+File.separator+replicaName);
-			}
-			else{
-				parentDir = visitorDir;
-				targetFile = new File(VISITORDIR+File.separator+replicaName);
-			}
-
-			if(parentDir.exists()){
-
-				if(targetFile.exists()){
-
-					logger.info(" Replica found for "+nameSpace+"/"+replicaName+ " proceeding to delete it");
-
-					targetFile.delete();
-
-					replicaRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(replicaRemoveHeader, ReplyStatus.SUCCESS, REPLICADELETESUCCESSFULMSG).toBuilder().setOriginator(self));
-
-					return replicaRemoveResponseBuilder.build();
-
-				}else{
-
-					logger.info(" Replica not present for "+nameSpace+"/"+replicaName+ " validate the replication module");
-
-					replicaRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(replicaRemoveHeader, ReplyStatus.FAILURE, FILEINEXISTENTMSG).toBuilder().setOriginator(self));
-
-					return replicaRemoveResponseBuilder.build();
-				}
-
-			}else{
-
-				logger.info(" Replica (namespace) it self not present for "+nameSpace+"/"+replicaName+ " validate the replication module");
-
-				replicaRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(replicaRemoveHeader, ReplyStatus.FAILURE, NAMESPACEINEXISTENTMSG).toBuilder().setOriginator(self));
-
-				return replicaRemoveResponseBuilder.build();
-			}
-		}catch(Exception repRmExcep){
-
-			logger.error("replicaRemove: Encountered general Exception "+repRmExcep.getMessage());
-			repRmExcep.printStackTrace();
-			replicaRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(replicaRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG).toBuilder().setOriginator(self));
-			return replicaRemoveResponseBuilder.build();
-		}
 	}
 }

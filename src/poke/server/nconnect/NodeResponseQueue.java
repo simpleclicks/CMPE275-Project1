@@ -1,28 +1,49 @@
 package poke.server.nconnect;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import poke.server.management.HeartbeatData;
+import poke.server.management.HeartbeatManager;
+import poke.server.storage.jdbc.DatabaseStorage;
 import eye.Comm.Header;
 import eye.Comm.Payload;
 import eye.Comm.Request;
 import eye.Comm.Response;
-
+/**
+ * @author Kaustubh
+ * @version 2.3
+ * {@code : Manages the public TCP connections with the active nodes}
+ * {@code : Decides the eligible nodes for request forwarding and deals with the responses of forwarded requests}
+ *
+ */
 public class NodeResponseQueue {
 
 	static private volatile ConcurrentHashMap<String, NodeClient> activeNodeMap = new ConcurrentHashMap<String, NodeClient>();
-	
+
 	static private volatile ConcurrentHashMap<String, NodeClient> activeExternalNodeMap = new ConcurrentHashMap<String, NodeClient>();
 
 	static private volatile  ConcurrentHashMap<String, String> docAddHSResponseQueue =  new ConcurrentHashMap<String, String>();
 
-	private static final int MAXWAITFORRESPONSE = 5000;
+	protected static Logger logger = LoggerFactory.getLogger("NodeResponseQueue ");
 
-	protected static Logger logger = LoggerFactory.getLogger("NodeResponseQueue");
+	static final private DatabaseStorage dbAct = DatabaseStorage.getInstance();
+
+	static final int RESPONSE_WAIT_MAX_RETRY = 5;
+
+	static final int RESPONSE_WAIT_MAX_TIME = 5000;
+
+	static final int MAX_CHUNK_SIZE = 26214400;
+	
 
 	//private static Random nodeIdSelector = new Random();
 
@@ -40,7 +61,7 @@ public class NodeResponseQueue {
 
 		return activeNodeMap.get(nodeId);
 	}
-	
+
 	public static NodeClient getExternalNode(String nodeId){
 
 		return activeExternalNodeMap.get(nodeId);
@@ -50,23 +71,11 @@ public class NodeResponseQueue {
 
 		activeNodeMap.remove(nodeId);
 	}
-	
+
 	public static void removeExternalNode(String nodeId){
 
 		activeExternalNodeMap.remove(nodeId);
 	}
-
-	
-
-	//	public static void addDocQueryReponse(String docNameSpace , Response docQueryResponse){
-	//		
-	//		docQueryResponseQueue.put(docNameSpace, docQueryResponse);
-	//	}
-	//	
-	//	public static boolean docQueryCheck(String docNameSpace){
-	//		
-	//		return docQueryResponseQueue.contains(docNameSpace);
-	//	}
 
 	public static boolean nodeExistCheck(String nodeId){
 
@@ -77,10 +86,10 @@ public class NodeResponseQueue {
 
 		return activeNodeMap.size();
 	}
-	
+
 	public static boolean externalNodeExistCheck(String nodeId){
 
-		return activeExternalNodeMap.containsKey(nodeId);
+		return activeExternalNodeMap.containsKey(nodeId); 
 	}
 
 	public static int externalNodesCount(){
@@ -91,7 +100,7 @@ public class NodeResponseQueue {
 	public static NodeClient[] getActiveNodeInterface(boolean internal){
 
 		Collection<NodeClient> activeNodes = null;
-		
+
 		if(internal)
 			activeNodes = activeNodeMap.values();
 		else
@@ -102,7 +111,7 @@ public class NodeResponseQueue {
 		activeNodes.toArray(activeNodeArray);
 
 		return activeNodeArray;
-}
+	}
 
 	public static void multicastDocAddHandshake(String  nameSpace, String fileName , long reqFileSize){
 
@@ -117,37 +126,52 @@ public class NodeResponseQueue {
 			@Override
 			public void run(){
 				int activeNodeCount = activeNodesCount();
-
-				for(int i=0 ; i < activeNodeCount ; i++){
+				NodeClient[] nc = getActiveNodeInterface(true);
+				boolean docAddHSSuccess = false;
+				String finalizedNodeId = null;
+outer:				for(int i=0 ; i < activeNodeCount ; i++){
 
 					//int index = nodeIdSelector.nextInt(activeNodeCount);
-
-					NodeClient[] nc = getActiveNodeInterface(true);
 
 					NodeClient selectedNode = nc[i];
 
 					selectedNode.docAddHandshake(directory, fName, fileSize);
 
-					logger.info(" DocADDHS thread sleeping for 3000ms! waiting for response for docAddHandshake from "+selectedNode.getNodeId());
-
+					int attempt = 0;
+				
 					try {
 
-						Thread.sleep(MAXWAITFORRESPONSE);
+inner:						do{
+							logger.info("Sleeping for configured wait time !!! Waiting for response for docAddHandshake from node "+selectedNode.getNodeId()+" attempt no "+(attempt+1));	
+							Thread.sleep(RESPONSE_WAIT_MAX_TIME);
+							String addHSResponse = selectedNode.checkDocADDHSResponse(directory, fName);
+							logger.info(" Response for docAddHandshake from "+selectedNode.getNodeId()+" as "+addHSResponse);
+							if(addHSResponse.equals("NA")){
+								attempt++;
+								continue inner;
+							}
+							else if(addHSResponse.equalsIgnoreCase("Failure"))
+								continue outer;
+							else if(addHSResponse.equalsIgnoreCase("Success")){
+								docAddHSResponseQueue.put(directory+fName, selectedNode.getNodeId());
+								docAddHSSuccess = true;
+								finalizedNodeId = selectedNode.getNodeId();
+								logger.info(" inserting entry into docAddHSQueue with key as "+directory+fName);
+								break outer;
+							}
+						}while(attempt < RESPONSE_WAIT_MAX_RETRY);
+
 
 					} catch (InterruptedException e) {
 
 						e.printStackTrace();
 					}
-
-					String addHSResponse = selectedNode.checkDocADDHSResponse(directory, fName);
-					
-					logger.info(" Response for docAddHandshake from "+selectedNode.getNodeId()+" as "+addHSResponse);
-
-					if(addHSResponse.equalsIgnoreCase("Success")){
-						docAddHSResponseQueue.put(directory+fName, selectedNode.getNodeId());
-						logger.info(" inserting entry into docAddHSQueue with key as "+directory+fName);
-						break;
-					}
+				}
+				
+				if(docAddHSSuccess){
+					logger.info("Doc add handshake successful for "+directory+"\\"+fName+" with "+finalizedNodeId);
+				}else{
+					logger.info("Doc add handshake failed for "+directory+"\\"+fName+" no node is available/ready for handshake");
 				}
 			}
 		}.start();
@@ -155,45 +179,44 @@ public class NodeResponseQueue {
 	}
 
 	public static void forwardDocADDRequest(String nodeId, Header docAddHeader , Payload docAddBody){
-		
+
 		if(activeNodeMap.containsKey(nodeId)){
-		
+
 			NodeClient node = activeNodeMap.get(nodeId);
-		
+
 			node.docAdd(docAddHeader, docAddBody);
 		}else{
-			
+
 			logger.error(" forwardDocADDRequest: Node "+nodeId+" does not exist in the network: Validate documentResource,nconnect");
 		}
-	
 		System.gc();
-	}
-	
+ 	}
+
 	public static boolean  fetchDocAddResult( String nodeId ,String nameSpace , String fileName){
 
 		System.gc();
-		
+
 		String response = null;
-		
+
 		if(activeNodeMap.containsKey(nodeId)){
-			
+
 			NodeClient node = activeNodeMap.get(nodeId);
-			
+
 			response = node.checkDocAddResponse(nameSpace, fileName);
-			
+
 			logger.info(" Response for docAdd for "+nameSpace+"/"+fileName+" from "+nodeId+" as "+response);
-			
+
 		}else{
-			
+
 			logger.error(" fetchDocAddResult: Node "+nodeId+" does not exist in the network: Validate documentResource,nconnect");
 		}
-		
+
 		if(response.equalsIgnoreCase("Success"))
 			return true;
 		else
 			return false;
 	}
-	
+
 	public static void broadcastDocQuery(String nameSpace , String fileName , boolean internal){
 
 		NodeClient[] activeNodeArray = getActiveNodeInterface(internal);
@@ -201,6 +224,20 @@ public class NodeResponseQueue {
 		for(NodeClient nc: activeNodeArray){
 
 			nc.queryFile(nameSpace, fileName);
+		}
+	}
+	
+	public static void broadcastReplicaQuery(String filePath){
+
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+		
+		String path = 	FilenameUtils.getPath(filePath);
+		String trimmedPath = path.substring(path.indexOf(File.separator)+1);
+		String fileName = FilenameUtils.getName(filePath);
+
+		for(NodeClient nc: activeNodeArray){
+
+			nc.queryReplica(trimmedPath, fileName);
 		}
 	}
 
@@ -216,23 +253,21 @@ public class NodeResponseQueue {
 		}
 	}
 
-	public static void multicastReplicaRemoveQuery(String nameSpace , String fileName){
+	public static String multicastReplicaRemoveQuery(String nameSpace , String fileName){
 
-		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+		String replicatedNode = dbAct.getReplicatedNode(nameSpace, fileName);
 
-		// int nodeId[] = fetch the node id list where this file has been replicated
+		if(replicatedNode.equals("DNE")){
+			logger.warn("multicastReplicaRemoveQuery: Document "+nameSpace+fileName+" does not exists in database: verify the doccAdd and/or supplied params");
+			return replicatedNode ;
+		}else if (replicatedNode.equals("NR")){
+			logger.warn("multicastReplicaRemoveQuery: Document "+nameSpace+fileName+" has not been replicated yet: Safe to delete instanstly");
+			return replicatedNode;
+		} else{
 
-		//		for (int id : nodeId){
-		//			
-		//			NodeClient nc = getActiveNode(id);
-		//			
-		//			nc.removeReplica(nameSpace, fileName);
-		//			
-		//		}
-
-		for(NodeClient nc: activeNodeArray){
-
-			nc.removeReplica(nameSpace, fileName);
+			NodeClient replicatedNC = getActiveNode(replicatedNode);
+			replicatedNC.removeReplica(nameSpace, fileName);
+			return "wait";
 		}
 	}
 
@@ -240,7 +275,7 @@ public class NodeResponseQueue {
 	public static String  fetchDocAddHSResult( String nameSpace , String fileName){
 
 		String key = nameSpace+fileName;
-		
+
 		logger.info(" fetchDocAddHSResult for key "+key);
 
 		if(docAddHSResponseQueue.containsKey(key)){
@@ -259,17 +294,60 @@ public class NodeResponseQueue {
 		NodeClient[] activeNodeArray = getActiveNodeInterface(internal);
 
 		for(NodeClient nc: activeNodeArray){
-
+			int attempt = 0;
+			
+inner:			do{
+		logger.info("Sleeping for configured wait time !!! Waiting for response for docQuery from node "+nc.getNodeId()+" attempt no "+(attempt+1));
+			try {
+				Thread.sleep(RESPONSE_WAIT_MAX_TIME);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			String result = nc.checkDocQueryResponse(nameSpace, fileName);
 
 			if(result.equalsIgnoreCase("Success")){
 				logger.info("Document "+nameSpace+"/"+fileName+" exists with "+nc.getNodeId());
 				return true;
-			}else if(result.equalsIgnoreCase("NA"))
+			}else if(result.equalsIgnoreCase("NA")){
 				logger.warn("No response from node "+nc.getNodeId()+"for document query of "+nameSpace+"/"+fileName);
-
+				continue inner;
+			}
+			
+		 }while (attempt < RESPONSE_WAIT_MAX_RETRY);
 		}
+		return false;
+	}
+	
+	public static boolean fetchReplicaQueryResult(String filePath){
 
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+		
+		String path = 	FilenameUtils.getPath(filePath);
+		String trimmedPath = path.substring(path.indexOf(File.separator)+1);
+		String fileName = FilenameUtils.getName(filePath);
+
+		for(NodeClient nc: activeNodeArray){
+			int attempt = 0;
+			
+inner:			do{
+		logger.info("Sleeping for configured wait time !!! Waiting for response for replicaQuery from node "+nc.getNodeId()+" attempt no "+(attempt+1));
+			try {
+				Thread.sleep(RESPONSE_WAIT_MAX_TIME);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			String result = nc.checkReplicaQueryResponse(trimmedPath, fileName);
+
+			if(result.equalsIgnoreCase("Success")){
+				logger.info("Replica "+trimmedPath+fileName+" exists with "+nc.getNodeId());
+				return true;
+			}else if(result.equalsIgnoreCase("NA")){
+				logger.warn("No response from node "+nc.getNodeId()+"for replica query of "+trimmedPath+"/"+fileName);
+				continue inner;
+			}
+			
+		 }while (attempt < RESPONSE_WAIT_MAX_RETRY);
+		}
 		return false;
 	}
 
@@ -297,35 +375,167 @@ public class NodeResponseQueue {
 
 	public static boolean fetchReplicaRemoveResult(String nameSpace , String fileName){
 
-		boolean queryResult = true;
+		String replicatedNode = dbAct.getReplicatedNode(nameSpace, fileName);
+		String result = "";
+		NodeClient replNode =  null;
+		try{
 
-		// int nodeId[] = fetch the node id list from DB where this file has been replicated
+			replNode = getActiveNode(replicatedNode);
 
-		//		for (int id : nodeId){
-		//			
-		//			NodeClient nc = getActiveNode(id);
-		//			
-		//			nc.removeReplica(nameSpace, fileName);
-		//			
-		//		}
+			result = replNode.checkReplicaRemoveResponse(nameSpace, fileName);
 
-		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
-
-		for(NodeClient nc: activeNodeArray){
-
-			String result = nc.checkReplicaRemoveResponse(nameSpace, fileName);
-
-			if(result.equalsIgnoreCase("Failure")){
-				logger.info("Document Replica remove failed for "+nameSpace+"/"+fileName);
-				return false;
-			}else if(result.equalsIgnoreCase("NA")){
-				logger.warn("No response from node "+nc.getNodeId()+"for document remove of "+nameSpace+"/"+fileName);
-			}else if(result.equalsIgnoreCase("Success"))
-				logger.info("Document Replica remove successful for "+nc.getNodeId()+" of "+nameSpace+"/"+fileName);
-
+		}catch(Exception e){
+			logger.error("fetchReplicaRemoveResult: Encountered Exception "+e.getMessage());
+			e.printStackTrace();
 		}
 
-		return queryResult;
+		if(result.equalsIgnoreCase("Failure")){
+			logger.error("Document Replica remove failed for "+nameSpace+"\\"+fileName);
+			return false;
+		}else if(result.equalsIgnoreCase("NA")){
+			logger.warn("No response from node "+replNode.getNodeId()+"for document remove of "+nameSpace+"/"+fileName);
+			return false;
+		}else if(result.equalsIgnoreCase("Success"))
+			logger.info("Document Replica remove successful for "+replNode.getNodeId()+" of "+nameSpace+"/"+fileName);
+		return true;
+	}
+
+	public static void multicastDocReplication(String filePath){
+
+		final String actFilePath = filePath;
+
+		final NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+
+		new Thread(){
+
+			public void run(){
+
+				boolean replicated = false;
+				boolean replicaHS = false;
+				String finalNodeId = null;
+				NodeClient finalizedNode = null;
+				File unRepFile = new File(actFilePath);
+				String path = 	FilenameUtils.getPath(actFilePath);
+				String trimmedPath = path.substring(path.indexOf(File.separator)+1);
+				String fileName = FilenameUtils.getName(actFilePath);
+				long size = FileUtils.sizeOf(unRepFile);
+
+outer:				for(NodeClient nc: activeNodeArray){
+					int attempt  = 0;
+					if(HeartbeatManager.getInstance().checkNodeStatus(nc.getNodeId()) == HeartbeatData.BeatStatus.Active ){
+
+						try{
+
+							nc.replicaHandshake(trimmedPath , fileName , size);
+
+							logger.info("Replica handshake sent to node "+nc.getNodeId()+" for file "+actFilePath);
+
+inner:						do{
+								logger.info("Sleeping for configured wait time !!! Waiting for response for ReplicaHS from node "+nc.getNodeId()+" attempt no "+(attempt+1));	
+								Thread.sleep(RESPONSE_WAIT_MAX_TIME);
+								String replicaHSResp = nc.checkReplicaHSResponse(trimmedPath, fileName);
+								if(replicaHSResp.equals("NA")){
+									attempt++;
+									continue inner;
+								}
+								else if(replicaHSResp.equalsIgnoreCase("Failure"))
+									continue outer;
+								else if(replicaHSResp.equalsIgnoreCase("Success")){
+									finalNodeId = nc.getNodeId();
+									finalizedNode = nc;
+									replicaHS = true;
+									break outer;
+								}
+							}while(attempt < RESPONSE_WAIT_MAX_RETRY);
+
+						}catch(Exception e){
+							logger.error("Unexpected failure during replication of "+actFilePath+" with node "+nc.getNodeId()+" "+e.getMessage());
+							e.printStackTrace();
+						}
+
+					}else{
+
+						logger.warn("Node "+nc.getNodeId()+" selected for replication is not active: Proceeding to validate next");
+						continue outer;
+					}
+
+				}
+
+				if(finalNodeId != null && finalizedNode !=null){
+
+					logger.info(finalNodeId+" has been finalized for the replication of "+actFilePath);
+					int totalChunks = (int) ((size/MAX_CHUNK_SIZE)+1);
+					logger.info("Total number of chunks to be transferred for "+actFilePath+" of size "+size+" are "+totalChunks);
+					try{
+
+						FileInputStream fis =  new FileInputStream(unRepFile);
+outer:					for(int chunkId = 0 ; chunkId< totalChunks ; chunkId++){
+
+							byte[] chunkContents =  null;
+							fis.skip(chunkId*MAX_CHUNK_SIZE);
+
+							if(fis.available() > MAX_CHUNK_SIZE)
+								chunkContents = new byte[MAX_CHUNK_SIZE];
+							else
+								chunkContents = new byte[fis.available()];
+							logger.info("Chunk "+(chunkId+1)+" to be transferred for "+actFilePath+" of size "+chunkContents.length+" to "+finalNodeId);
+							int bytesRead  = fis.read(chunkContents, 0, chunkContents.length );
+							if(bytesRead==0)
+								logger.error("Unable to read bytes from file "+actFilePath);
+							finalizedNode.addReplica(trimmedPath, fileName, chunkContents, totalChunks, (chunkId+1));
+
+							logger.info("Chuck "+(chunkId+1)+"has been sent to node "+finalizedNode.getNodeId()+" for file "+actFilePath);
+							int attempt = 0;
+
+inner:						do{
+								logger.info("Sleeping for configured wait time !!! Waiting for response for addReplica from node "+finalizedNode.getNodeId()+" attempt no "+(attempt+1));	
+								Thread.sleep(RESPONSE_WAIT_MAX_TIME);
+								String replicaHSResp = finalizedNode.checkAddReplicaResponse(trimmedPath, fileName);
+								if(replicaHSResp.equals("NA")){
+									attempt++;
+									continue inner;
+								}
+								else if(replicaHSResp.equalsIgnoreCase("Failure")){
+									logger.error("Failure response received from node "+finalNodeId+" for addReplica of "+actFilePath+" for chunk "+(chunkId+1));
+									logger.error(" Aborting the replication process for "+actFilePath);
+									break outer;
+								}
+								else if(replicaHSResp.equalsIgnoreCase("Success")){
+									logger.error("Success response received from node "+finalNodeId+" for addReplica of "+actFilePath+" for chunk "+(chunkId+1));
+									if((chunkId+1) == totalChunks){
+										dbAct.updateReplicationCount(path, fileName, finalNodeId, 1);
+										replicated = true;
+										break outer;
+									}else
+									continue outer;
+								}
+							}while(attempt < RESPONSE_WAIT_MAX_RETRY);
+
+
+						}
+
+					}catch(IOException ioExcep){
+						logger.error("IOException occurred while replicating "+actFilePath+" on "+finalNodeId+" reasosn: "+ioExcep.getMessage());
+						return;
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					}
+					
+					if(replicated && replicaHS)
+						logger.info("Replication process completed successfully for "+actFilePath+" with node "+finalNodeId);
+					else
+						logger.info("Replication process failed for "+actFilePath+" with node "+finalNodeId);
+
+				}else{
+
+					logger.warn("No network node ready/available for replication of "+actFilePath+" of size "+size);
+					return;
+				}
+			}// run method ends
+
+
+		}.start();	// thread constructor ends
 	}
 
 }

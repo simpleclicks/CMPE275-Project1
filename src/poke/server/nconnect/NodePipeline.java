@@ -8,6 +8,12 @@ import org.jboss.netty.handler.codec.frame.LengthFieldPrepender;
 import org.jboss.netty.handler.codec.protobuf.ProtobufDecoder;
 import org.jboss.netty.handler.codec.protobuf.ProtobufEncoder;
 
+/**
+ * @author Kaustubh
+ * @version 2.3
+ * {@code : Public TCP pipeline}
+ * 
+ */
 
 public class NodePipeline implements ChannelPipelineFactory {
 	

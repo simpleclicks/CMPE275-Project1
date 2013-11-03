@@ -177,9 +177,15 @@ public class ClientConnection {
 		
 		Payload.Builder docAddBodyBuilder = Payload.newBuilder();
 		
-		if(nameSpace !=null && nameSpace.length()>0)
-		docAddBodyBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace).build());
-		
+		if(nameSpace !=null && nameSpace.length()>0){
+			
+			if(nameSpace.contains("/") && File.separator.equals("\\"))
+			{
+				logger.error("Invalid namespace declaration");
+				return;
+			}
+			docAddBodyBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace).build());
+		}
 		docAddBodyBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocSize(fileSize).setDocExtension(filePath));
 		
 		Request.Builder docAddReqBuilder = Request.newBuilder();

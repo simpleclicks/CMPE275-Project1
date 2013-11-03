@@ -15,6 +15,8 @@
  */
 package poke.server.storage.jdbc;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -25,6 +27,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import poke.server.management.HeartbeatManager;
 import poke.server.storage.Storage;
 
 import com.jolbox.bonecp.BoneCP;
@@ -34,6 +37,7 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
+import org.apache.commons.io.FileUtils;
 
 public class DatabaseStorage {
 	protected static Logger logger = LoggerFactory.getLogger("database");
@@ -45,8 +49,11 @@ public class DatabaseStorage {
 
 	protected Properties cfg;
 	protected BoneCP cpool;
+	static final private String self = HeartbeatManager.getInstance().getNodeId();
 	
 	private static DatabaseStorage ds = new DatabaseStorage();
+	
+	private static File dbLogs = new File("logs/db.log");
 
 	public DatabaseStorage() {
 		init();
@@ -69,8 +76,11 @@ public class DatabaseStorage {
 			config.setMinConnectionsPerPartition(5);
 			config.setMaxConnectionsPerPartition(10);
 			config.setPartitionCount(1);
-
+			config.setStatementsCacheSize(0);
+			config.setPreparedStatementsCacheSize(0);
 			cpool = new BoneCP(config);
+			
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -112,6 +122,7 @@ public class DatabaseStorage {
 			e.printStackTrace();
 		} finally {
 			try {
+				qr=null;
 				conn.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -133,7 +144,7 @@ public class DatabaseStorage {
 			
 			conn = cpool.getConnection();
 			String sql = "select * from document where documentname = ? and namespacename = ?";
-			document = qr.query(cpool.getConnection(), sql, isReplicatedRsh, documentname, namespace);
+			document = qr.query(conn, sql, isReplicatedRsh, documentname, namespace);
 			
 			if(document == null) {
 				
@@ -148,6 +159,7 @@ public class DatabaseStorage {
 			e.printStackTrace();
 		} finally {
 			try {
+				qr=null;
 				conn.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -169,7 +181,7 @@ public class DatabaseStorage {
 			
 			conn = cpool.getConnection();
 			String sql = "select * from document where documentname = ? and namespacename = ?";
-			document = qr.query(cpool.getConnection(), sql, countReplicateRsh, documentname, namespace);
+			document = qr.query(conn, sql, countReplicateRsh, documentname, namespace);
 			
 			if(document == null) {
 				return 0;
@@ -182,6 +194,7 @@ public class DatabaseStorage {
 			e.printStackTrace();
 		} finally {
 			try {
+				qr=null;
 				conn.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -203,12 +216,16 @@ public class DatabaseStorage {
 			
 			conn = cpool.getConnection();
 			String sql = "select * from document where documentname = ? and namespacename = ?";
-			document = qr.query(cpool.getConnection(), sql, getReplicatedNodeRsh, documentname, namespace);
+			document = qr.query(conn, sql, getReplicatedNodeRsh, documentname, namespace);
 			
 			if(document == null) {
-				return "NA";
+				return "DNE";
 			} else {
-				return document.getReplicatedNode();
+				
+				if(document.getReplicatedNode() !=null && document.getReplicatedNode().length() > 0)
+				return document.getReplicatedNode() ;
+				else
+				return "NR";
 			}
 			
 		} catch (SQLException e) {
@@ -216,6 +233,7 @@ public class DatabaseStorage {
 			e.printStackTrace();
 		} finally {
 			try {
+				qr=null;
 				conn.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -237,7 +255,7 @@ public class DatabaseStorage {
 			
 			conn = cpool.getConnection();
 			String sql = "select * from document where documentname = ? and namespacename = ?";
-			document = qr.query(cpool.getConnection(), sql, getPreviousReplicatedNodeRsh, documentname, namespace);
+			document = qr.query(conn, sql, getPreviousReplicatedNodeRsh, documentname, namespace);
 			
 			if(document == null) {
 				return "NA";
@@ -250,6 +268,7 @@ public class DatabaseStorage {
 			e.printStackTrace();
 		} finally {
 			try {
+				qr=null;
 				conn.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -262,7 +281,7 @@ public class DatabaseStorage {
 	
 	
 	
-	public boolean addDocumentInDatabase(String namespaceName, String documentname, boolean isReplicated, int replicationCount, String owner) {
+	public boolean addDocumentInDatabase(String namespaceName, String documentname) {
 
 		QueryRunner qr = new QueryRunner();
 		Connection conn = null;
@@ -274,13 +293,14 @@ public class DatabaseStorage {
 						
 			if(namespaceName != null) {
 				String sql = "INSERT INTO Document(DocumentName, NamespaceName, IsReplicated, ReplicationCount, Owner) VALUES (?, ?, ?, ?, ?)";
-				insertCount = qr.update(conn, sql, documentname, namespaceName, isReplicated, replicationCount, owner);
+				insertCount = qr.update(conn, sql, documentname, namespaceName, false, 0, self);
 			} else {
 				String sql = "INSERT INTO Document(DocumentName, IsReplicated, ReplicationCount, Owner) VALUES (?, ?, ?, ?)";	
-				insertCount = qr.update(conn, sql, documentname, isReplicated, replicationCount, owner);
+				insertCount = qr.update(conn, sql, documentname, false, 0, "self");
 			}
 			
 			if(insertCount < 1) {
+				FileUtils.write(dbLogs, "DB insert failed for "+namespaceName+documentname,true);
 				return false;
 			}
 			else {
@@ -290,9 +310,20 @@ public class DatabaseStorage {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			logger.info("addDocumentInDatabase: Cannot add document in database for document: "+documentname);
-			e.printStackTrace();			
+			try {
+				FileUtils.write(dbLogs, "DB insert failed for "+namespaceName+documentname,true);
+			} catch (IOException e1) {
+				logger.info("addDocumentInDatabase: IOException while writing logs to file");
+				e1.printStackTrace();
+			}
+			e.printStackTrace();		
+			return false;
+		} catch (IOException e) {
+			logger.info("addDocumentInDatabase: IOException while writing logs to file");
+			e.printStackTrace();
 		} finally {
 			try {
+				qr=null;
 				conn.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -301,9 +332,10 @@ public class DatabaseStorage {
 		}
 		
 		return false;
+		
 	}
 	
-	public boolean addReplicaInDatabase(String namespaceName, String documentname, int replicationCount, String owner, String replicatedNode, String previousReplicatedNode) {
+	public boolean addReplicaInDatabase(String namespaceName, String documentname, String owner , String replicatedNode) {
 
 		QueryRunner qr = new QueryRunner();
 		Connection conn = null;
@@ -314,11 +346,11 @@ public class DatabaseStorage {
 			conn = cpool.getConnection();
 						
 			if(namespaceName != null) {
-				String sql = "INSERT INTO Document(DocumentName, NamespaceName, ReplicationCount, IsReplicated, ToBeReplicated, Owner, ReplicatedNode, PreviousReplicatedNode) VALUES (?, ?, ?, false, false, ?, ?, ?)";
-				insertCount = qr.update(conn, sql, documentname, namespaceName, replicationCount,  owner, replicatedNode, previousReplicatedNode);
+				String sql = "INSERT INTO Document(DocumentName, NamespaceName , IsReplicated, ToBeReplicated, Owner, ReplicatedNode) VALUES (?, ?, false, false, ?, ?)";
+				insertCount = qr.update(conn, sql, documentname, namespaceName, owner, replicatedNode);
 			} else {
-				String sql = "INSERT INTO Document(DocumentName, ReplicationCount, IsReplicated, ToBeReplicated, Owner, ReplicatedNode, PreviousReplicatedNode) VALUES (?, ?, false, false, ?, ?, ?)";
-				insertCount = qr.update(conn, sql, documentname, replicationCount,  owner, replicatedNode, previousReplicatedNode);
+				String sql = "INSERT INTO Document(DocumentName, IsReplicated, ToBeReplicated, Owner, ReplicatedNode) VALUES (?, false, false, ?, ?)";
+				insertCount = qr.update(conn, sql, documentname, owner, replicatedNode);
 			}
 			
 			if(insertCount < 1) {
@@ -334,6 +366,7 @@ public class DatabaseStorage {
 			e.printStackTrace();			
 		} finally {
 			try {
+				qr=null;
 				conn.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -347,29 +380,34 @@ public class DatabaseStorage {
 	public boolean deleteDocumentInDatabase(String namespaceName, String documentname) {
 
 		QueryRunner qr = new QueryRunner();
+		
 		Connection conn = null;
-		int insertCount = 0;
+		int deleteCount = 0;
 		
 		try {
 			
 			conn = cpool.getConnection();
-							
+			conn.setAutoCommit(true);
 			String sql = "Delete from Document where DocumentName = ? and NamespaceName = ?";
-			insertCount = qr.update(conn, sql, documentname, namespaceName);
+			logger.info("Deleteing document from DB "+namespaceName+documentname);
+			deleteCount = qr.update(conn, sql, documentname, namespaceName);
 			
-			if(insertCount < 1) {
+			if(deleteCount < 1) {
+				logger.info("Could not delete document "+namespaceName+documentname);
 				return false;
 			}
 			else {
+				logger.info("Delete document "+namespaceName+documentname);
 				return true;
 			}
 						
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			logger.info("addDocumentInDatabase: Cannot delete document in database for document "+documentname);
+			logger.info("deleteDocumentInDatabase: Cannot delete document in database for document "+documentname);
 			e.printStackTrace();			
 		} finally {
 			try {
+				qr=null;
 				conn.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -390,7 +428,7 @@ public class DatabaseStorage {
 			
 			conn = cpool.getConnection();
 							
-			String sql = "Update Document set ReplicatedNode = ?,ReplicationCount =? where DocumentName = ? and NamespaceName = ?";
+			String sql = "Update Document set ReplicatedNode = ?,ReplicationCount =? , IsReplicated = true , ToBeReplicated = false where DocumentName = ? and NamespaceName = ?";
 			insertCount = qr.update(conn, sql, replicatedNode, replicationCount, documentname, namespaceName);
 			
 			if(insertCount < 1) {
@@ -406,6 +444,7 @@ public class DatabaseStorage {
 			e.printStackTrace();			
 		} finally {
 			try {
+				qr=null;
 				conn.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -428,7 +467,7 @@ public class DatabaseStorage {
 			
 			conn = cpool.getConnection();
 			String sql = "select * from document where replicatedNode = ?";
-			List<Document> documentList = qr.query(cpool.getConnection(), sql, getDocumentsRsh, replicatedNode);
+			List<Document> documentList = qr.query(conn, sql, getDocumentsRsh, replicatedNode);
 			
 			if(documentList == null) {
 				return returnDocument;
@@ -448,6 +487,8 @@ public class DatabaseStorage {
 			e.printStackTrace();
 		} finally {
 			try {
+				
+				qr=null;
 				conn.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -458,38 +499,41 @@ public class DatabaseStorage {
 		return returnDocument;
 	}
 	
-	public List<String> documentsToBeReplicated(String owner) {
+	public List<String> documentsToBeReplicated() {
 		
 		QueryRunner qr = new QueryRunner();
 		ResultSetHandler<List<Document>> getDocumentsRsh = new BeanListHandler<Document>(Document.class);
 		
 		Connection conn = null;
-		List<String> returnDocument = null;
+		List<String> returnDocument = new ArrayList<String>();
 		
 		try {
 			
 			conn = cpool.getConnection();
-			String sql = "select * from document where owner = ? and ToBeReplicated = true and isReplicated = false";
-			List<Document> documentList = qr.query(cpool.getConnection(), sql, getDocumentsRsh, owner);
+			String sql = "select * from document where owner = ? and ToBeReplicated = true and isReplicated = false and ReplicationCount < 1";
+			List<Document> documentList = qr.query(conn, sql, getDocumentsRsh, self);
 			
-			if(documentList == null) {
+			if(documentList == null || documentList.size() == 0) {
+			
 				return returnDocument;
+			
 			} else {
-				ListIterator<Document> listIterator = documentList.listIterator();
-				int index = 0;
-				returnDocument = new ArrayList<String>();
-				while (listIterator.hasNext()) {
-					returnDocument.add(documentList.get(index).getNamespaceName()+"/"+documentList.get(index).getDocumentName());
-					index++;
+				
+				for(Document unRepDoc :documentList ){
+					returnDocument.add(unRepDoc.getNamespaceName()+unRepDoc.getDocumentName());
 				}
+				
 				return returnDocument; 
 			}
 			
 		} catch (SQLException e) {
-			logger.info("getReplicatedNode: Cannot get documents for owner "+owner);
+			
+			logger.info("getReplicatedNode: Cannot get documents for owner "+self);
 			e.printStackTrace();
+		
 		} finally {
 			try {
+				qr=null;
 				conn.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -507,6 +551,7 @@ public class DatabaseStorage {
 		//ds.addDocumentInDatabase(null, "abc.txt", false, 0, "four");
 		//System.out.println(ds.getOwner("EMPTY", "abc.txt"));
 		//ds.addReplicaInDatabase(null, "abc.txt", 1, "four", "five", null);
+		ds.deleteDocumentInDatabase("home\\kau", "abc.txt");
 	}
 
 }
