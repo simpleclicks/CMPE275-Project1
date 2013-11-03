@@ -459,9 +459,8 @@ public class DatabaseStorage {
 		
 		QueryRunner qr = new QueryRunner();
 		ResultSetHandler<List<Document>> getDocumentsRsh = new BeanListHandler<Document>(Document.class);
-		
 		Connection conn = null;
-		List<String> returnDocument = null;
+		List<String> returnDocument = new ArrayList<String>();
 		
 		try {
 			
@@ -469,16 +468,15 @@ public class DatabaseStorage {
 			String sql = "select * from document where replicatedNode = ?";
 			List<Document> documentList = qr.query(conn, sql, getDocumentsRsh, replicatedNode);
 			
-			if(documentList == null) {
+			if(documentList == null || documentList.size() == 0) {
+			
 				return returnDocument;
+			
 			} else {
-				ListIterator<Document> listIterator = documentList.listIterator();
-				int index = 0;
-				returnDocument = new ArrayList<String>();
-				while (listIterator.hasNext()) {
-					returnDocument.add(documentList.get(index).getNamespaceName()+"/"+documentList.get(index).getDocumentName());
-					index++;
-				}
+				
+				for(Document doc : documentList)
+					returnDocument.add(doc.getNamespaceName()+doc.getDocumentName());
+				
 				return returnDocument; 
 			}
 			
