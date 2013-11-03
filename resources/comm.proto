@@ -81,6 +81,8 @@ message Header {
         NAMESPACELIST = 11;
         NAMESPACEUPDATE = 12;
         NAMESPACEREMOVE =13;
+        NAMESPACEQUERY = 14;
+        NAMESPACELISTQUERY = 15;
 		DOCREPLICATEREQ = 18;
         DOCREPLICATE = 19;
         DOCADD = 20;

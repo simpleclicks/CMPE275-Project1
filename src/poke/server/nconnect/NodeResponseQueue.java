@@ -1,12 +1,16 @@
 package poke.server.nconnect;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eye.Comm.Document;
 import eye.Comm.Response;
 
 public class NodeResponseQueue {
@@ -86,6 +90,31 @@ public class NodeResponseQueue {
 
 	public static boolean fetchDocQueryResult(String nameSpace, String fileName) {
 
+	public static void broadcastNamespaceQuery(String nameSpace){
+
+		NodeClient[] activeNodeArray = getActiveNodeInterface();
+
+		for(NodeClient nc: activeNodeArray){
+
+			nc.queryNamespace(nameSpace);
+		}
+	}
+
+	public static void broadcastNamespaceListQuery(String nameSpace) {
+		// TODO Auto-generated method stub
+
+		NodeClient[] activeNodeArray = getActiveNodeInterface();
+
+		for(NodeClient nc: activeNodeArray){
+
+			nc.queryNamespaceList(nameSpace);
+		}
+
+	}
+
+
+	public static boolean fetchDocQueryResult( String nameSpace , String fileName){
+
 		boolean queryResult = true;
 
 		NodeClient[] activeNodeArray = getActiveNodeInterface();
@@ -93,6 +122,7 @@ public class NodeResponseQueue {
 		for (NodeClient nc : activeNodeArray) {
 
 			String result = nc.checkDocQueryResponse(nameSpace, fileName);
+
 
 			if (result.equalsIgnoreCase("Failure")) {
 				logger.info("Document upload validation failed for "
@@ -138,6 +168,33 @@ public class NodeResponseQueue {
 		return queryResult;
 	}
 
-	// public static void fetchDocFindResponse
+	public static List fetchNamespaceList(String namespace){
+		boolean queryResult = true;
+		List<Document> fileList= new ArrayList<Document>();
+		List<Document> newFileList = new ArrayList<Document>();
+		logger.info("In fetchNameSpaceList");
+		NodeClient[] activeNodeArray = getActiveNodeInterface();
+
+
+		for (NodeClient nc : activeNodeArray) {
+			String result = "NA";
+
+			//  while(result.equalsIgnoreCase("NA")){
+			fileList = (List<Document>) (nc.sendNamespaceList(namespace));
+			try {
+				Thread.sleep(3000);
+				newFileList.addAll(fileList);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				logger.error("Thread exception in fetchNamespaceList "+e.getMessage());
+			}
+
+			logger.info("Files returned from fetchNameSpaceList " +newFileList);
+			return newFileList;                
+
+		}
+
+		return fileList;
+	}
 
 }

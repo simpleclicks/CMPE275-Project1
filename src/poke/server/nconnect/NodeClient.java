@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -60,6 +62,8 @@ public class NodeClient {
 	private LinkedBlockingDeque<Request> outboundRequestQueue = new LinkedBlockingDeque<Request>();
 
 	private ConcurrentHashMap<String, String> docQueryResponseQueue = new ConcurrentHashMap<String, String>();
+	
+	private ConcurrentHashMap<String, List<Document>> listFiles = new ConcurrentHashMap<String, List<Document>>(); 
 
 	private ConcurrentHashMap<String, String> docFindResponseQueue = new ConcurrentHashMap<String, String>();
 
@@ -160,6 +164,60 @@ public class NodeClient {
 		return enqueueRequest(docQueryReqBuilder.build());
 
 	}
+	
+	public boolean queryNamespace(String nameSpace){
+
+		Header.Builder namespaceQueryHeader = Header.newBuilder();
+
+		namespaceQueryHeader.setRoutingId(Header.Routing.NAMESPACEQUERY);
+
+		namespaceQueryHeader.setOriginator(HeartbeatManager.getInstance().getNodeId());
+
+		Payload.Builder docPayloadBuilder = Payload.newBuilder();
+
+		//docPayloadBuilder.setDoc(Document.newBuilder().setDocName(fileName));
+
+		if(nameSpace !=null && nameSpace.length() > 0)
+			docPayloadBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace));
+
+		Request.Builder namespaceQueryReqBuilder = Request.newBuilder();
+
+		namespaceQueryReqBuilder.setHeader(namespaceQueryHeader.build());
+
+		namespaceQueryReqBuilder.setBody(docPayloadBuilder.build());
+
+		return enqueueRequest(namespaceQueryReqBuilder.build());
+
+	}
+	
+	public boolean queryNamespaceList(String nameSpace) {
+		// TODO Auto-generated method stub
+
+		Header.Builder namespaceListQueryHeader = Header.newBuilder();
+
+		namespaceListQueryHeader.setRoutingId(Header.Routing.NAMESPACELISTQUERY);
+
+		namespaceListQueryHeader.setOriginator(HeartbeatManager.getInstance().getNodeId());
+
+		Payload.Builder namespacePayloadBuilder = Payload.newBuilder();
+
+		if(nameSpace !=null && nameSpace.length() > 0)
+			namespacePayloadBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace));
+
+		Request.Builder namespaceListQueryReqBuilder = Request.newBuilder();
+
+		namespaceListQueryReqBuilder.setHeader(namespaceListQueryHeader.build());
+
+		namespaceListQueryReqBuilder.setBody(namespacePayloadBuilder.build());
+
+		return enqueueRequest(namespaceListQueryReqBuilder.build());
+		
+	}
+	
+	public String checkDocQueryResponse(String nameSpace , String fileName){
+		
+		String key = nameSpace+fileName;
+		
 
 	public boolean findFile(String nameSpace, String fileName) {
 
@@ -205,7 +263,36 @@ public class NodeClient {
 			return noResult;
 		}
 	}
+	public List checkNamespaceList(String namespace){
+		String key = namespace;
 
+        String noResult = "NA";
+
+        if (listFiles.containsKey(key)) {
+
+                return listFiles.get(key);
+
+        } else {
+        		
+                return null;
+        }
+	}
+	
+	public List sendNamespaceList(String namespace) {
+		
+		List<Document> Files = new ArrayList<Document>();
+		String noResult = "NA";
+		if (listFiles.containsKey(namespace)){
+			Files = listFiles.get(namespace);
+		}
+		
+    	logger.info("Files returned from sendNamespaceList " +Files);
+
+		return Files;
+		
+	}
+	
+	
 	public String checkDocFindResponse(String nameSpace, String fileName) {
 
 		String key = nameSpace + fileName;
@@ -342,7 +429,7 @@ public class NodeClient {
 				try {
 
 					Request msg = conn.outboundRequestQueue.take();
-
+					logger.info("Message is in the outbound queue: Node client");
 					if (ch.isWritable()) {
 						logger.info("Sending request to the nodeId " + nodeId);
 						ChannelFuture cf = ch.write(msg);
@@ -505,6 +592,34 @@ public class NodeClient {
 									.getReplyCode().name());
 						}
 					}
+					
+					else if(msg.getHeader().getRoutingId() == Header.Routing.NAMESPACEQUERY){
+
+						System.out.println("NodeClientResponseHandler: Recieved the response to namespaceQuery from the server and the response is "+msg.getHeader().getReplyCode()+" with Message fom server as "+msg.getHeader().getReplyMsg());
+
+						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
+							logger.info("Namespace removed from node "+ owner.getNodeId());
+
+						}
+
+					}
+					
+					else if(msg.getHeader().getRoutingId() == Header.Routing.NAMESPACELISTQUERY){
+						String namespace = null;
+						System.out.println("NodeClientResponseHandler:");
+						PayloadReply response =  msg.getBody();
+						System.out.println("NodeClientResponseHandler: Recieved the response to namespaceListQuery from the server and the response is "+msg.getHeader().getReplyCode()+" with Message fom server as "+msg.getHeader().getReplyMsg());
+
+						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
+							logger.info("inside if ");
+							namespace = response.getSpaces(0).getName();
+							logger.info("namespace " + namespace);
+						//	listFiles = msg.getBody().getDocsList();
+							owner.listFiles.put(namespace, msg.getBody().getDocsList());
+							logger.info("Document list recieved from node "+ owner.getNodeId());
+						}
+
+					}
 
 				} catch (InterruptedException ie) {
 					logger.error("InboundWorker has been interrupted "
@@ -546,4 +661,6 @@ public class NodeClient {
 			
 		}
 	}
+
+	
 }

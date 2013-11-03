@@ -43,6 +43,12 @@ public class ClientPrintListener implements ClientListener {
 			
 			System.out.println("Server response to document add "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
 			
+			
+		}else if (msg.getHeader().getRoutingId() == Header.Routing.NAMESPACEADD){
+				
+			System.out.println("Server response to namespace add "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
+			
+			
 		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCREMOVE){
 			
 			System.out.println("Server response to document remove "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());

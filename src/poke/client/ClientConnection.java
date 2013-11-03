@@ -154,11 +154,46 @@ public class ClientConnection {
 		}
 	}
 
+	public void namespaceAdd(String namespace) {
+		// request to add namespace
+
+		Header.Builder namespaceAddHeader = Header.newBuilder();
+		namespaceAddHeader.setRoutingId(Routing.NAMESPACEADD);
+		namespaceAddHeader.setOriginator("Namespace Add test");
+
+		Payload.Builder namespaceAddBodyBuilder = Payload.newBuilder();
+		namespaceAddBodyBuilder.setSpace(NameSpace.newBuilder().setName(namespace));
+
+		Request.Builder namespaceAddReqBuilder = Request.newBuilder();
+		namespaceAddReqBuilder.setHeader(namespaceAddHeader);
+		namespaceAddReqBuilder.setBody(namespaceAddBodyBuilder);
+
+		try {
+			//enqueue message
+
+			outbound.put(namespaceAddReqBuilder.build());
+			logger.info("put namespace add request in outbound queue for namespace "+ namespace);
+		} catch (Exception e) {
+			logger.warn("Failed to put namespace add request in outbound queue for namespace "+ namespace);
+
+		}
+
+
+
+
+	}
+
+	public void docAddReq(String nameSpace,String filePath){
+
+
 	public void docAddReq(String nameSpace, String filePath) {
 
 		Header.Builder docAddReqHeader = Header.newBuilder();
 
 		String fileName = FilenameUtils.getName(filePath);
+
+		logger.info("File to be uploaded to the server "+fileName);
+
 
 		logger.info("File to be uploaded to the server " + fileName);
 
@@ -401,10 +436,72 @@ public class ClientConnection {
 			logger.warn("Unable to deliver doc find message, queuing "
 					+ e.getMessage());
 		}
-		
-		System.gc();
+
 	}
 
+	public void namespaceRemove(String namespace) {
+		
+		// remove namespace
+		
+		Header.Builder namespaceRemoveReqHeader = Header.newBuilder();
+
+		namespaceRemoveReqHeader.setRoutingId(Routing.NAMESPACEREMOVE);
+
+		namespaceRemoveReqHeader.setOriginator("Namespace remove test");
+
+		Payload.Builder namespaceRemoveBodyBuilder = Payload.newBuilder();
+
+		if(namespace !=null && namespace.length() > 0)
+			namespaceRemoveBodyBuilder.setSpace(NameSpace.newBuilder().setName(namespace).build());
+
+		//namespaceRemoveBodyBuilder.setDoc(Document.newBuilder().setDocName(fileName));
+
+		Request.Builder namespaceRemoveRequest = Request.newBuilder();
+
+		namespaceRemoveRequest.setHeader(namespaceRemoveReqHeader.build());
+		namespaceRemoveRequest.setBody(namespaceRemoveBodyBuilder.build());
+
+
+		try {
+
+			outbound.put(namespaceRemoveRequest.build());
+
+		} catch (InterruptedException e) {
+			logger.warn("Unable to deliver namespace remove message, queuing "+e.getMessage());
+		}
+
+	}
+
+	public void namespaceList(String nameSpace) {
+		// To list the namespace and files in it
+		
+		Header.Builder namespaceListReqHeader = Header.newBuilder();
+		namespaceListReqHeader.setRoutingId(Routing.NAMESPACELIST);
+		namespaceListReqHeader.setOriginator("namespace List test");
+        Payload.Builder namespaceListReqBody = Payload.newBuilder();
+
+        if (nameSpace != null && nameSpace.length() > 0)
+        	namespaceListReqBody.setSpace(NameSpace.newBuilder().setName(nameSpace)
+                                .build());
+
+
+        Request.Builder namespaceListRequest = Request.newBuilder();
+        namespaceListRequest.setBody(namespaceListReqBody.build());
+        namespaceListRequest.setHeader(namespaceListReqHeader.build());
+
+        try {
+
+                outbound.put(namespaceListRequest.build());
+
+        } catch (InterruptedException e) {
+                logger.warn("Unable to deliver namespace list message, queuing "
+                                + e.getMessage());
+        }
+        
+        System.gc();
+		
+	}
+	
 	private void init() {
 		// the queue to support client-side surging
 		outbound = new LinkedBlockingDeque<com.google.protobuf.GeneratedMessage>();
@@ -479,8 +576,7 @@ public class ClientConnection {
 			Channel ch = conn.getChannel();
 
 			if (ch == null || !ch.isOpen()) {
-				ClientConnection.logger
-						.error("connection missing, no outbound communication");
+				ClientConnection.logger.error("connection missing, no outbound communication");
 				return;
 			}
 
@@ -521,6 +617,8 @@ public class ClientConnection {
 							conn.outbound.putFirst(msg);
 						}
 
+
+
 					} else
 						conn.outbound.putFirst(msg);
 				} catch (InterruptedException ie) {
@@ -537,4 +635,6 @@ public class ClientConnection {
 			}
 		}
 	}
+
+
 }

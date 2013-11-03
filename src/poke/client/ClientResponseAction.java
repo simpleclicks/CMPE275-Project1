@@ -2,10 +2,11 @@ package poke.client;
 
 import java.io.File;
 import java.io.FileInputStream;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+//import java.util.ArrayList;
+//import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.io.FileUtils;
@@ -17,7 +18,7 @@ import org.jboss.netty.channel.ChannelFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sun.security.provider.certpath.OCSPResponse.ResponseStatus;
+//import sun.security.provider.certpath.OCSPResponse.ResponseStatus;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.GeneratedMessage;
@@ -143,6 +144,20 @@ public class ClientResponseAction {
 						}
 
 					}
+					else if (msg.getHeader().getRoutingId() == Header.Routing.NAMESPACEADD){
+						
+						System.out.println("Server response to namespaceAdd "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
+					}
+					else if (msg.getHeader().getRoutingId() == Header.Routing.NAMESPACEREMOVE){
+						
+						System.out.println("Server response to namespaceRemove "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
+					}
+					
+					else if (msg.getHeader().getRoutingId() == Header.Routing.NAMESPACELIST){
+						
+						System.out.println("Server response to namespaceList "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg()+
+											"Document List "+ msg.getBody().getDocsList());
+					}
 					else if(msg.getHeader().getRoutingId() == Routing.DOCFIND){
 						
 						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
@@ -228,7 +243,7 @@ public class ClientResponseAction {
 
 			String fileExt = FilenameUtils.getExtension(filePath);
 			
-		//	System.out.println("File path/ext received "+fileExt);
+			System.out.println("File path/ext received "+fileExt);
 
 			String fileName = FilenameUtils.getName(filePath);
 
@@ -260,7 +275,7 @@ public class ClientResponseAction {
 				}
 
 				docAddPLBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocExtension(filePath).
-						setChunkContent(ByteString.copyFrom(fileContents)).setDocSize(fileSize).setTotalChunk(totalChunk).setChunkId(1));
+						setChunkContent(ByteString.copyFrom(fileContents)).setDocSize(fileSize).setTotalChunk(totalChunk).setChunkId(0));
 
 				docAddReqBuilder.setBody(docAddPLBuilder);
 
@@ -281,7 +296,6 @@ public class ClientResponseAction {
 
 				try {
 
-					int bytesRead = 0;
 
 					int chunkId = 1;
 					
@@ -296,6 +310,7 @@ public class ClientResponseAction {
 				
 						chunkId = ((int) docUpload.getDocs(0).getChunkId())+1;
 					}
+					int bytesRead = 0;
 
 					FileInputStream chunkFIS = new FileInputStream(file);
 					
@@ -319,7 +334,9 @@ public class ClientResponseAction {
 							bytesRead= IOUtils.read(chunkFIS, chunckContents , 0 , bytesRemaining);
 
 						}
-
+						
+						System.out.println("bytes read "+bytesRead);
+						
 						System.out.println("Uploading chunk "+chunkId+" of size "+chunckContents.length+" for file "+fileName);
 						
 						
