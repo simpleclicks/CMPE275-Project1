@@ -27,9 +27,6 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import poke.server.management.HeartbeatManager;
-import poke.server.storage.Storage;
-
 import com.jolbox.bonecp.BoneCP;
 import com.jolbox.bonecp.BoneCPConfig;
 
@@ -38,6 +35,8 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.apache.commons.io.FileUtils;
+
+import poke.server.management.HeartbeatManager;
 
 public class DatabaseStorage {
 	protected static Logger logger = LoggerFactory.getLogger("database");
@@ -50,6 +49,7 @@ public class DatabaseStorage {
 	protected Properties cfg;
 	protected BoneCP cpool;
 	static final private String self = HeartbeatManager.getInstance().getNodeId();
+//	static final private String self = "self";
 	
 	private static DatabaseStorage ds = new DatabaseStorage();
 	
@@ -130,7 +130,7 @@ public class DatabaseStorage {
 			}
 		}
 		
-		return document.getOwner();
+		return document.getNamespaceName();
 	}
 	
 	public boolean isReplicated(String namespace, String documentname) {
@@ -440,7 +440,7 @@ public class DatabaseStorage {
 						
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			logger.info("addDocumentInDatabase: Cannot update replication count in database for document "+documentname);
+			logger.info("updateReplicationCount: Cannot update replication count in database for document "+documentname);
 			e.printStackTrace();			
 		} finally {
 			try {
@@ -454,7 +454,44 @@ public class DatabaseStorage {
 		
 		return false;
 	}
-	
+
+	public void resetReplication(String previousReplicatedNode) {
+
+		QueryRunner qr = new QueryRunner();
+		Connection conn = null;
+		int insertCount = 0;
+		
+		try {
+			
+			conn = cpool.getConnection();
+							
+			String sql = "Update Document set ReplicatedNode = null, PreviousReplicatedNode = ?,ReplicationCount = 0 , IsReplicated = false , ToBeReplicated = true where replicatedNode = ?";
+			insertCount = qr.update(conn, sql, previousReplicatedNode, previousReplicatedNode);
+			
+			if(insertCount < 1) {
+				logger.info("resetReplication: "+previousReplicatedNode+" doesn't contain any replicas of this node");
+			}
+			else {
+				logger.info("resetReplication: "+previousReplicatedNode+" contains "+insertCount+" any replicas of this node");
+			}
+						
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			logger.info("resetReplication: Cannot update replication count in database for node "+previousReplicatedNode);
+			e.printStackTrace();			
+		} finally {
+			try {
+				qr=null;
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		
+	}
+
 	public List<String> getDocuments(String replicatedNode) {
 		
 		QueryRunner qr = new QueryRunner();
@@ -483,7 +520,7 @@ public class DatabaseStorage {
 			}
 			
 		} catch (SQLException e) {
-			logger.info("getReplicatedNode: Cannot get documents for replicated node "+replicatedNode);
+			logger.info("getDocuments: Cannot get documents for replicated node "+replicatedNode);
 			e.printStackTrace();
 		} finally {
 			try {
@@ -514,13 +551,13 @@ public class DatabaseStorage {
 			List<Document> documentList = qr.query(conn, sql, getDocumentsRsh, self);
 			
 			if(documentList == null || documentList.size() == 0) {
-			
+						
 				return returnDocument;
 			
 			} else {
 				
 				for(Document unRepDoc :documentList ){
-					returnDocument.add(unRepDoc.getNamespaceName()+unRepDoc.getDocumentName());
+					returnDocument.add(unRepDoc.getNamespaceName()+unRepDoc.getDocumentName()+"");
 				}
 				
 				return returnDocument; 
@@ -528,7 +565,7 @@ public class DatabaseStorage {
 			
 		} catch (SQLException e) {
 			
-			logger.info("getReplicatedNode: Cannot get documents for owner "+self);
+			logger.info("documentsToBeReplicated: Cannot get documents for owner "+self);
 			e.printStackTrace();
 		
 		} finally {
@@ -547,11 +584,18 @@ public class DatabaseStorage {
 
 	public static void main(String args[]) {
 		
-		DatabaseStorage ds = new DatabaseStorage();
+		//DatabaseStorage ds = new DatabaseStorage();
 		//ds.addDocumentInDatabase(null, "abc.txt", false, 0, "four");
 		//System.out.println(ds.getOwner("EMPTY", "abc.txt"));
 		//ds.addReplicaInDatabase(null, "abc.txt", 1, "four", "five", null);
-		ds.deleteDocumentInDatabase("home\\kau", "abc.txt");
+		//ds.deleteDocumentInDatabase("home\\kau", "abc.txt");
+		//System.out.println(ds.getOwner(ds.getOwner("\\home\\sau\\", "qwe.asd"), "qwe.asd"));
+		//System.out.println(ds.documentsToBeReplicated());
+		//ds.resetReplication(self);
+		//ds.resetReplication("six");
+		//ds.release();
+		//String abc = "\\home\\sau\\";
+		//System.out.println("\home\sau\");
 	}
 
 }

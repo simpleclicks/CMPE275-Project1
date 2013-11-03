@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import poke.server.conf.ServerConf.NearestConf;
 import poke.server.management.HeartbeatData.BeatStatus;
 import poke.server.nconnect.NodeResponseQueue;
+import poke.server.storage.jdbc.DatabaseStorage;
 
 import com.google.protobuf.GeneratedMessage;
 
@@ -284,7 +285,7 @@ public class HeartbeatManager extends Thread {
 		public CloseHeartListener(HeartbeatData heart) {
 			this.heart = heart;
 		}
-
+		
 		@Override
 		public void operationComplete(ChannelFuture future) throws Exception {
 			if (outgoingHB.containsValue(heart)) {
@@ -302,6 +303,8 @@ public class HeartbeatManager extends Thread {
 			if(NodeResponseQueue.externalNodeExistCheck(heart.getNodeId()))
 				NodeResponseQueue.removeExternalNode(heart.getNodeId());
 			
+			if(heart.getNodeId() != null)
+				DatabaseStorage.getInstance().resetReplication(heart.getNodeId());
 		}
 	}
 }
