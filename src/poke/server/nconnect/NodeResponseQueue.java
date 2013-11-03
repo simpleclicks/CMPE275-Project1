@@ -131,8 +131,6 @@ public class NodeResponseQueue {
 				String finalizedNodeId = null;
 outer:				for(int i=0 ; i < activeNodeCount ; i++){
 
-					//int index = nodeIdSelector.nextInt(activeNodeCount);
-
 					NodeClient selectedNode = nc[i];
 
 					selectedNode.docAddHandshake(directory, fName, fileSize);
@@ -271,7 +269,6 @@ inner:						do{
 		}
 	}
 
-
 	public static String  fetchDocAddHSResult( String nameSpace , String fileName){
 
 		String key = nameSpace+fileName;
@@ -293,7 +290,7 @@ inner:						do{
 
 		NodeClient[] activeNodeArray = getActiveNodeInterface(internal);
 
-		for(NodeClient nc: activeNodeArray){
+outer:		for(NodeClient nc: activeNodeArray){
 			int attempt = 0;
 			
 inner:			do{
@@ -311,6 +308,9 @@ inner:			do{
 			}else if(result.equalsIgnoreCase("NA")){
 				logger.warn("No response from node "+nc.getNodeId()+"for document query of "+nameSpace+"/"+fileName);
 				continue inner;
+			}else if(result.equalsIgnoreCase("Failure")){
+				logger.warn("No response from node "+nc.getNodeId()+"for document query of "+nameSpace+"/"+fileName);
+				continue outer;
 			}
 			
 		 }while (attempt < RESPONSE_WAIT_MAX_RETRY);
@@ -326,10 +326,11 @@ inner:			do{
 		String trimmedPath = path.substring(path.indexOf(File.separator)+1);
 		String fileName = FilenameUtils.getName(filePath);
 
-		for(NodeClient nc: activeNodeArray){
+outer:		for(NodeClient nc: activeNodeArray){
 			int attempt = 0;
 			
 inner:			do{
+		
 		logger.info("Sleeping for configured wait time !!! Waiting for response for replicaQuery from node "+nc.getNodeId()+" attempt no "+(attempt+1));
 			try {
 				Thread.sleep(RESPONSE_WAIT_MAX_TIME);
@@ -344,6 +345,9 @@ inner:			do{
 			}else if(result.equalsIgnoreCase("NA")){
 				logger.warn("No response from node "+nc.getNodeId()+"for replica query of "+trimmedPath+"/"+fileName);
 				continue inner;
+			}else if(result.equalsIgnoreCase("Failure")){
+				logger.warn("Replica "+trimmedPath+fileName+" does not exists at "+nc.getNodeId());
+				continue outer;
 			}
 			
 		 }while (attempt < RESPONSE_WAIT_MAX_RETRY);
@@ -351,26 +355,26 @@ inner:			do{
 		return false;
 	}
 
-	public static boolean fetchDocRemoveResult( String nameSpace , String fileName){
-
-		boolean queryResult = false;
+	public static String fetchDocRemoveResult( String nameSpace , String fileName){
 
 		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+		
+		String result = "NA";
 
 		for(NodeClient nc: activeNodeArray){
 
-			String result = nc.checkDocRemoveResponse(nameSpace, fileName);
+			result = nc.checkDocRemoveResponse(nameSpace, fileName);
 
 			if(result.equalsIgnoreCase("Success")){
 				logger.info("Document remove successful for "+nameSpace+"/"+fileName+" by nodeId "+nc.getNodeId());
-				return true;
+				return result;
 			}else if(result.equalsIgnoreCase("NA")){
 				logger.warn("No response from node "+nc.getNodeId()+"for document remove of "+nameSpace+"/"+fileName);
 			}else if(result.equalsIgnoreCase("Failure"))
 				logger.warn("DocRemoveResponse: Node "+nc.getNodeId()+" does not have "+nameSpace+"/"+fileName);
 		}
 
-		return queryResult;
+		return result;
 	}
 
 	public static boolean fetchReplicaRemoveResult(String nameSpace , String fileName){
@@ -510,9 +514,7 @@ inner:						do{
 									continue outer;
 								}
 							}while(attempt < RESPONSE_WAIT_MAX_RETRY);
-
-
-						}
+					}
 
 					}catch(IOException ioExcep){
 						logger.error("IOException occurred while replicating "+actFilePath+" on "+finalNodeId+" reasosn: "+ioExcep.getMessage());
@@ -537,5 +539,4 @@ inner:						do{
 
 		}.start();	// thread constructor ends
 	}
-
 }

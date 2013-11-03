@@ -47,6 +47,7 @@ import poke.server.management.HeartbeatConnector;
 import poke.server.management.HeartbeatManager;
 import poke.server.management.ManagementDecoderPipeline;
 import poke.server.management.ManagementQueue;
+import poke.server.replication.ReplicaSynchronizer;
 import poke.server.replication.ReplicationInitializer;
 import poke.server.resources.ResourceFactory;
 import poke.server.routing.ServerDecoderPipeline;
@@ -265,18 +266,26 @@ public class Server {
 			logger.info("Unknown host");
 			e.printStackTrace();
 		}
-		//System.out.println(hostAddress);
-		//BroadcastConnector bconnector = new BroadcastConnector(nodeId, hostAddress, port, mport, bport);
-		//bconnector.initiateBroadcast();
-//		logger.info("Broadcasting availability");
+		
+		BroadcastConnector bconnector = new BroadcastConnector(nodeId, hostAddress, port, mport, bport);
+		bconnector.initiateBroadcast();
+
+		//		logger.info("Broadcasting availability");
 		
 		createBroadcastBoot(bport);
 		BroadcastQueue.startup(conf.getServer().getProperty("node.id"));
+		
 		logger.info("Broadcast listener started");
+		
 		ConnectToExternalNodes externalNodeThread = new ConnectToExternalNodes();
 		externalNodeThread.start();
+		
 		ReplicationInitializer replicationThread = new ReplicationInitializer();
 		replicationThread.start();
+		
+		ReplicaSynchronizer replicaSyncThread =  new ReplicaSynchronizer();
+		replicaSyncThread.start();
+		
 		logger.info("Server ready");
 		
 	}
