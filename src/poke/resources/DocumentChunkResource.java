@@ -63,14 +63,8 @@ public class DocumentChunkResource implements ChunkedResource {
 		switch (opChoice) {
 		
 		 case 21:
-			 try {
 				 responses = docFind(docOpHeader, docOpBody); 
-			 }
-			 catch (InterruptedException e) {
-				// TODO: handle exception
-				 		
-			}
-             break;
+				 break;
              
 			default:
 				System.out
@@ -81,23 +75,37 @@ public class DocumentChunkResource implements ChunkedResource {
 		return responses;
 	}
 
-	private List<Response> docFind(Header docFindHeader, Payload docFindBody) throws InterruptedException {
+	private List<Response> docFind(Header docFindHeader, Payload docFindBody){
 		
 		List<Response> responses = new ArrayList<Response>();
 		String fileName = HOMEDIR + File.separator
 				+ docFindBody.getSpace().getName() + File.separator
 				+ docFindBody.getDoc().getDocName();
+		String fileNameAway = VISITORDIR + File.separator
+				+ docFindBody.getSpace().getName() + File.separator
+				+ docFindBody.getDoc().getDocName();
 		boolean fileExists = false;
+		boolean awayExists= false;
 		Response.Builder docFindResponse = Response.newBuilder();
 		PayloadReply.Builder docFindRespPayload = PayloadReply.newBuilder();
 		Header.Builder docFindRespHeader = Header.newBuilder();
 		String nameSpace = docFindBody.getSpace().getName();
 		String self = HeartbeatManager.getInstance().getNodeId();
+		docFindRespPayload.addDocsBuilder();
+		docFindRespPayload.addSpacesBuilder();
+		
+		docFindRespPayload.setDocs(0, Document.newBuilder().setDocName(fileName));
+		//if(nameSpace == null)
+		docFindRespPayload.setSpaces(0, NameSpace.newBuilder().setName(nameSpace));
 		
 		try {
 			fileExists = FileUtils.directoryContains(homeDir,
 					new File(fileName));
-			if (fileExists /*&& docFindHeader.getOriginator().contains("Client")*/) {
+			awayExists = FileUtils.directoryContains(visitorDir, new File(fileNameAway));
+			if(awayExists){
+				fileName = fileNameAway;
+			}
+			if (fileExists || awayExists) {
 				responses = docFindClient(docFindHeader, responses, fileName,
 						docFindResponse, docFindRespPayload, docFindRespHeader,
 						nameSpace);
@@ -140,7 +148,7 @@ public class DocumentChunkResource implements ChunkedResource {
 
 	             docFindRespHeader.setReplyMsg("Server could not find the file.");
 	             docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not Found").toBuilder().setOriginator(self));
-	             docFindRespPayload.addSpacesBuilder();
+	             //docFindRespPayload.addSpacesBuilder();
 	              docFindResponse.setBody(docFindRespPayload.build());
 	              
 	             responses.add(docFindResponse.build());
@@ -166,11 +174,7 @@ public class DocumentChunkResource implements ChunkedResource {
 			String fileName, Response.Builder docFindResponse,
 			PayloadReply.Builder docFindRespPayload,
 			Header.Builder docFindRespHeader, String nameSpace) {
-		docFindRespPayload.addSpacesBuilder();
-		if (nameSpace != null && nameSpace.length() > 0){
-			docFindRespPayload.setSpaces(0, NameSpace.newBuilder().setName(nameSpace));
-			//docFindRespPayload.addSpacesBuilder().build();
-		}
+		
 		String fileExt = FilenameUtils.getExtension(fileName);
 
 		java.io.File file = FileUtils.getFile(fileName);
@@ -272,7 +276,8 @@ public class DocumentChunkResource implements ChunkedResource {
 			} catch (FileNotFoundException e) {
 
 				logger.info("IO Exception while creating the file and/or writing the content to it "+e.getMessage());
-
+				
+				  docFindResponse.setBody(docFindRespPayload.build());
 		          docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
 
 		          docFindRespHeader.setReplyMsg("Server Exception while downloading the requested file.");
@@ -284,6 +289,8 @@ public class DocumentChunkResource implements ChunkedResource {
 			} catch (IOException e) {
 
 				logger.info("IO Exception while creating the file and/or writing the content to it "+e.getMessage());
+				
+				docFindResponse.setBody(docFindRespPayload.build());
 
 		          docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
 

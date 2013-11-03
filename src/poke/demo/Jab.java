@@ -42,7 +42,7 @@ public class Jab {
 	
 		//cc.docAddReq("TestChunk", "E://Movies//Easy A (2010).avi");
 		
-		cc.docFind("test", "test1.mov");
+		cc.docFind("awayTest/newChunk", "xampp.run");
 		
 		//cc.docRemove("", "Kaustubh1");
 	

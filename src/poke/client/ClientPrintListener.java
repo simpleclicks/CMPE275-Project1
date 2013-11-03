@@ -34,11 +34,10 @@ public class ClientPrintListener implements ClientListener {
 		if (msg.getHeader().getRoutingId() == Header.Routing.FINGER)
 			ClientUtil.printFinger(msg.getBody().getFinger());
 		else if (msg.getHeader().getRoutingId() == Header.Routing.DOCFIND) {
-			for (int i = 0, I = msg.getBody().getDocsCount(); i < I; i++)
-				ClientUtil.printDocument(msg.getBody().getDocs(i));
+			System.out.println(msg.getHeader().getReplyMsg()); 
 		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCADDHANDSHAKE){
 			
-			//System.out.println("Server response to document add request "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
+			System.out.println("Server response to document add request "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
 			
 		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCADD){
 			
@@ -48,8 +47,6 @@ public class ClientPrintListener implements ClientListener {
 			
 			System.out.println("Server response to document remove "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
 			
-		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCFIND){
-			//TODO add the code for saving the received found file or the message if file not found 
 		}
 	}
 }

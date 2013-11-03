@@ -144,21 +144,20 @@ public class ClientResponseAction {
 
 					}
 					else if(msg.getHeader().getRoutingId() == Routing.DOCFIND){
-						System.out.println("ClientResponseHandler : Document found. Downloading...");
+						
 						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
-
+							System.out.println("ClientResponseHandler : Document found. Downloading...");
 							for (int i = 0, I = msg.getBody().getDocsCount(); i < I; i++){
 								//ClientUtil.printDocument(msg.getBody().getDocs(i));
 								String nameSpace = msg.getBody().getSpaces(0).getName();
-								String[] NSFolder = nameSpace.split("\\\\");
-				                String effNS = DOWNLOADDIR+File.separator+NSFolder[NSFolder.length-1];
+								//String[] NSFolder = nameSpace.split("\\\\");
+				                String effNS = DOWNLOADDIR+File.separator+nameSpace;
 
 				                String fileName = msg.getBody().getDocs(0).getDocName();
 				                String fname;
-				                String[] filePath = fileName.split("\\\\");
-				                fname = filePath[filePath.length-1];
+				                fname = FilenameUtils.getName(fileName);
 
-				                logger.info("DocAdd: Received file "+fname);
+				                logger.info("DocFind: Received file "+fname);
 
 				                logger.info("effective namespace "+effNS);
 
@@ -188,6 +187,9 @@ public class ClientResponseAction {
 							
 								
 							}
+						else{
+							System.out.println(msg.getHeader().getReplyMsg());
+						}
 					}
 
 				} catch (InterruptedException ie) {
