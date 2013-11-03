@@ -173,7 +173,8 @@ public class NameSpaceResource implements Resource {
 
 					if(namespaceDir.isDirectory()){
 						FileUtils.forceDelete(namespaceDir);
-
+						logger.info("Namespace successfully deleted");
+						namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
 					}
 					else{
 						namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACENOTDIRECTORY+"Supplied namespace is not directory"));
@@ -197,6 +198,9 @@ public class NameSpaceResource implements Resource {
 
 					if(namespaceReplDir.isDirectory()){
 						FileUtils.forceDelete(namespaceReplDir);
+						logger.info("Namespace successfully deleted");
+						namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
+
 
 					}
 					else{
@@ -228,17 +232,19 @@ public class NameSpaceResource implements Resource {
 
 		NodeResponseQueue.broadcastNamespaceQuery(nameSpace);
 		try{
-			logger.info(" Document resousrce sleeping for 2000ms! Witing for responses from the other nodes for DOCQUERY ");
-
+			logger.info(" Namespace resousrce sleeping for 2000ms! Witing for responses from the other nodes for NAMESPACEQUERY ");
+			
 			Thread.sleep(2000);
 		}
 		catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+			namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
 		}
 
-		logger.info("Namespace successfully deleted");
-		namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
+		//	logger.info("Namespace successfully deleted");
+		//	namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
 
 		return namespaceRemoveResponseBuilder.build();
 	}
@@ -267,8 +273,6 @@ public class NameSpaceResource implements Resource {
 			effHomeNS= effHomeNS+File.separator+nameSpace;
 			effAwayNS = effAwayNS+File.separator+nameSpace;
 		}
-
-
 		File parentHomeDir = new File(effHomeNS);
 
 		File parentAwayDir = new File(effAwayNS);
@@ -279,10 +283,7 @@ public class NameSpaceResource implements Resource {
 				FileUtils.forceDelete(parentHomeDir);
 				logger.info("Deleted namespace in Home directory");
 				namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
-
 			}
-
-			//if(!fileHome){
 			if(parentAwayDir.exists()){
 				FileUtils.forceDelete(parentAwayDir);
 				logger.info("Deleted namespace in Replica directory");
@@ -293,8 +294,9 @@ public class NameSpaceResource implements Resource {
 
 			logger.error("NamespaceQuery: IOException while deleting namespace");
 			e.printStackTrace();
+			namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
 		}
-		logger.info("sending response to namespace query's inbound queue");
 		return namespaceQueryResponseBuilder.build();
 	}
 
@@ -345,6 +347,13 @@ public class NameSpaceResource implements Resource {
 					listName.add(old.getName());
 				}
 
+			}
+
+			if (listName.isEmpty() & listFile.isEmpty()){
+				namespaceListResponse.setBody(namespaceListRespBody.build());
+				namespaceListResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListHeader, ReplyStatus.FAILURE, NAMESPACEDOESNOTEXIST));
+			}
+			else {
 				newList.addAll(listName);
 				newList.addAll(listFile);
 				for (String file : newList) {
@@ -358,14 +367,12 @@ public class NameSpaceResource implements Resource {
 				namespaceListResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListHeader, ReplyStatus.SUCCESS, DOCLISTFOUND));
 
 			}
-			else{
-				namespaceListResponse.setBody(namespaceListRespBody.build());
-				namespaceListResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListHeader, ReplyStatus.FAILURE, NAMESPACEDOESNOTEXIST));
 
-			}
 		} catch (Exception e) {
 			// TODO: handle exception
 			logger.error("Error while processing request" +e.getMessage());
+			namespaceListResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
 		}
 
 		return namespaceListResponse.build();
@@ -414,10 +421,9 @@ public class NameSpaceResource implements Resource {
 		} catch (Exception e) {
 			// TODO: handle exception
 			logger.error("Error while processing request" +e.getMessage());
+			namespaceListQueryResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListQueryHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
 		}
-
-
-		logger.info("successfully returned the list");
 
 		return namespaceListQueryResponse.build();
 	}
