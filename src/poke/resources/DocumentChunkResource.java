@@ -243,14 +243,20 @@ public class DocumentChunkResource implements ChunkedResource {
 				FileInputStream chunkeFIS = new FileInputStream(file);
 
 				do {
+					bytesRead = 26214400;
+					int bytesActuallyRead = 0;
 
-					byte[] chunckContents = new byte[26214400];
+						byte[] chunckContents = new byte[26214400];
+						
+						if(chunkeFIS.available()<26214400){
+							bytesRead = chunkeFIS.available();
+							chunckContents = new byte[chunkeFIS.available()];
+						}
 
-					bytesRead = IOUtils.read(chunkeFIS, chunckContents, 0,
-							26214400);
+						bytesActuallyRead = IOUtils.read(chunkeFIS, chunckContents, 0, bytesRead);
 
 					logger.info("Total number of bytes read for chunk "
-							+ chunkId + " : " + bytesRead);
+							+ chunkId + " : " + bytesActuallyRead);
 
 					logger.info("Contents of the chunk "+chunkId+" : "+chunckContents);
 					
