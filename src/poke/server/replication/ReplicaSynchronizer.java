@@ -42,6 +42,12 @@ public class ReplicaSynchronizer extends Thread{
 			
 			for(String filePath: replicatedFiles){
 				
+				try {
+					Thread.sleep(20000);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				NodeResponseQueue.broadcastReplicaQuery(filePath);
 				logger.info(" Broadcasted replicaQuery for "+filePath);
 				logger.info("Sleeping for configured wait time !!! Waiting for response for replicaQuery from network nodes ");
