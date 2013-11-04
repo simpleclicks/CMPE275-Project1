@@ -46,6 +46,7 @@ public class NodeResponseQueue {
 	static final int RESPONSE_WAIT_MAX_TIME = 5000;
 
 	static final int MAX_CHUNK_SIZE = 26214400;
+	static final int MAX_ATTEMPT = 5;
 	
 
 	static private HashMap<String, String> responseToChunkMap = new HashMap<String, String>();
@@ -644,27 +645,61 @@ inner:						do{
 		return queryResult;
 	}
 
+	public static String fetchNamespaceRemoveResult( String nameSpace){
+
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+		
+		String result = "NA";
+
+		for(NodeClient nc: activeNodeArray){
+
+			result = nc.checkNamespaceRemoveResponse(nameSpace);
+
+			if(result.equalsIgnoreCase("Success")){
+				logger.info("Namespace remove successful for "+nameSpace);
+				return result;
+			}else if(result.equalsIgnoreCase("NA")){
+				logger.warn("No response from node "+nc.getNodeId());
+			}else if(result.equalsIgnoreCase("Failure"))
+				logger.warn("namespaceRemoveResponse: Node "+nc.getNodeId()+" does not have "+nameSpace);
+			}
+
+		return result;
+	}
+	
+	
 	public static List fetchNamespaceList(String namespace){
 		boolean queryResult = true;
 		List<Document> fileList= new ArrayList<Document>();
 		List<Document> newFileList = new ArrayList<Document>();
 		logger.info("In fetchNameSpaceList");
 		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
-
+		int attempt = 0;
 
 		for (NodeClient nc : activeNodeArray) {
 			String result = "NA";
 
 			//  while(result.equalsIgnoreCase("NA")){
+			do{
+			
 			try {
-				fileList = (List<Document>) (nc.sendNamespaceList(namespace));
 				Thread.sleep(8000);
-				newFileList.addAll(fileList);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				logger.error("Thread exception in fetchNamespaceList "+e.getMessage());
 			}
-
+			fileList = (List<Document>) (nc.sendNamespaceList(namespace));
+			if (fileList.isEmpty()){
+				attempt++;
+				continue;
+			}else{
+				
+				newFileList.addAll(fileList);
+				break;
+			}
+			
+			}while(attempt < MAX_ATTEMPT);
+			
 			logger.info("Files returned from fetchNameSpaceList " +newFileList);
 			return newFileList;                
 
