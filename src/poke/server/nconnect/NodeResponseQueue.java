@@ -472,9 +472,11 @@ inner:						do{
 					logger.info("Total number of chunks to be transferred for "+actFilePath+" of size "+size+" are "+totalChunks);
 					try{
 
-						FileInputStream fis =  new FileInputStream(unRepFile);
+						
 outer:					for(int chunkId = 0 ; chunkId< totalChunks ; chunkId++){
-
+	
+							FileInputStream fis =  new FileInputStream(unRepFile);
+							
 							byte[] chunkContents =  null;
 							fis.skip(chunkId*MAX_CHUNK_SIZE);
 
