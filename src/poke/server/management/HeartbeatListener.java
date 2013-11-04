@@ -62,7 +62,7 @@ public class HeartbeatListener implements MonitorListener {
 		if (msg.hasGraph()) {
 			logger.info("Received graph responses");
 		} else if (msg.hasBeat() && msg.getBeat().getNodeId().equals(data.getNodeId())) {
-			logger.info("Tracing code flow 2: HeartbeatLisner Received HB response from " + msg.getBeat().getNodeId());
+			//logger.info("Tracing code flow 2: HeartbeatLisner Received HB response from " + msg.getBeat().getNodeId());
 			data.setLastBeat(System.currentTimeMillis());
 
 			HeartbeatData hd = HeartbeatManager.getInstance().getHeartbeatData(msg.getBeat().getNodeId());

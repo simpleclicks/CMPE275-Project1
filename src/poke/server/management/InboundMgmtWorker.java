@@ -78,7 +78,7 @@ public class InboundMgmtWorker extends Thread {
 					 * Incoming are connections this node establishes, which is
 					 * handled by the HeartbeatConnector.
 					 */
-					logger.info(" Tracing code flow: InboundMgmtWorker: Heartbeat received from " + req.getBeat().getNodeId());
+					//logger.info(" Tracing code flow: InboundMgmtWorker: Heartbeat received from " + req.getBeat().getNodeId());
 					HeartbeatManager.getInstance().updateInboundHB(req.getBeat().getNodeId());
 				} else if (req.hasGraph()) {
 					Network n = req.getGraph();
@@ -91,7 +91,7 @@ public class InboundMgmtWorker extends Thread {
 					 */
 					if (n.getAction().getNumber() == Action.NODEJOIN_VALUE) {
 						if (msg.channel.isOpen()) {
-							System.out.println("Tracing code flow 3: InboundMgmtWorker received the node join req from "+msg.sa);
+							//System.out.println("Tracing code flow 3: InboundMgmtWorker received the node join req from "+msg.sa);
 							//can i cast socka?
 							SocketAddress socka = msg.channel.getRemoteAddress();
 							if (socka != null) {
@@ -104,10 +104,7 @@ public class InboundMgmtWorker extends Thread {
 								int port = Integer.valueOf(HeartbeatConnector.getInstance().getConf().getServer().getProperty("port"));
 								int mgmtPort = Integer.valueOf(HeartbeatConnector.getInstance().getConf().getServer().getProperty("port.mgmt"));
 								String remoteAddress =  msg.channel.getRemoteAddress().toString().split("/")[1].split(":")[0];
-								//System.out.println(port);
-								//System.out.println(mgmtPort);
-								//System.out.println(remoteAddress);
-								
+																
 								HeartbeatData heart = new HeartbeatData(n.getNodeId(), remoteAddress, port, mgmtPort);
 								heart.setExternal(req.getIsExternal());
 								HeartbeatConnector.getInstance().addConnectByBroadcast(heart);

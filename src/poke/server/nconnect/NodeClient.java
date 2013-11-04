@@ -84,6 +84,8 @@ public class NodeClient {
 	private ConcurrentHashMap<String, List<Document>> listFiles = new ConcurrentHashMap<String, List<Document>>(); 
 
 	private ConcurrentHashMap<String, String> docFindResponseQueue = new ConcurrentHashMap<String, String>();
+	
+	private ConcurrentHashMap<String, String> namespaceRemoveResponseQueue =  new ConcurrentHashMap<String, String>();
 
 	private ConcurrentHashMap<String, Long> nodeToDocFind = new ConcurrentHashMap<String, Long>();
 
@@ -452,6 +454,22 @@ public class NodeClient {
 		if(replicaHSResponseQueue.containsKey(key)){
 			
 			return replicaHSResponseQueue.remove(key);
+					
+		}else{
+			
+			return noResult;
+		}
+	}
+	
+public String checkNamespaceRemoveResponse(String nameSpace){
+		
+		String key = nameSpace;
+		
+		String noResult = "NA";
+		
+		if(namespaceRemoveResponseQueue.containsKey(key)){
+			
+			return namespaceRemoveResponseQueue.remove(key);
 					
 		}else{
 			
@@ -842,12 +860,12 @@ public class NodeClient {
 					else if(msg.getHeader().getRoutingId() == Header.Routing.NAMESPACEQUERY){
 
 						System.out.println("NodeClientResponseHandler: Recieved the response to namespaceQuery from the server and the response is "+msg.getHeader().getReplyCode()+" with Message fom server as "+msg.getHeader().getReplyMsg());
-
+						String namespace = msg.getBody().getSpaces(0).getName();
 						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
 							logger.info("Namespace removed from node "+ owner.getNodeId());
 
 						}
-
+						owner.namespaceRemoveResponseQueue.put(namespace, msg.getHeader().getReplyCode().name());
 					}
 					
 					else if(msg.getHeader().getRoutingId() == Header.Routing.NAMESPACELISTQUERY){
