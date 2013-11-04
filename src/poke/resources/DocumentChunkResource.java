@@ -24,11 +24,10 @@ import eye.Comm.PayloadReply;
 import eye.Comm.Request;
 import eye.Comm.Response;
 import poke.server.management.HeartbeatManager;
-import poke.server.nconnect.NodeClient;
 import poke.server.nconnect.NodeResponseQueue;
 import poke.server.resources.ChunkedResource;
 import poke.server.resources.ResourceUtil;
-import poke.server.storage.jdbc.DatabaseStorage;
+
 
 public class DocumentChunkResource implements ChunkedResource {
 	

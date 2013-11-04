@@ -391,6 +391,7 @@ inner:			do{
 				return true;
 			}else if(result.equalsIgnoreCase("NA")){
 				logger.warn("No response from node "+nc.getNodeId()+"for replica query of "+trimmedPath+"/"+fileName);
+				attempt++;
 				continue inner;
 			}else if(result.equalsIgnoreCase("Failure")){
 				logger.warn("Replica "+trimmedPath+fileName+" does not exists at "+nc.getNodeId());
@@ -493,6 +494,7 @@ inner:						do{
 									continue outer;
 								else if(replicaHSResp.equalsIgnoreCase("Success")){
 									finalNodeId = nc.getNodeId();
+									dbAct.setReplicationInProgress(path, fileName);
 									finalizedNode = nc;
 									replicaHS = true;
 									break outer;
@@ -551,18 +553,22 @@ inner:						do{
 								else if(replicaHSResp.equalsIgnoreCase("Failure")){
 									logger.error("Failure response received from node "+finalNodeId+" for addReplica of "+actFilePath+" for chunk "+(chunkId+1));
 									logger.error(" Aborting the replication process for "+actFilePath);
+									dbAct.resetReplicationInProgress(path, fileName);
 									break outer;
 								}
 								else if(replicaHSResp.equalsIgnoreCase("Success")){
 									logger.error("Success response received from node "+finalNodeId+" for addReplica of "+actFilePath+" for chunk "+(chunkId+1));
+									dbAct.setReplicationInProgress(path, fileName);
 									if((chunkId+1) == totalChunks){
 										dbAct.updateReplicationCount(path, fileName, finalNodeId, 1);
+										dbAct.resetReplicationInProgress(path, fileName);
 										replicated = true;
 										break outer;
 									}else
 									continue outer;
 								}
 							}while(attempt < RESPONSE_WAIT_MAX_RETRY);
+							fis.close();
 					}
 
 					}catch(IOException ioExcep){
@@ -575,9 +581,10 @@ inner:						do{
 					
 					if(replicated && replicaHS)
 						logger.info("Replication process completed successfully for "+actFilePath+" with node "+finalNodeId);
-					else
+					else{
+						dbAct.resetReplicationInProgress(path, fileName);
 						logger.info("Replication process failed for "+actFilePath+" with node "+finalNodeId);
-
+					}
 				}else{
 
 					logger.warn("No network node ready/available for replication of "+actFilePath+" of size "+size);
