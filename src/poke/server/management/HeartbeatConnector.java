@@ -158,15 +158,16 @@ public class HeartbeatConnector extends Thread {
 	@Override
 	public void run() {
 
+		logger.info("HB connection monitor started");
 		while (forever) {
 			try {
 				validateConnection();
 				if (monitors.size() == 0) {
-					logger.info("HB connection monitor not started, no connections to establish");
+					logger.info("HB connection monitor: No connections to establish");
 					Thread.sleep(sConnectRate);
 				} 
 				else {
-					logger.info("HB connection monitor starting, node has " + monitors.size() + " connections");
+					logger.info("HB connection monitor: Node has " + monitors.size() + " connections");
 
 					Thread.sleep(sConnectRate);
 					// try to establish connections to our nearest nodes
@@ -200,7 +201,7 @@ public class HeartbeatConnector extends Thread {
 		// validate connections this node wants to create
 		for (HeartbeatData hb : HeartbeatManager.getInstance().incomingHB.values()) {
 			// receive HB - need to check if the channel is readable
-			logger.info("IncomingHB: "+hb.getStatus()+" Node: "+ hb.getNodeId());
+			//logger.info("IncomingHB: "+hb.getStatus()+" Node: "+ hb.getNodeId());
 			if (hb.channel == null) {
 				if (hb.getStatus() == BeatStatus.Active || hb.getStatus() == BeatStatus.Weak) {
 					hb.setStatus(BeatStatus.Failed);
@@ -233,7 +234,7 @@ public class HeartbeatConnector extends Thread {
 		// validate connections this node wants to create
 		for (HeartbeatData hb : HeartbeatManager.getInstance().outgoingHB.values()) {
 			// emit HB - need to check if the channel is writable
-			logger.info("OutgoingHB: "+hb.getStatus()+" Node: "+ hb.getNodeId());
+			//logger.info("OutgoingHB: "+hb.getStatus()+" Node: "+ hb.getNodeId());
 			if (hb.channel == null) {
 				if (hb.getStatus() == BeatStatus.Active || hb.getStatus() == BeatStatus.Weak) {
 					hb.setStatus(BeatStatus.Failed);
@@ -278,7 +279,7 @@ public class HeartbeatConnector extends Thread {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			System.out.println("JSON: " + json);
+			//System.out.println("JSON: " + json);
 		} finally {
 			try {
 				fw.close();
