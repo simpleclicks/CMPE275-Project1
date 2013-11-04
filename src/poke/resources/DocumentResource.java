@@ -333,8 +333,9 @@ public class DocumentResource implements Resource {
                                         nodeFound = true;
                                         break;
                                 }else{
+                                		attempt++;
                                         continue;
-                                }
+                                }			
                         }while (attempt < RESPONSE_WAIT_MAX_RETRY );
                         
                         if(nodeFound)
@@ -424,9 +425,10 @@ public class DocumentResource implements Resource {
                         
                         if(docAddResponse)
                                 break;
-                        else
+                        else{
+                        		attempt++;
                                 continue;
-                        
+                        }
                 }while(attempt < RESPONSE_WAIT_MAX_RETRY);
                         
                         if(docAddResponse){
@@ -649,6 +651,7 @@ public class DocumentResource implements Resource {
                                                                 break;
                                                         }else if(docRemoveBroadcastResult.equalsIgnoreCase("NA")){
                                                                 logger.warn("No response from all the network nodes for document remove of "+nameSpece+"/"+fileToBeDeleted);
+                                                                attempt++;
                                                                 continue;
                                                         }
                                                         
@@ -700,6 +703,7 @@ public class DocumentResource implements Resource {
                                                         break;
                                                 }else if(docRemoveBroadcastResult.equalsIgnoreCase("NA")){
                                                         logger.warn("No response from all the network nodes for document remove of "+nameSpece+"/"+fileToBeDeleted);
+                                                        attempt++;
                                                         continue;
                                                 }
                                                 }while(attempt < RESPONSE_WAIT_MAX_RETRY);                                                
@@ -829,6 +833,7 @@ public class DocumentResource implements Resource {
                                                         break;
                                                 }else if(docRemoveBroadcastResult.equalsIgnoreCase("NA")){
                                                         logger.warn("No response from all the network nodes for document remove of "+nameSpece+"/"+fileToBeDeleted);
+                                                        attempt++;
                                                         continue;
                                                 }
                                                 }while(attempt < RESPONSE_WAIT_MAX_RETRY);        
@@ -985,6 +990,7 @@ public class DocumentResource implements Resource {
                                         }else{
 
                                                 docQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(docQueryHeader, ReplyStatus.FAILURE, REQUESTEDFILEDNEXISTSMSG).toBuilder().setOriginator(self));
+                                                attempt++;
                                                 continue;
                                         }
                                 
