@@ -94,6 +94,7 @@ message Header {
         REPLICAHANDSHAKE = 27;
         ADDREPLICA = 28;
         REPLICAQUERY = 29;
+        MASTERREPLICAQUERY = 30;
         }
         
      enum ReplyStatus {
