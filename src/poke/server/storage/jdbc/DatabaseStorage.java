@@ -169,44 +169,7 @@ public class DatabaseStorage {
 		
 		return false;
 	}
-
-	public boolean isReplicatedOnMaster(String namespace, String documentname, String previousReplicatedNode) {
-		
-		QueryRunner qr = new QueryRunner();
-		ResultSetHandler<Document> isReplicatedRsh = new BeanHandler<Document>(Document.class);
-		Document document= null;
-		Connection conn = null;
-		
-		try {
-			
-			conn = cpool.getConnection();
-			String sql = "select * from document where documentname = ? and namespacename = ? and previousReplicatedNode = ? and ToBeReplicated = false";
-			document = qr.query(conn, sql, isReplicatedRsh, documentname, namespace, previousReplicatedNode);
-			
-			if(document == null) {
-				
-				return false;
-			} else {
-				
-				return true;
-			}
-			
-		} catch (SQLException e) {
-			logger.info("isReplicatedOnMaster: Cannot check whether document is replicated on master for document "+documentname+" and node "+previousReplicatedNode);
-			e.printStackTrace();
-		} finally {
-			try {
-				qr=null;
-				conn.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		return false;
-	}
-
+	
 	public int countReplicate(String namespace, String documentname) {
 		
 		QueryRunner qr = new QueryRunner();
@@ -465,7 +428,7 @@ public class DatabaseStorage {
 			
 			conn = cpool.getConnection();
 							
-			String sql = "Update Document set ReplicatedNode = ?,ReplicationCount =? , IsReplicated = true , ToBeReplicated = false, ReplicationInProgress = false where DocumentName = ? and NamespaceName = ?";
+			String sql = "Update Document set ReplicatedNode = ?,ReplicationCount =? , IsReplicated = true , ToBeReplicated = false where DocumentName = ? and NamespaceName = ?";
 			insertCount = qr.update(conn, sql, replicatedNode, replicationCount, documentname, namespaceName);
 			
 			if(insertCount < 1) {
@@ -478,43 +441,6 @@ public class DatabaseStorage {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			logger.info("updateReplicationCount: Cannot update replication count in database for document "+documentname);
-			e.printStackTrace();			
-		} finally {
-			try {
-				qr=null;
-				conn.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		return false;
-	}
-
-	public boolean updateReplicationInProgress(String namespaceName, String documentname) {
-
-		QueryRunner qr = new QueryRunner();
-		Connection conn = null;
-		int insertCount = 0;
-		
-		try {
-			
-			conn = cpool.getConnection();
-							
-			String sql = "Update Document set ReplicationInProgress = true where DocumentName = ? and NamespaceName = ?";
-			insertCount = qr.update(conn, sql, documentname, namespaceName);
-			
-			if(insertCount < 1) {
-				return false;
-			}
-			else {
-				return true;
-			}
-						
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			logger.info("updateReplicationInProgress: Cannot set replicationInProgress flag in database for document "+documentname);
 			e.printStackTrace();			
 		} finally {
 			try {
@@ -619,7 +545,7 @@ public class DatabaseStorage {
 		try {
 			
 			conn = cpool.getConnection();
-			String sql = "select * from document where owner = ? and ToBeReplicated = true and isReplicated = false and ReplicationCount < 1 and ReplicationInProgress = false";
+			String sql = "select * from document where owner = ? and ToBeReplicated = true and isReplicated = false and ReplicationCount < 1";
 			List<Document> documentList = qr.query(conn, sql, getDocumentsRsh, self);
 			
 			if(documentList == null || documentList.size() == 0) {
@@ -629,7 +555,7 @@ public class DatabaseStorage {
 			} else {
 				
 				for(Document unRepDoc :documentList ){
-					returnDocument.add(unRepDoc.getNamespaceName()+unRepDoc.getDocumentName());
+					returnDocument.add(unRepDoc.getNamespaceName()+unRepDoc.getDocumentName()+"");
 				}
 				
 				return returnDocument; 
@@ -656,7 +582,7 @@ public class DatabaseStorage {
 
 	public static void main(String args[]) {
 		
-		DatabaseStorage ds = new DatabaseStorage();
+		//DatabaseStorage ds = new DatabaseStorage();
 		//ds.addDocumentInDatabase(null, "abc.txt", false, 0, "four");
 		//System.out.println(ds.getOwner("EMPTY", "abc.txt"));
 		//ds.addReplicaInDatabase(null, "abc.txt", 1, "four", "five", null);
@@ -665,8 +591,7 @@ public class DatabaseStorage {
 		//System.out.println(ds.documentsToBeReplicated());
 		//ds.resetReplication(self);
 		//ds.resetReplication("six");
-		ds.updateReplicationInProgress("away\\Diwali1\\", "GTHub.flv");
-		ds.release();
+		//ds.release();
 		//String abc = "\\home\\sau\\";
 		//System.out.println("\home\sau\");
 	}

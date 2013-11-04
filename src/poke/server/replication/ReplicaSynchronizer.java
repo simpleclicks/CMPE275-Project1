@@ -28,12 +28,6 @@ public class ReplicaSynchronizer extends Thread{
 	public void run() {
 		super.run();
 		
-		try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		List<String> replicatedFiles = dbAct.getDocuments(self);
 		
 		if(replicatedFiles.size() == 0){
@@ -44,23 +38,21 @@ public class ReplicaSynchronizer extends Thread{
 		
 		}else{
 			
-			
 			logger.info("Number of replicas to be synced up "+replicatedFiles.size());
 			logger.info(" Initiating synchronization process...");
 			
 			for(String filePath: replicatedFiles){
 				
 				File replicaToBeDeleted = new File(filePath);
-
 				
 				String owner = dbAct.getOwner(FilenameUtils.getPath(filePath), FilenameUtils.getName(filePath));
 				
 				if(owner!= null && owner.length() > 0){
 					
-					
+					logger.info(" Sent master-replica-query for "+filePath);
 					boolean masterExists = NodeResponseQueue.masterReplicaQuery(filePath, owner);
 					if(masterExists){
-						logger.info(" Sent master-replica-query for "+filePath);
+					
 					logger.info(" Checking master-replica-query response for "+filePath);
 					
 					boolean masrterReplicaResult = NodeResponseQueue.fetchMasterReplicaQueryResult(filePath, owner);
