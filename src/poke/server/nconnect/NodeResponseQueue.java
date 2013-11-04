@@ -238,6 +238,21 @@ inner:						do{
 			nc.queryReplica(trimmedPath, fileName);
 		}
 	}
+	
+	public static boolean masterReplicaQuery(String filePath , String nodeId){
+
+		NodeClient masterNode = getActiveNode(nodeId);
+		
+		if(masterNode == null)
+			return false;
+		
+		String path = 	FilenameUtils.getPath(filePath);
+		String trimmedPath = path.substring(path.indexOf(File.separator)+1);
+		String fileName = FilenameUtils.getName(filePath);
+
+		masterNode.queryMasterReplica(trimmedPath, fileName);
+		return true;
+	}
 
 	public static void broadcastDocRemoveQuery(String nameSpace , String fileName){
 
@@ -268,6 +283,45 @@ inner:						do{
 			return "wait";
 		}
 	}
+	
+	public static boolean fetchMasterReplicaQueryResult(String filePath , String nodeId){
+
+		NodeClient activeNodeArray = getActiveNode(nodeId);
+		
+		String path = 	FilenameUtils.getPath(filePath);
+		String trimmedPath = path.substring(path.indexOf(File.separator)+1);
+		String fileName = FilenameUtils.getName(filePath);
+
+			int attempt = 0;
+			
+inner:			do{
+		
+		logger.info("Sleeping for configured wait time !!! Waiting for response for master-replica-Query from node "+activeNodeArray.getNodeId()+" attempt no "+(attempt+1));
+			try {
+				Thread.sleep(RESPONSE_WAIT_MAX_TIME);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			String result = activeNodeArray.checkMasterReplicaQueryResponse(trimmedPath, fileName);
+
+			if(result.equalsIgnoreCase("Success")){
+				logger.info("Replica "+trimmedPath+fileName+" has been re-replicated by master "+activeNodeArray.getNodeId());
+				return true;
+			}else if(result.equalsIgnoreCase("NA")){
+				logger.warn("No response from node "+activeNodeArray.getNodeId()+"for replica query of "+trimmedPath+"/"+fileName);
+				attempt++;
+				continue inner;
+			}else if(result.equalsIgnoreCase("Failure")){
+				logger.warn("Replica "+trimmedPath+fileName+" does not exists at "+activeNodeArray.getNodeId());
+				return false;
+			}
+			
+		 }while (attempt < RESPONSE_WAIT_MAX_RETRY);
+		
+		return false;
+	}
+
+	
 
 	public static String  fetchDocAddHSResult( String nameSpace , String fileName){
 
@@ -307,6 +361,7 @@ inner:			do{
 				return true;
 			}else if(result.equalsIgnoreCase("NA")){
 				logger.warn("No response from node "+nc.getNodeId()+"for document query of "+nameSpace+"/"+fileName);
+				attempt++;
 				continue inner;
 			}else if(result.equalsIgnoreCase("Failure")){
 				logger.warn("No response from node "+nc.getNodeId()+"for document query of "+nameSpace+"/"+fileName);
@@ -344,6 +399,7 @@ inner:			do{
 				return true;
 			}else if(result.equalsIgnoreCase("NA")){
 				logger.warn("No response from node "+nc.getNodeId()+"for replica query of "+trimmedPath+"/"+fileName);
+				attempt++;
 				continue inner;
 			}else if(result.equalsIgnoreCase("Failure")){
 				logger.warn("Replica "+trimmedPath+fileName+" does not exists at "+nc.getNodeId());
@@ -442,8 +498,12 @@ inner:						do{
 									attempt++;
 									continue inner;
 								}
-								else if(replicaHSResp.equalsIgnoreCase("Failure"))
+								else if(replicaHSResp.equalsIgnoreCase("Failure")){
 									continue outer;
+								}else if(replicaHSResp.equalsIgnoreCase("Failureexists")){
+									dbAct.updateReplicationCount(path, fileName, finalNodeId, 1);
+									return;
+								}
 								else if(replicaHSResp.equalsIgnoreCase("Success")){
 									finalNodeId = nc.getNodeId();
 									finalizedNode = nc;
@@ -472,10 +532,11 @@ inner:						do{
 					logger.info("Total number of chunks to be transferred for "+actFilePath+" of size "+size+" are "+totalChunks);
 					try{
 
-						FileInputStream fis =  new FileInputStream(unRepFile);
+						
 outer:					for(int chunkId = 0 ; chunkId< totalChunks ; chunkId++){
 
 							byte[] chunkContents =  null;
+							FileInputStream fis =  new FileInputStream(unRepFile);
 							fis.skip(chunkId*MAX_CHUNK_SIZE);
 
 							if(fis.available() > MAX_CHUNK_SIZE)

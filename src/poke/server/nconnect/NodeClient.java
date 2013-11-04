@@ -73,6 +73,8 @@ public class NodeClient {
 	
 	private ConcurrentHashMap<String, String> queryReplicaResponseQueue =  new ConcurrentHashMap<String, String>();
 	
+	private ConcurrentHashMap<String, String> queryMasterReplicaResponseQueue =  new ConcurrentHashMap<String, String>();
+	
 	public NodeClient(String host, int port, String nodeId) {
 		super();
 		this.host = host;
@@ -147,6 +149,13 @@ public class NodeClient {
 	public boolean queryReplica(String nameSpace, String fileName){
 
 		Request replicaQueryRequest = createRequest(nameSpace , fileName , Header.Routing.REPLICAQUERY ,0 ,0 ,0 , null);
+
+		return enqueueRequest(replicaQueryRequest);
+	}
+	
+	public boolean queryMasterReplica(String nameSpace, String fileName){
+
+		Request replicaQueryRequest = createRequest(nameSpace , fileName , Header.Routing.MASTERREPLICAQUERY ,0 ,0 ,0 , null);
 
 		return enqueueRequest(replicaQueryRequest);
 	}
@@ -285,6 +294,24 @@ public class NodeClient {
 		if(queryReplicaResponseQueue.containsKey(key)){
 			
 			return queryReplicaResponseQueue.remove(key);
+					
+		}else{
+			
+			return noResult;
+		}
+	}
+	
+public String checkMasterReplicaQueryResponse(String nameSpace , String fileName){
+		
+		String key = nameSpace+fileName;
+		
+		String noResult = "NA";
+		
+		logger.info(" Key for checking master replicaQuery response "+key);
+		
+		if(queryMasterReplicaResponseQueue.containsKey(key)){
+			
+			return queryMasterReplicaResponseQueue.remove(key);
 					
 		}else{
 			
@@ -592,14 +619,18 @@ public class NodeClient {
 					}else if(msg.getHeader().getRoutingId() == Header.Routing.REPLICAHANDSHAKE){
 
 						String msgKey = createKey(msg.getBody());
+						String replyCode = "";
 						logger.info(" msgKey for REPLICAHANDSHAKE "+msgKey);						
 						
 						if(msgKey.equalsIgnoreCase("Invalid")){
 							logger.error("Invalid REPLICAHANDSHAKE Response from node "+owner.nodeId+" document name missing");
 							continue;
 						}
-
-						owner.replicaHSResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+						if(msg.getHeader().getReplyMsg().contains("exists")){
+							replyCode = msg.getHeader().getReplyCode().name()+"exists";
+						}else 
+							replyCode = msg.getHeader().getReplyCode().name();
+						owner.replicaHSResponseQueue.put(msgKey,replyCode);
 					}else if(msg.getHeader().getRoutingId() == Header.Routing.ADDREPLICA){
 
 						String msgKey = createKey(msg.getBody());
@@ -611,7 +642,7 @@ public class NodeClient {
 						}
 
 						owner.addReplicaResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
-					}if(msg.getHeader().getRoutingId() == Header.Routing.REPLICAQUERY){
+					}else if(msg.getHeader().getRoutingId() == Header.Routing.REPLICAQUERY){
 
 						String msgKey = createKey(msg.getBody());
 						logger.info(" msgKey for replicaQuery "+msgKey);						
@@ -622,7 +653,19 @@ public class NodeClient {
 						}
 
 						owner.queryReplicaResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+					}else if(msg.getHeader().getRoutingId() == Header.Routing.MASTERREPLICAQUERY){
+
+						String msgKey = createKey(msg.getBody());
+						logger.info(" msgKey for replicaQuery "+msgKey);						
+						
+						if(msgKey.equalsIgnoreCase("Invalid")){
+							logger.error("Invalid MASTERREPLICAQUERY Response from node "+owner.nodeId+" document name missing");
+							continue;
+						}
+
+						owner.queryMasterReplicaResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
 					}
+
 
 
 				} catch (InterruptedException ie) {
