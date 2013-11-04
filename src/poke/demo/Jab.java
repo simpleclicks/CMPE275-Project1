@@ -36,7 +36,7 @@ public class Jab {
 	}
 
 	public void run() {
-		ClientConnection cc = ClientConnection.initConnection("192.168.0.183", 5575);
+		ClientConnection cc = ClientConnection.initConnection("localhost", 5575);
 		System.out.println("Adding listener");
 		ClientListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);

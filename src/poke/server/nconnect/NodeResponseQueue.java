@@ -631,9 +631,11 @@ inner:						do{
 				logger.info("Document with the given name "
 						+ nameSpace + "/" + fileName +" was not found.");
 				return false;
-			} else if (result.equalsIgnoreCase("Success"))
+			} else if (result.equalsIgnoreCase("Success")){
+				logger.info("Document with the given name "
+						+ nameSpace + "/" + fileName +" was found.");
 				return true;		
-
+			}
 		}
 		}
 		catch(InterruptedException ex){
@@ -654,9 +656,9 @@ inner:						do{
 			String result = "NA";
 
 			//  while(result.equalsIgnoreCase("NA")){
-			fileList = (List<Document>) (nc.sendNamespaceList(namespace));
 			try {
-				Thread.sleep(3000);
+				fileList = (List<Document>) (nc.sendNamespaceList(namespace));
+				Thread.sleep(8000);
 				newFileList.addAll(fileList);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
