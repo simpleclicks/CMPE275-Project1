@@ -348,23 +348,24 @@ public class ReplicationResource implements Resource {
 			replicaQueryResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(queryDoc));
 		}
 
-		File file = null;
-		
 		if(nameSpace !=null && nameSpace.length() >0){
 			effNS = effNS+File.separator+nameSpace;
-			file = new File(effNS+fileName);
-		}else{
-			
-			file = new File(effNS+File.separator+fileName);
 		}
 		
 		logger.info(" Received master-replica query request from "+originator+" for "+effNS+" "+fileName);
-
-		
 		
 		try {
-
 			
+			boolean rereplicated = dbAct.isReplicatedOnMaster(effNS, fileName, originator);
+			
+			if(rereplicated){
+				replicaQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(repliOpHeader, ReplyStatus.SUCCESS, "File has been re-replicated").toBuilder().setOriginator(self));
+				return replicaQueryResponseBuilder.build();
+			}else{
+				replicaQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(repliOpHeader, ReplyStatus.FAILURE, "File has not been re-replicated").toBuilder().setOriginator(self));
+				dbAct.updateReplicationCount(nameSpace, fileName, originator, 1);
+				return replicaQueryResponseBuilder.build();
+			}
 
 		} catch (Exception e) {
 
@@ -373,9 +374,6 @@ public class ReplicationResource implements Resource {
 			replicaQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(repliOpHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG).toBuilder().setOriginator(self));
 			return replicaQueryResponseBuilder.build();
 		}
-		
-		return replicaQueryResponseBuilder.build();
-		
 	}
 	
 	

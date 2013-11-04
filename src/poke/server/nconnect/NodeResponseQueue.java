@@ -563,10 +563,13 @@ inner:						do{
 								else if(replicaHSResp.equalsIgnoreCase("Failure")){
 									logger.error("Failure response received from node "+finalNodeId+" for addReplica of "+actFilePath+" for chunk "+(chunkId+1));
 									logger.error(" Aborting the replication process for "+actFilePath);
+									dbAct.resetReplication(finalNodeId);
 									break outer;
 								}
 								else if(replicaHSResp.equalsIgnoreCase("Success")){
 									logger.error("Success response received from node "+finalNodeId+" for addReplica of "+actFilePath+" for chunk "+(chunkId+1));
+									if(chunkId==1)
+										dbAct.updateReplicationInProgress(path, fileName);
 									if((chunkId+1) == totalChunks){
 										dbAct.updateReplicationCount(path, fileName, finalNodeId, 1);
 										replicated = true;
