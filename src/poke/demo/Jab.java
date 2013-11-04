@@ -15,9 +15,6 @@
  */
 package poke.demo;
 
-
-
-
 import java.io.File;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -46,6 +43,7 @@ public class Jab {
 
 
 		String namespace = null;
+		String docName = null;
 		
 		try {
 			while (true) {
@@ -53,7 +51,7 @@ public class Jab {
 				BufferedReader buffer = new BufferedReader(new InputStreamReader(System.in));
 
 				System.out.println("Select one function to be executed" +
-						" 1.Add namespace 2.Delete Namespace 3.List all files in the namespace 4.Add Document 5.Delete Document 6.Find Document 7.Exit");
+						" 1.Add namespace "+"\n"+" 2.Delete Namespace "+"\n"+"3.List all files in the namespace"+"\n"+" 4.Add Document "+"\n"+"5.Delete Document"+"\n"+" 6.Find Document "+"\n"+"7.Exit");
 				int choice = Integer.parseInt (buffer.readLine());
 				
 				switch (choice) {
@@ -73,15 +71,25 @@ public class Jab {
 					cc.namespaceList(namespace);
 					break;
 				case 4:
-					//cc.docAddReq("devsam","C://Courses//Fall13//275//protoc-compile-cmd.txt");
-
-					//cc.docAdd("devika", "C:\\Courses\\Fall13\\275\\myname.txt");
+					System.out.println("Enter the namespace ");
+					namespace = buffer.readLine();
+					System.out.println("Enter the document name ");
+					docName = buffer.readLine();
+					cc.docAddReq(namespace,docName);
 					break;
 				case 5:
-					//cc.docRemove("", "Kaustubh1");
+					System.out.println("Enter the namespace ");
+					namespace = buffer.readLine();
+					System.out.println("Enter the document name ");
+					docName = buffer.readLine();
+					cc.docRemove(namespace, docName);
 					break;
 				case 6:
-					//cc.docFind("");
+					System.out.println("Enter the namespace ");
+					namespace = buffer.readLine();
+					System.out.println("Enter the document name ");
+					docName = buffer.readLine();
+					cc.docFind(namespace,docName);
 				case 7:
 					System.exit(0);
 					break;
