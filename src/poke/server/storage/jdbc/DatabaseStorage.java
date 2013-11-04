@@ -296,7 +296,7 @@ public class DatabaseStorage {
 				insertCount = qr.update(conn, sql, documentname, namespaceName, false, 0, self);
 			} else {
 				String sql = "INSERT INTO Document(DocumentName, IsReplicated, ReplicationCount, Owner) VALUES (?, ?, ?, ?)";	
-				insertCount = qr.update(conn, sql, documentname, false, 0, "self");
+				insertCount = qr.update(conn, sql, documentname, false, 0, self);
 			}
 			
 			if(insertCount < 1) {
@@ -577,6 +577,85 @@ public class DatabaseStorage {
 		}
 		
 		return returnDocument;
+	}
+	
+	public boolean setReplicationInProgress(String namespaceName, String documentname) {
+
+		QueryRunner qr = new QueryRunner();
+		Connection conn = null;
+		int insertCount = 0;
+		
+		try {
+			
+			conn = cpool.getConnection();
+							
+			String sql = "Update Document set ReplicationInProgress = true where DocumentName = ? and NamespaceName = ?";
+			insertCount = qr.update(conn, sql, documentname, namespaceName);
+			
+			if(insertCount < 1) {
+				logger.info("setReplicationInProgress: Replication progress could not be set in database");
+				return false;
+			}
+			else {
+				logger.info("setReplicationInProgress: Replication progress set in database");
+				return true;
+			}
+						
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			logger.info("setReplicationInProgress: Cannot set replication progress in database for document "+documentname);
+			e.printStackTrace();			
+		} finally {
+			try {
+				qr=null;
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		return false;
+	}
+
+
+	public boolean resetReplicationInProgress(String namespaceName, String documentname) {
+
+		QueryRunner qr = new QueryRunner();
+		Connection conn = null;
+		int insertCount = 0;
+		
+		try {
+			
+			conn = cpool.getConnection();
+							
+			String sql = "Update Document set ReplicationInProgress = false where DocumentName = ? and NamespaceName = ?";
+			insertCount = qr.update(conn, sql, documentname, namespaceName);
+			
+			if(insertCount < 1) {
+				logger.info("resetReplicationInProgress: Replication progress could not be reset in database");
+				return false;
+			}
+			else {
+				logger.info("resetReplicationInProgress: Replication progress has been reset in database");
+				return true;
+			}
+						
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			logger.info("resetReplicationInProgress: Cannot reset replication progress in database for document "+documentname);
+			e.printStackTrace();			
+		} finally {
+			try {
+				qr=null;
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		return false;
 	}
 
 
