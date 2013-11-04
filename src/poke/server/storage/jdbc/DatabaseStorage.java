@@ -48,8 +48,8 @@ public class DatabaseStorage {
 
 	protected Properties cfg;
 	protected BoneCP cpool;
-	static final private String self = HeartbeatManager.getInstance().getNodeId();
-//	static final private String self = "self";
+//	static final private String self = HeartbeatManager.getInstance().getNodeId();
+	static final private String self = "self";
 	
 	private static DatabaseStorage ds = new DatabaseStorage();
 	
@@ -659,6 +659,48 @@ public class DatabaseStorage {
 		return false;
 	}
 
+	public boolean removeNamespaces(String namespace) {
+		
+		QueryRunner qr = new QueryRunner();
+				
+		Connection conn = null;
+		int insertCount = 0;
+				
+		try {
+					
+			conn = cpool.getConnection();
+			namespace.replaceAll("\\", "\\\\\\\\");
+			String homenamespace = "home\\\\" + namespace +"%";
+			String awaynamespace = "away\\\\" + namespace +"%";
+			System.out.println(homenamespace +" "+awaynamespace);
+			String sql = "delete from document where NamespaceName like ? or NamespaceName like ?";
+			insertCount = qr.update(conn, sql, homenamespace, awaynamespace);
+			
+			if(insertCount < 1) {
+				logger.info("removeNamespaces: No Namespaces removed");
+				return false;
+			}
+			else {
+				logger.info("removeNamespaces: "+insertCount+" Namespaces removed");
+				return true;
+			}
+		} catch (SQLException e) {
+			
+			logger.info("removeNamespaces: Cannot remove Namespaces for namespace "+namespace);
+			e.printStackTrace();
+		
+		} finally {
+			try {
+				qr=null;
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		return false;
+	}
 
 	public static void main(String args[]) {
 		
@@ -671,6 +713,7 @@ public class DatabaseStorage {
 		//System.out.println(ds.documentsToBeReplicated());
 		//ds.resetReplication(self);
 		//ds.resetReplication("six");
+		//ds.removeNamespaces("a1\\");
 		//ds.release();
 		//String abc = "\\home\\sau\\";
 		//System.out.println("\home\sau\");
