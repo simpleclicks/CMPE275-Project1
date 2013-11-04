@@ -115,11 +115,15 @@ public class DocumentChunkResource implements ChunkedResource {
 
 					logger.info(" DocFind: sleeping. Waiting for responses from the other nodes for DOCFIND ");
 
-					Thread.sleep(MAXWAITFORRESPONSE);
+					//Thread.sleep(MAXWAITFORRESPONSE);
+					String docFindResult = null;
 					
-					boolean docFindResult = NodeResponseQueue.fetchDocFindResult(nameSpace , docFindBody.getDoc().getDocName());
+					do{
+						docFindResult = NodeResponseQueue.fetchDocFindResult(nameSpace , docFindBody.getDoc().getDocName());
+						Thread.sleep(2000);
+					}while(docFindResult == null);
 
-					if(docFindResult){
+					if(docFindResult=="Success"){
 						logger.info("Document found at external node..");
 						String tempfname = "temp" + File.separator
 						+ docFindBody.getSpace().getName() + File.separator

@@ -297,13 +297,17 @@ public class PerChannelQueue implements ChannelQueue {
 										else{
 											Response.Builder respEnqueue = Response.newBuilder();
 											//TODO read each chunk from the file and enqueue
-											int bytesRead = 0;
-
+											int bytesRead = 26214400;
+											int bytesActuallyRead = 0;
 
 												byte[] chunckContents = new byte[26214400];
+												
+												if(chunkeFIS.available()<26214400){
+													bytesRead = chunkeFIS.available();
+													chunckContents = new byte[chunkeFIS.available()];
+												}
 
-												bytesRead = IOUtils.read(chunkeFIS, chunckContents, 0,
-														26214400);
+												bytesActuallyRead = IOUtils.read(chunkeFIS, chunckContents, 0, bytesRead);
 
 												logger.info("CHUNKED Contents of the chunk "+response.getBody().getDocs(0).getChunkId()+" : "+chunckContents);
 												
@@ -333,7 +337,7 @@ public class PerChannelQueue implements ChannelQueue {
 												Response tbE = respEnqueue.build();
 												sq.enqueueResponse(tbE);
 												
-												Thread.sleep(5000);
+												Thread.sleep(3000);
 										}
 									}
 									else{
