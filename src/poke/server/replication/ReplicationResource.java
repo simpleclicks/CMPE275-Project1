@@ -359,9 +359,11 @@ public class ReplicationResource implements Resource {
 			boolean rereplicated = dbAct.isReplicatedOnMaster(effNS, fileName, originator);
 			
 			if(rereplicated){
+				logger.info(effNS+" "+fileName+" has been re-replicated");
 				replicaQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(repliOpHeader, ReplyStatus.SUCCESS, "File has been re-replicated").toBuilder().setOriginator(self));
 				return replicaQueryResponseBuilder.build();
 			}else{
+				logger.info(effNS+" "+fileName+" has not been re-replicated");
 				replicaQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(repliOpHeader, ReplyStatus.FAILURE, "File has not been re-replicated").toBuilder().setOriginator(self));
 				dbAct.updateReplicationCount(nameSpace, fileName, originator, 1);
 				return replicaQueryResponseBuilder.build();

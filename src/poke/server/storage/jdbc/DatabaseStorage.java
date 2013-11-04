@@ -48,8 +48,8 @@ public class DatabaseStorage {
 
 	protected Properties cfg;
 	protected BoneCP cpool;
-//	static final private String self = HeartbeatManager.getInstance().getNodeId();
-	static final private String self = "self";
+	static final private String self = HeartbeatManager.getInstance().getNodeId();
+//	static final private String self = "self";
 	
 	private static DatabaseStorage ds = new DatabaseStorage();
 	
@@ -465,7 +465,7 @@ public class DatabaseStorage {
 			
 			conn = cpool.getConnection();
 							
-			String sql = "Update Document set ReplicatedNode = ?,ReplicationCount =? , IsReplicated = true , ToBeReplicated = false where DocumentName = ? and NamespaceName = ?";
+			String sql = "Update Document set ReplicatedNode = ?,ReplicationCount =? , IsReplicated = true , ToBeReplicated = false, ReplicationInProgress = false where DocumentName = ? and NamespaceName = ?";
 			insertCount = qr.update(conn, sql, replicatedNode, replicationCount, documentname, namespaceName);
 			
 			if(insertCount < 1) {
