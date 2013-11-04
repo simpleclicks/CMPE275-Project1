@@ -624,9 +624,11 @@ inner:						do{
 				logger.info("Document with the given name "
 						+ nameSpace + "/" + fileName +" was not found.");
 				return false;
-			} else if (result.equalsIgnoreCase("Success"))
+			} else if (result.equalsIgnoreCase("Success")){
+				logger.info("Document with the given name "
+						+ nameSpace + "/" + fileName +" was found.");
 				return true;		
-
+			}
 		}
 		}
 		catch(InterruptedException ex){
