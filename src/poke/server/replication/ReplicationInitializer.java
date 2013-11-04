@@ -18,7 +18,7 @@ public class ReplicationInitializer extends Thread {
 	
 	private static final Logger logger = LoggerFactory.getLogger("ReplicationInitializer");
 	
-	private static final int pollingInterval = 10000;
+	private static final int pollingInterval = 15000;
 	
 	@Override
 	public void run() {

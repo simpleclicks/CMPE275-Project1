@@ -278,7 +278,7 @@ public class PerChannelQueue implements ChannelQueue {
 							if(responses.get(0).getHeader().getReplyCode() == ReplyStatus.SUCCESS){
 								String fname = responses.get(0).getBody().getDocs(0).getDocName();
 								String namespaceName = responses.get(0).getBody().getSpaces(0).getName();
-								FileInputStream chunkeFIS = new FileInputStream(new File(fname));
+								
 								String fileExt = FilenameUtils.getExtension(fname);
 
 								java.io.File file = FileUtils.getFile(fname);
@@ -290,6 +290,7 @@ public class PerChannelQueue implements ChannelQueue {
 								long totalChunk = ((fileSize / MAX_UNCHUNKED_FILE_SIZE)) + 1;
 
 								for (Response response : responses) {
+									FileInputStream chunkeFIS = new FileInputStream(new File(fname));
 									if(response.getHeader().getReplyCode() == ReplyStatus.SUCCESS){
 										if(response.getBody().getDocs(0).getTotalChunk() <= 1){
 											sq.enqueueResponse(response);
@@ -297,13 +298,62 @@ public class PerChannelQueue implements ChannelQueue {
 										else{
 											Response.Builder respEnqueue = Response.newBuilder();
 											//TODO read each chunk from the file and enqueue
+											int bytesRead = 26214400;
+											int bytesActuallyRead = 0;
+											long offset = 0;
+											 if(response.getBody().getDocs(0).getChunkId() > 1 ){
+												 offset = ((response.getBody().getDocs(0).getChunkId()-1) * bytesRead);
+												 chunkeFIS.skip(offset);
+											 }
+												byte[] chunckContents = new byte[26214400];
+												
+												if(chunkeFIS.available() < 26214400){
+													bytesRead = chunkeFIS.available();
+													chunckContents = new byte[chunkeFIS.available()];
+												}
+
+												bytesActuallyRead = IOUtils.read(chunkeFIS, chunckContents, 0, bytesRead);
+											
+											/*int chunkId = (int) response.getBody().getDocs(0).getChunkId();
+											
+											int bytesOffset = 0;
+											
+											if(chunkId == 0){
+												bytesOffset = 0;
+											}
+											else if(chunkId < response.getBody().getDocs(0).getTotalChunk()){
+												
+												bytesOffset = (int) (response.getBody().getDocs(0).getChunkId() - 1);
+										
+												//chunkId = ((int) response.getBody().getDocs(0).getChunkId())+1;
+											}
+											
 											int bytesRead = 0;
 
+											//FileInputStream chunkFIS = new FileInputStream(file);
+											
+											//int bytesRemaining = chunkFIS.available();
+											
+											chunkFIS.skip(bytesOffset* MAX_UNCHUNKED_FILE_SIZE);
+											
+											int bytesRemaining = chunkFIS.available();
 
-												byte[] chunckContents = new byte[26214400];
+												byte[] chunckContents = null; 
 
-												bytesRead = IOUtils.read(chunkeFIS, chunckContents, 0,
-														26214400);
+												if(bytesRemaining > MAX_UNCHUNKED_FILE_SIZE){
+
+													chunckContents = new byte[MAX_UNCHUNKED_FILE_SIZE];
+
+													bytesRead= IOUtils.read(chunkFIS, chunckContents , 0 , MAX_UNCHUNKED_FILE_SIZE);
+												}
+												else {
+													chunckContents = new byte[bytesRemaining];
+
+													//System.out.println("length of last chunk content "+chunckContents.length);
+
+													bytesRead= IOUtils.read(chunkFIS, chunckContents , 0 , bytesRemaining);
+
+												}*/
 
 												logger.info("CHUNKED Contents of the chunk "+response.getBody().getDocs(0).getChunkId()+" : "+chunckContents);
 												
@@ -333,12 +383,13 @@ public class PerChannelQueue implements ChannelQueue {
 												Response tbE = respEnqueue.build();
 												sq.enqueueResponse(tbE);
 												
-												Thread.sleep(5000);
+												Thread.sleep(3000);
 										}
 									}
 									else{
 										sq.enqueueResponse(response);
 									}
+									chunkeFIS.close();
 								}
 								
 							}

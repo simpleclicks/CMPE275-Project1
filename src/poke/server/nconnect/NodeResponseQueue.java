@@ -614,8 +614,8 @@ inner:						do{
 
 	}*/
 
-	public static boolean fetchDocFindResult(String nameSpace, String fileName) {
-		boolean queryResult = false;
+	public static String fetchDocFindResult(String nameSpace, String fileName) {
+		String queryResult = null;
 
 		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
 		try{
@@ -631,11 +631,11 @@ inner:						do{
 			if (result.equalsIgnoreCase("Failure")) {
 				logger.info("Document with the given name "
 						+ nameSpace + "/" + fileName +" was not found.");
-				return false;
+				return "Failure";
 			} else if (result.equalsIgnoreCase("Success")){
 				logger.info("Document with the given name "
 						+ nameSpace + "/" + fileName +" was found.");
-				return true;		
+				return "Success";		
 			}
 		}
 		}
