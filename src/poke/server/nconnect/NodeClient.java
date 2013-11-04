@@ -73,8 +73,6 @@ public class NodeClient {
 	
 	private ConcurrentHashMap<String, String> queryReplicaResponseQueue =  new ConcurrentHashMap<String, String>();
 	
-	private ConcurrentHashMap<String, String> queryMasterReplicaResponseQueue =  new ConcurrentHashMap<String, String>();
-	
 	public NodeClient(String host, int port, String nodeId) {
 		super();
 		this.host = host;
@@ -149,13 +147,6 @@ public class NodeClient {
 	public boolean queryReplica(String nameSpace, String fileName){
 
 		Request replicaQueryRequest = createRequest(nameSpace , fileName , Header.Routing.REPLICAQUERY ,0 ,0 ,0 , null);
-
-		return enqueueRequest(replicaQueryRequest);
-	}
-	
-	public boolean queryMasterReplica(String nameSpace, String fileName){
-
-		Request replicaQueryRequest = createRequest(nameSpace , fileName , Header.Routing.MASTERREPLICAQUERY ,0 ,0 ,0 , null);
 
 		return enqueueRequest(replicaQueryRequest);
 	}
@@ -294,24 +285,6 @@ public class NodeClient {
 		if(queryReplicaResponseQueue.containsKey(key)){
 			
 			return queryReplicaResponseQueue.remove(key);
-					
-		}else{
-			
-			return noResult;
-		}
-	}
-	
-public String checkMasterReplicaQueryResponse(String nameSpace , String fileName){
-		
-		String key = nameSpace+fileName;
-		
-		String noResult = "NA";
-		
-		logger.info(" Key for checking master replicaQuery response "+key);
-		
-		if(queryMasterReplicaResponseQueue.containsKey(key)){
-			
-			return queryMasterReplicaResponseQueue.remove(key);
 					
 		}else{
 			
@@ -619,18 +592,14 @@ public String checkMasterReplicaQueryResponse(String nameSpace , String fileName
 					}else if(msg.getHeader().getRoutingId() == Header.Routing.REPLICAHANDSHAKE){
 
 						String msgKey = createKey(msg.getBody());
-						String replyCode = "";
 						logger.info(" msgKey for REPLICAHANDSHAKE "+msgKey);						
 						
 						if(msgKey.equalsIgnoreCase("Invalid")){
 							logger.error("Invalid REPLICAHANDSHAKE Response from node "+owner.nodeId+" document name missing");
 							continue;
 						}
-						if(msg.getHeader().getReplyMsg().contains("exists")){
-							replyCode = msg.getHeader().getReplyCode().name()+"exists";
-						}else 
-							replyCode = msg.getHeader().getReplyCode().name();
-						owner.replicaHSResponseQueue.put(msgKey,replyCode);
+
+						owner.replicaHSResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
 					}else if(msg.getHeader().getRoutingId() == Header.Routing.ADDREPLICA){
 
 						String msgKey = createKey(msg.getBody());
@@ -642,7 +611,7 @@ public String checkMasterReplicaQueryResponse(String nameSpace , String fileName
 						}
 
 						owner.addReplicaResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
-					}else if(msg.getHeader().getRoutingId() == Header.Routing.REPLICAQUERY){
+					}if(msg.getHeader().getRoutingId() == Header.Routing.REPLICAQUERY){
 
 						String msgKey = createKey(msg.getBody());
 						logger.info(" msgKey for replicaQuery "+msgKey);						
@@ -653,19 +622,7 @@ public String checkMasterReplicaQueryResponse(String nameSpace , String fileName
 						}
 
 						owner.queryReplicaResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
-					}else if(msg.getHeader().getRoutingId() == Header.Routing.MASTERREPLICAQUERY){
-
-						String msgKey = createKey(msg.getBody());
-						logger.info(" msgKey for replicaQuery "+msgKey);						
-						
-						if(msgKey.equalsIgnoreCase("Invalid")){
-							logger.error("Invalid MASTERREPLICAQUERY Response from node "+owner.nodeId+" document name missing");
-							continue;
-						}
-
-						owner.queryMasterReplicaResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
 					}
-
 
 
 				} catch (InterruptedException ie) {

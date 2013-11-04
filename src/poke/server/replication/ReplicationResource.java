@@ -91,14 +91,9 @@ public class ReplicationResource implements Resource {
 		case 29:
 			repliOpResponse = replicaQuery(repliOpHeader, repliOpBody);
 			break;
-			
-		case 30:
-			repliOpResponse = masterReplicaQuery(repliOpHeader, repliOpBody);
-			logger.info("Master Replica Query request received");
-			break;
 
 		default:
-			System.out.println("ReplicationResource: No matching doc op id found");
+			System.out.println("DpcumentResource: No matching doc op id found");
 
 
 		}
@@ -322,64 +317,6 @@ public class ReplicationResource implements Resource {
 			return replicaQueryResponseBuilder.build();
 		}
 	}
-	
-	
-	
-	private Response masterReplicaQuery(Header repliOpHeader , Payload repliOpBody){
-		
-		String originator = repliOpHeader.getOriginator();
-
-		Response.Builder replicaQueryResponseBuilder = Response.newBuilder();
-
-		Document queryDoc = repliOpBody.getDoc();
-
-		NameSpace space = repliOpBody.getSpace();
-
-		String fileName = queryDoc.getDocName();
-
-		String nameSpace =  EMPTY_STRING;
-
-		String effNS = VISITORDIR;
-
-		if(space !=null && space.getName().length() >0){
-			nameSpace  = space.getName();
-			replicaQueryResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(queryDoc).addSpaces(space));
-		}else{
-			replicaQueryResponseBuilder.setBody(PayloadReply.newBuilder().addDocs(queryDoc));
-		}
-
-		File file = null;
-		
-		if(nameSpace !=null && nameSpace.length() >0){
-			effNS = effNS+File.separator+nameSpace;
-			file = new File(effNS+fileName);
-		}else{
-			
-			file = new File(effNS+File.separator+fileName);
-		}
-		
-		logger.info(" Received master-replica query request from "+originator+" for "+effNS+" "+fileName);
-
-		
-		
-		try {
-
-			
-
-		} catch (Exception e) {
-
-			logger.error("ReplicaQuery: Exception while validating file existence "+e.getMessage());
-			e.printStackTrace();
-			replicaQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(repliOpHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG).toBuilder().setOriginator(self));
-			return replicaQueryResponseBuilder.build();
-		}
-		
-		return replicaQueryResponseBuilder.build();
-		
-	}
-	
-	
-	
 	
 	private Response replicaRemove(Header replicaRemoveHeader , Payload replicaRemoveBody){
 
