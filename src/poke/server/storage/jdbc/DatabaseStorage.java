@@ -48,8 +48,8 @@ public class DatabaseStorage {
 
 	protected Properties cfg;
 	protected BoneCP cpool;
-//	static final private String self = HeartbeatManager.getInstance().getNodeId();
-	static final private String self = "self";
+	static final private String self = HeartbeatManager.getInstance().getNodeId();
+//	static final private String self = "self";
 	
 	private static DatabaseStorage ds = new DatabaseStorage();
 	

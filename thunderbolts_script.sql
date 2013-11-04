@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS `document` (
   `Owner` varchar(250) NOT NULL,
   `ReplicatedNode` varchar(250),
   `PreviousReplicatedNode` varchar(250),
-  `ReplicationCount` int(3) NOT NULL,
+  `ReplicationCount` int(3) NOT NULL DEFAULT 0,
   `IsReplicated` boolean,
   `ToBeReplicated` boolean DEFAULT TRUE,
   `ReplicationInProgress` boolean DEFAULT FALSE,

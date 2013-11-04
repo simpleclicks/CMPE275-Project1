@@ -177,7 +177,8 @@ public class HeartMonitor {
 		if (channel == null)
 			return false;
 		else
-		{	logger.info("HeartMonitor is connector called "+ (channel.getChannel().isOpen() && channel.getChannel().isWritable()));
+		{	
+			//logger.info("HeartMonitor is connector called "+ (channel.getChannel().isOpen() && channel.getChannel().isWritable()));
 		return (channel.getChannel().isOpen() && channel.getChannel().isWritable());
 		}
 	}
@@ -206,7 +207,7 @@ public class HeartMonitor {
 		{
 			try {
 
-				System.out.println("Tracing code flow 1 : HeartMonitor.java intiateHeartbeat");
+				//System.out.println("Tracing code flow 1 : HeartMonitor.java intiateHeartbeat");
 				Channel ch = connect();
 				Network.Builder n = Network.newBuilder();
 				n.setOriginId(HeartbeatManager.getInstance().getNodeId());
