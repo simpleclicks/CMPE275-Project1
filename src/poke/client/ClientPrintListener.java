@@ -34,15 +34,20 @@ public class ClientPrintListener implements ClientListener {
 		if (msg.getHeader().getRoutingId() == Header.Routing.FINGER)
 			ClientUtil.printFinger(msg.getBody().getFinger());
 		else if (msg.getHeader().getRoutingId() == Header.Routing.DOCFIND) {
-			for (int i = 0, I = msg.getBody().getDocsCount(); i < I; i++)
-				ClientUtil.printDocument(msg.getBody().getDocs(i));
+			System.out.println(msg.getHeader().getReplyMsg()); 
 		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCADDHANDSHAKE){
 			
-			//System.out.println("Server response to document add request "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
+			System.out.println("Server response to document add request "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
 			
 		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCADD){
 			
 			System.out.println("Server response to document add "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
+			
+			
+		}else if (msg.getHeader().getRoutingId() == Header.Routing.NAMESPACEADD){
+				
+			System.out.println("Server response to namespace add "+msg.getHeader().getReplyCode().name()+" Server Message "+msg.getHeader().getReplyMsg());
+			
 			
 		}else if (msg.getHeader().getRoutingId() == Header.Routing.DOCREMOVE){
 			

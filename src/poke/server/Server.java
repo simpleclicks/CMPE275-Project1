@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -51,6 +52,7 @@ import poke.server.replication.ReplicaSynchronizer;
 import poke.server.replication.ReplicationInitializer;
 import poke.server.resources.ResourceFactory;
 import poke.server.routing.ServerDecoderPipeline;
+import poke.server.storage.jdbc.DatabaseStorage;
 
 /**
  * Note high surges of messages can close down the channel if the handler cannot
@@ -72,6 +74,7 @@ public class Server {
 	protected ChannelFactory cf, mgmtCF, broadcastCF;
 	protected ServerConf conf;
 	protected HeartbeatManager hbMgr;
+
 	private String confPath;
 
 	/**
@@ -108,10 +111,12 @@ public class Server {
 			br = new BufferedInputStream(new FileInputStream(cfg));
 			br.read(raw);
 			conf = JsonUtil.decode(new String(raw), ServerConf.class);
+
 			ResourceFactory.initialize(conf);
 			confPath = cfg.getAbsolutePath();
 			//System.out.println(confPath);
 			
+
 		} catch (Exception e) {
 		}
 

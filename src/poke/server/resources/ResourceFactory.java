@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import poke.resources.DocumentChunkResource;
 import poke.server.conf.ServerConf;
 import poke.server.conf.ServerConf.ResourceConf;
 import poke.server.storage.jdbc.DatabaseStorage;
@@ -45,7 +46,7 @@ import eye.Comm.Header;
  */
 public class ResourceFactory {
 	protected static Logger logger = LoggerFactory.getLogger("server");
-	
+
 
 	private static ServerConf cfg;
 	private static AtomicReference<ResourceFactory> factory = new AtomicReference<ResourceFactory>();
@@ -95,6 +96,31 @@ public class ResourceFactory {
 		try {
 			// strategy: instance-per-request
 			Resource rsc = (Resource) Beans.instantiate(this.getClass().getClassLoader(), rc.getClazz());
+			return rsc;
+		} catch (Exception e) {
+			logger.error("unable to create resource " + rc.getClazz());
+			return null;
+		}
+	}
+	
+	public ChunkedResource chunkedResourceInstance(Header header) {
+		// is the message for this server?
+		if (header.hasToNode()) {
+			String iam = cfg.getServer().getProperty("node.id");
+			if (iam.equalsIgnoreCase(header.getToNode()))
+				; // fall through and process normally
+			else {
+				// forward request
+			}
+		}
+
+		ResourceConf rc = cfg.findById(header.getRoutingId().getNumber());
+		if (rc == null)
+			return null;
+
+		try {
+			// strategy: instance-per-request
+			ChunkedResource rsc = (ChunkedResource) Beans.instantiate(this.getClass().getClassLoader(), rc.getClazz());
 			return rsc;
 		} catch (Exception e) {
 			logger.error("unable to create resource " + rc.getClazz());

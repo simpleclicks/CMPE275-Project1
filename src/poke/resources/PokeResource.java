@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceUtil;
+import poke.server.storage.jdbc.DatabaseStorage;
 import eye.Comm.Finger;
 import eye.Comm.Header.ReplyStatus;
 import eye.Comm.PayloadReply;

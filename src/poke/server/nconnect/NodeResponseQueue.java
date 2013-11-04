@@ -5,19 +5,22 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Random;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import poke.server.management.HeartbeatData;
 import poke.server.management.HeartbeatManager;
 import poke.server.storage.jdbc.DatabaseStorage;
 import eye.Comm.Header;
 import eye.Comm.Payload;
 import eye.Comm.Request;
+import eye.Comm.Document;
 import eye.Comm.Response;
 /**
  * @author Kaustubh
@@ -45,9 +48,10 @@ public class NodeResponseQueue {
 	static final int MAX_CHUNK_SIZE = 26214400;
 	
 
-	//private static Random nodeIdSelector = new Random();
+	static private HashMap<String, String> responseToChunkMap = new HashMap<String, String>();
 
-	public static void addActiveNode(String nodeId , NodeClient node){
+	public static void addActiveNode(String nodeId, NodeClient node) {
+
 
 		activeNodeMap.put(nodeId, node);
 	}
@@ -69,7 +73,7 @@ public class NodeResponseQueue {
 
 	public static void removeInactiveNode(String nodeId){
 
-		activeNodeMap.remove(nodeId);
+			activeNodeMap.remove(nodeId);
 	}
 
 	public static void removeExternalNode(String nodeId){
@@ -77,12 +81,12 @@ public class NodeResponseQueue {
 		activeExternalNodeMap.remove(nodeId);
 	}
 
-	public static boolean nodeExistCheck(String nodeId){
+	public static boolean nodeExistCheck(String nodeId) {
 
 		return activeNodeMap.containsKey(nodeId);
 	}
 
-	public static int activeNodesCount(){
+	public static int activeNodesCount() {
 
 		return activeNodeMap.size();
 	}
@@ -219,13 +223,14 @@ inner:						do{
 
 		NodeClient[] activeNodeArray = getActiveNodeInterface(internal);
 
-		for(NodeClient nc: activeNodeArray){
+		for (NodeClient nc : activeNodeArray) {
 
 			nc.queryFile(nameSpace, fileName);
 		}
 	}
 	
 	public static void broadcastReplicaQuery(String filePath){
+
 
 		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
 		
@@ -238,6 +243,47 @@ inner:						do{
 			nc.queryReplica(trimmedPath, fileName);
 		}
 	}
+	
+	public static void broadcastDocFind(String nameSpace, String fileName) {
+
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+
+		for (NodeClient nc : activeNodeArray) {
+
+			nc.findFile(nameSpace, fileName);
+		}
+	}
+
+	public static void broadcastNamespaceQuery(String nameSpace){
+
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+
+		for(NodeClient nc: activeNodeArray){
+
+			nc.queryNamespace(nameSpace);
+		}
+	}
+
+	public static void broadcastNamespaceListQuery(String nameSpace) {
+		// TODO Auto-generated method stub
+
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+
+		for(NodeClient nc: activeNodeArray){
+
+			nc.queryNamespaceList(nameSpace);
+		}
+
+	}
+
+
+	/*public static boolean fetchDocQueryResult( String nameSpace , String fileName){
+
+		boolean queryResult = true;
+
+		NodeClient[] activeNodeArray = getActiveNodeInterface();
+
+		for (NodeClient nc : activeNodeArray) {*/
 
 	public static void broadcastDocRemoveQuery(String nameSpace , String fileName){
 
@@ -302,6 +348,7 @@ inner:			do{
 			}
 			String result = nc.checkDocQueryResponse(nameSpace, fileName);
 
+/*<<<<<<< HEAD*/
 			if(result.equalsIgnoreCase("Success")){
 				logger.info("Document "+nameSpace+"/"+fileName+" exists with "+nc.getNodeId());
 				return true;
@@ -541,4 +588,81 @@ inner:						do{
 
 		}.start();	// thread constructor ends
 	}
+
+
+
+			/*if (result.equalsIgnoreCase("Failure")) {
+				logger.info("Document upload validation failed for "
+						+ nameSpace + "/" + fileName);
+				return false;
+			} else if (result.equalsIgnoreCase("NA"))
+				logger.warn("No response from node " + nc.getNodeId()
+						+ "for document upload validation for " + nameSpace
+						+ "/" + fileName);
+
+		}
+
+		return queryResult;
+
+	}*/
+
+	public static boolean fetchDocFindResult(String nameSpace, String fileName) {
+		boolean queryResult = false;
+
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+		try{
+		for (NodeClient nc : activeNodeArray) {
+			String result = "NA";
+			
+			do{
+				result = nc.checkDocFindResponse(nameSpace, fileName);
+				Thread.sleep(1000);
+			}while(result.equalsIgnoreCase("NA"));
+			
+
+			if (result.equalsIgnoreCase("Failure")) {
+				logger.info("Document with the given name "
+						+ nameSpace + "/" + fileName +" was not found.");
+				return false;
+			} else if (result.equalsIgnoreCase("Success"))
+				return true;		
+
+		}
+		}
+		catch(InterruptedException ex){
+			ex.printStackTrace();
+		}
+		return queryResult;
+	}
+
+	public static List fetchNamespaceList(String namespace){
+		boolean queryResult = true;
+		List<Document> fileList= new ArrayList<Document>();
+		List<Document> newFileList = new ArrayList<Document>();
+		logger.info("In fetchNameSpaceList");
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+
+
+		for (NodeClient nc : activeNodeArray) {
+			String result = "NA";
+
+			//  while(result.equalsIgnoreCase("NA")){
+			fileList = (List<Document>) (nc.sendNamespaceList(namespace));
+			try {
+				Thread.sleep(3000);
+				newFileList.addAll(fileList);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				logger.error("Thread exception in fetchNamespaceList "+e.getMessage());
+			}
+
+			logger.info("Files returned from fetchNameSpaceList " +newFileList);
+			return newFileList;                
+
+		}
+
+		return fileList;
+	}
+
 }
+

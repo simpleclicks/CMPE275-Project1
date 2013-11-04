@@ -1,10 +1,18 @@
 package poke.server.nconnect;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
+
+import java.net.SocketAddress;
+import java.util.ArrayList;
+import java.util.List;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import org.apache.commons.io.FileUtils;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
@@ -37,7 +45,7 @@ public class NodeClient {
 
 	protected ChannelFuture channelFuture;
 
-	protected Channel channel; 
+	protected Channel channel;
 
 	protected ClientBootstrap bootstrap;
 
@@ -53,9 +61,9 @@ public class NodeClient {
 
 	private InboundWorker responseProcessor;
 
-	private  LinkedBlockingDeque<Response> inboundResponseQueue = new LinkedBlockingDeque<Response>();
+	private LinkedBlockingDeque<Response> inboundResponseQueue = new LinkedBlockingDeque<Response>();
 
-	private  LinkedBlockingDeque<Request> outboundRequestQueue = new LinkedBlockingDeque<Request>();
+	private LinkedBlockingDeque<Request> outboundRequestQueue = new LinkedBlockingDeque<Request>();
 
 	private ConcurrentHashMap<String, String> docQueryResponseQueue =  new ConcurrentHashMap<String, String>();
 	
@@ -73,6 +81,12 @@ public class NodeClient {
 	
 	private ConcurrentHashMap<String, String> queryReplicaResponseQueue =  new ConcurrentHashMap<String, String>();
 	
+	private ConcurrentHashMap<String, List<Document>> listFiles = new ConcurrentHashMap<String, List<Document>>(); 
+
+	private ConcurrentHashMap<String, String> docFindResponseQueue = new ConcurrentHashMap<String, String>();
+
+	private ConcurrentHashMap<String, Long> nodeToDocFind = new ConcurrentHashMap<String, Long>();
+
 	public NodeClient(String host, int port, String nodeId) {
 		super();
 		this.host = host;
@@ -85,13 +99,13 @@ public class NodeClient {
 
 	private void initTCP() {
 
-		bootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(Executors.newCachedThreadPool(),
+		bootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(
+				Executors.newCachedThreadPool(),
 				Executors.newFixedThreadPool(2)));
 
 		bootstrap.setOption("connectTimeoutMillis", 10000);
 		bootstrap.setOption("tcpNoDelay", true);
 		bootstrap.setOption("keepAlive", true);
-
 
 		if (handler == null) {
 
@@ -100,7 +114,7 @@ public class NodeClient {
 
 		bootstrap.setPipelineFactory(new NodePipeline(handler));
 
-		//connect();
+		// connect();
 
 		requestSender.start();
 
@@ -109,34 +123,40 @@ public class NodeClient {
 
 	private void connect() {
 
-		try{
+		try {
 
 			if (channel == null) {
-				logger.info("connecting to network node "+nodeId+" at " + host + ":" + port);
-				channelFuture = bootstrap.connect(new InetSocketAddress(host, port));
+				logger.info("connecting to network node " + nodeId + " at "
+						+ host + ":" + port);
+				channelFuture = bootstrap.connect(new InetSocketAddress(host,
+						port));
 				channelFuture.awaitUninterruptibly();
 
 			}
-			
-		}catch(Exception btConnectExccep){
 
-			logger.error(" Error while establishing public connection to node "+nodeId+" "+btConnectExccep.getMessage());
+		} catch (Exception btConnectExccep) {
+
+			logger.error(" Error while establishing public connection to node "
+					+ nodeId + " " + btConnectExccep.getMessage());
 		}
 
 		if (channelFuture.isDone() && channelFuture.isSuccess()) {
 
 			channel = channelFuture.getChannel();
-			channel.getCloseFuture().addListener(new NodeChannelClosedListener(this));
-			logger.info("connected to network node "+nodeId+" at " + host + ":" + port+" successfully");
+			channel.getCloseFuture().addListener(
+					new NodeChannelClosedListener(this));
+			logger.info("connected to network node " + nodeId + " at " + host
+					+ ":" + port + " successfully");
 
 		} else {
 			channel = null;
 			channelFuture = null;
-			//throw new RuntimeException("Not able to establish TCP connection to node "+nodeId);
+			// throw new
+			// RuntimeException("Not able to establish TCP connection to node "+nodeId);
 		}
 	}
 
-	public boolean queryFile(String nameSpace, String fileName){
+	public boolean queryFile(String nameSpace, String fileName) {
 
 		Request docQueryRequest = createRequest(nameSpace , fileName , Header.Routing.DOCQUERY ,0 ,0 ,0 , null);
 
@@ -202,6 +222,7 @@ public class NodeClient {
 
 		docQueryHeaader.setRoutingId(action);
 
+
 		docQueryHeaader.setOriginator(HeartbeatManager.getInstance().getNodeId()); 
 
 		Payload.Builder docPayloadBuilder = Payload.newBuilder();
@@ -213,8 +234,9 @@ public class NodeClient {
 		else
 		docPayloadBuilder.setDoc(Document.newBuilder().setDocName(fileName).setDocSize(docSize).setTotalChunk(totalChunks).setChunkId(chunkId));
 
-		if(nameSpace !=null && nameSpace.length() > 0)
-			docPayloadBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace));
+		if (nameSpace != null && nameSpace.length() > 0)
+			docPayloadBuilder.setSpace(NameSpace.newBuilder()
+					.setName(nameSpace));
 
 		Request.Builder docQueryReqBuilder = Request.newBuilder();
 
@@ -258,11 +280,90 @@ public class NodeClient {
 		}
 	}
 	
-	public String checkDocQueryResponse(String nameSpace , String fileName){
+	public boolean queryNamespace(String nameSpace){
+
+		Header.Builder namespaceQueryHeader = Header.newBuilder();
+
+		namespaceQueryHeader.setRoutingId(Header.Routing.NAMESPACEQUERY);
+
+		namespaceQueryHeader.setOriginator(HeartbeatManager.getInstance().getNodeId());
+
+		Payload.Builder docPayloadBuilder = Payload.newBuilder();
+
+		//docPayloadBuilder.setDoc(Document.newBuilder().setDocName(fileName));
+
+		if(nameSpace !=null && nameSpace.length() > 0)
+			docPayloadBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace));
+
+		Request.Builder namespaceQueryReqBuilder = Request.newBuilder();
+
+		namespaceQueryReqBuilder.setHeader(namespaceQueryHeader.build());
+
+		namespaceQueryReqBuilder.setBody(docPayloadBuilder.build());
+
+		return enqueueRequest(namespaceQueryReqBuilder.build());
+
+	}
+	
+	public boolean queryNamespaceList(String nameSpace) {
+		// TODO Auto-generated method stub
+
+		Header.Builder namespaceListQueryHeader = Header.newBuilder();
+
+		namespaceListQueryHeader.setRoutingId(Header.Routing.NAMESPACELISTQUERY);
+
+		namespaceListQueryHeader.setOriginator(HeartbeatManager.getInstance().getNodeId());
+
+		Payload.Builder namespacePayloadBuilder = Payload.newBuilder();
+
+		if(nameSpace !=null && nameSpace.length() > 0)
+			namespacePayloadBuilder.setSpace(NameSpace.newBuilder().setName(nameSpace));
+
+		Request.Builder namespaceListQueryReqBuilder = Request.newBuilder();
+
+		namespaceListQueryReqBuilder.setHeader(namespaceListQueryHeader.build());
+
+		namespaceListQueryReqBuilder.setBody(namespacePayloadBuilder.build());
+
+		return enqueueRequest(namespaceListQueryReqBuilder.build());
 		
-		String key = nameSpace+fileName;
-		
+	}		
+
+	public boolean findFile(String nameSpace, String fileName) {
+
+		Header.Builder docFindHeader = Header.newBuilder();
+
+		docFindHeader.setRoutingId(Header.Routing.DOCFIND);
+
+		docFindHeader.setOriginator(HeartbeatManager.getInstance().getNodeId());
+
+		nodeToDocFind.put(HeartbeatManager.getInstance().getNodeId(), (long) 0);
+
+		Payload.Builder docFindPayloadBuilder = Payload.newBuilder();
+
+		docFindPayloadBuilder
+				.setDoc(Document.newBuilder().setDocName(fileName));
+
+		if (nameSpace != null && nameSpace.length() > 0)
+			docFindPayloadBuilder.setSpace(NameSpace.newBuilder().setName(
+					nameSpace));
+
+		Request.Builder docFindReqBuilder = Request.newBuilder();
+
+		docFindReqBuilder.setHeader(docFindHeader.build());
+
+		docFindReqBuilder.setBody(docFindPayloadBuilder.build());
+
+		return enqueueRequest(docFindReqBuilder.build());
+
+	}
+
+	public String checkDocQueryResponse(String nameSpace, String fileName) {
+
+		String key = nameSpace + fileName;
+
 		String noResult = "NA";
+
 		
 		if(docQueryResponseQueue.containsKey(key)){
 			
@@ -357,12 +458,57 @@ public class NodeClient {
 			return noResult;
 		}
 	}
+	public List checkNamespaceList(String namespace){
+		String key = namespace;
+
+        String noResult = "NA";
+
+        if (listFiles.containsKey(key)) {
+
+                return listFiles.get(key);
+
+        } else {
+        		
+                return null;
+        }
+	}
 	
+	public List sendNamespaceList(String namespace) {
+		
+		List<Document> Files = new ArrayList<Document>();
+		String noResult = "NA";
+		if (listFiles.containsKey(namespace)){
+			Files = listFiles.get(namespace);
+		}
+		
+    	logger.info("Files returned from sendNamespaceList " +Files);
+
+		return Files;
+		
+	}
+	
+	
+	public String checkDocFindResponse(String nameSpace, String fileName) {
+
+		String key = nameSpace + fileName;
+
+		String noResult = "NA";
+		
+		//System.out.println("Finding key " + key + " in " +docFindResponseQueue.toString());
+
+		if (docFindResponseQueue.containsKey(key)) {
+
+			return docFindResponseQueue.get(key);
+
+		} else {
+
+			return noResult;
+		}
+	}
 
 	public String getNodeId() {
 		return nodeId;
 	}
-
 
 	private boolean enqueueRequest(Request request) {
 		try {
@@ -377,7 +523,7 @@ public class NodeClient {
 		}
 	}
 
-	public  void enqueueResponse(Response response) {
+	public void enqueueResponse(Response response) {
 		try {
 
 			inboundResponseQueue.put(response);
@@ -387,8 +533,8 @@ public class NodeClient {
 		}
 	}
 
-	public static class NodeChannelClosedListener implements ChannelFutureListener {
-
+	public static class NodeChannelClosedListener implements
+			ChannelFutureListener {
 
 		NodeClient nodeConnect;
 
@@ -401,7 +547,8 @@ public class NodeClient {
 		@Override
 		public void operationComplete(ChannelFuture future) throws Exception {
 
-			logger.warn(" Public channel to node "+nodeConnect.nodeId+" has been closed");
+			logger.warn(" Public channel to node " + nodeConnect.nodeId
+					+ " has been closed");
 
 		}
 
@@ -415,51 +562,55 @@ public class NodeClient {
 		public OutboundWorker(NodeClient conn) {
 			this.conn = conn;
 			if (conn.outboundRequestQueue == null)
-				throw new RuntimeException("OutboundWorker worker detected null request queue");
+				throw new RuntimeException(
+						"OutboundWorker worker detected null request queue");
 		}
 
 		@Override
 		public void run() {
 
 			Channel ch = conn.channel;
-			
+
 			int retry = 0;
-			
-			while(true){
-
-			if(ch == null || !ch.isConnected()){
-
-				logger.info("Attempting to establish public TCP connection to "+nodeId);
-				conn.connect();
-				ch = conn.channel;
-				
-				if (ch == null || !ch.isOpen()) {
-					logger.error("connection missing, no outbound public communication with node "+nodeId);
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					continue;
-				}else
-					break;
-			}
-		
-		}// end of connect while-true
 
 			while (true) {
 
-				if (!forever && conn.outboundRequestQueue.size() == 0){
+				if (ch == null || !ch.isConnected()) {
+
+					logger.info("Attempting to establish public TCP connection to "
+							+ nodeId);
+					conn.connect();
+					ch = conn.channel;
+
+					if (ch == null || !ch.isOpen()) {
+						logger.error("connection missing, no outbound public communication with node "
+								+ nodeId);
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						continue;
+					} else
+						break;
+				}
+
+			}// end of connect while-true
+
+			while (true) {
+
+				if (!forever && conn.outboundRequestQueue.size() == 0) {
 
 					try {
 
 						retry++;
-						if(retry <=5){
+						if (retry <= 5) {
 							Thread.sleep(1000);
 							continue;
-						}
-						else{
-							System.out.println("Closing the public channel for nodeId "+conn.nodeId);
+						} else {
+							System.out
+									.println("Closing the public channel for nodeId "
+											+ conn.nodeId);
 							ch.close();
 							bootstrap.releaseExternalResources();
 						}
@@ -472,31 +623,37 @@ public class NodeClient {
 				try {
 
 					Request msg = conn.outboundRequestQueue.take();
-
+					logger.info("Message is in the outbound queue: Node client");
 					if (ch.isWritable()) {
-						logger.info("Sending request to the nodeId "+nodeId);
+						logger.info("Sending request to the nodeId " + nodeId);
 						ChannelFuture cf = ch.write(msg);
 						if (cf.isDone() && !cf.isSuccess()) {
-							logger.error("failed to send request to nodeId "+nodeId);
+							logger.error("failed to send request to nodeId "
+									+ nodeId);
 							conn.outboundRequestQueue.putFirst(msg);
 						}
 
 						System.gc();
 
 					} else{
+
+						
 						conn.outboundRequestQueue.putFirst(msg);
-						logger.error("Channel to nodeId "+nodeId+" is not writable");
+						logger.error("Channel to nodeId " + nodeId
+								+ " is not writable");
 					}
 				} catch (InterruptedException ie) {
 					break;
 				} catch (Exception e) {
+
 					logger.error("Unexpected communcation failure with nodeId "+nodeId, e.getMessage());
 					break;
 				}
 			}
 
 			if (!forever) {
-				logger.info("Shutting down the public connection to nodeId "+nodeId);
+				logger.info("Shutting down the public connection to nodeId "
+						+ nodeId);
 				ch.close();
 				bootstrap.releaseExternalResources();
 			}
@@ -513,9 +670,10 @@ public class NodeClient {
 
 		public InboundWorker(NodeClient processResponse) {
 
-			owner= processResponse;
+			owner = processResponse;
 			if (owner.inboundResponseQueue == null)
-				throw new RuntimeException("InboundWorker worker detected null response queue");
+				throw new RuntimeException(
+						"InboundWorker worker detected null response queue");
 		}
 
 		@Override
@@ -523,7 +681,7 @@ public class NodeClient {
 
 			while (true) {
 
-				if (!forever && owner.inboundResponseQueue.size() == 0){
+				if (!forever && owner.inboundResponseQueue.size() == 0) {
 
 					break;
 				}
@@ -536,100 +694,185 @@ public class NodeClient {
 					
 					if (msg.getHeader().getRoutingId() == Header.Routing.DOCQUERY) {
 
-						String msgKey = createKey(msg.getBody());
-						
-						if(msgKey.equalsIgnoreCase("Invalid")){
-							logger.error("Invalid DocQueryResponse from node "+owner.nodeId+" document name missing");
-							continue;
+                        String msgKey = createKey(msg.getBody());
+                        
+                        if(msgKey.equalsIgnoreCase("Invalid")){
+                                logger.error("Invalid DocQueryResponse from node "+owner.nodeId+" document name missing");
+                                continue;
+                        }
+
+                        owner.docQueryResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+
+                }else if(msg.getHeader().getRoutingId() == Header.Routing.DOCREMOVE){
+
+                        String msgKey = createKey(msg.getBody());
+                        
+                        if(msgKey.equalsIgnoreCase("Invalid")){
+                                logger.error("Invalid DocRemoveResponse from node "+owner.nodeId+" document name missing");
+                                continue;
+                        }
+
+                        owner.docRemoveResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+
+                }else if(msg.getHeader().getRoutingId() == Header.Routing.REPLICAREMOVE){
+
+                        String msgKey = createKey(msg.getBody());
+                        
+                        if(msgKey.equalsIgnoreCase("Invalid")){
+                                logger.error("Invalid ReplicaRemoveResponse from node "+owner.nodeId+" document name missing");
+                                continue;
+                        }
+
+                        owner.replicaRemoveResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+
+                }else if(msg.getHeader().getRoutingId() == Header.Routing.DOCADDHANDSHAKE){
+
+                        String msgKey = createKey(msg.getBody());
+                        
+                        if(msgKey.equalsIgnoreCase("Invalid")){
+                                logger.error("Invalid DOCADDHANDSHAKE Response from node "+owner.nodeId+" document name missing");
+                                continue;
+                        }
+
+                        owner.docAddHSResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+
+                }else if(msg.getHeader().getRoutingId() == Header.Routing.DOCADD){
+
+                        String msgKey = createKey(msg.getBody());
+                        
+                        if(msgKey.equalsIgnoreCase("Invalid")){
+                                logger.error("Invalid DOCADD Response from node "+owner.nodeId+" document name missing");
+                                continue;
+                        }
+
+                        owner.docAddResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+
+                }else if(msg.getHeader().getRoutingId() == Header.Routing.REPLICAHANDSHAKE){
+
+                        String msgKey = createKey(msg.getBody());
+                        logger.info(" msgKey for REPLICAHANDSHAKE "+msgKey);                                                
+                        
+                        if(msgKey.equalsIgnoreCase("Invalid")){
+                                logger.error("Invalid REPLICAHANDSHAKE Response from node "+owner.nodeId+" document name missing");
+                                continue;
+                        }
+
+                        owner.replicaHSResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+                }else if(msg.getHeader().getRoutingId() == Header.Routing.ADDREPLICA){
+
+                        String msgKey = createKey(msg.getBody());
+                        logger.info(" msgKey for ADDREPLICA "+msgKey);                                                
+                        
+                        if(msgKey.equalsIgnoreCase("Invalid")){
+                                logger.error("Invalid ADDREPLICA Response from node "+owner.nodeId+" document name missing");
+                                continue;
+                        }
+
+                        owner.addReplicaResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+                }if(msg.getHeader().getRoutingId() == Header.Routing.REPLICAQUERY){
+
+                        String msgKey = createKey(msg.getBody());
+                        logger.info(" msgKey for replicaQuery "+msgKey);                                                
+                        
+                        if(msgKey.equalsIgnoreCase("Invalid")){
+                                logger.error("Invalid REPLICAQUERY Response from node "+owner.nodeId+" document name missing");
+                                continue;
+                        }
+
+                        owner.queryReplicaResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+                } else if (msg.getHeader().getRoutingId() == Header.Routing.DOCFIND) {
+						boolean addToQueue = false;
+						//System.out.println(msg.toString());
+						System.out
+								.println("In NodeClientResponseHandler : DOCFIND response recieved from node"
+										+ msg.getHeader().getOriginator());
+						if (msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS) {
+							System.out.println("File "
+									+ msg.getBody().getDocs(0).getDocName()
+									+ " found at node : "
+									+ msg.getHeader().getOriginator()
+									+ "chunkID is"
+									+ msg.getBody().getDocs(0).getChunkId());
+							writeToTemp(msg.getBody().getDocs(0).getDocName(),
+									msg.getBody().getSpaces(0).getName(),
+									msg.getBody().getDocs(0).getChunkId(), msg
+											.getBody().getDocs(0)
+											.getTotalChunk(),
+											msg.getBody().getDocs(0).getChunkContent().toByteArray());
+							if(msg.getBody().getDocs(0).getChunkId() == msg.getBody().getDocs(0).getTotalChunk()){
+								addToQueue = true;
+							}
+						} else {
+							System.out.println("File not found at node : "
+									+ msg.getHeader().getOriginator());
+							addToQueue = true;
 						}
+						logger.info("Recieved the response to DOCFIND from the Node "
+								+ owner.nodeId);
+						if(addToQueue){
+							String msgKey = null;
 
-						owner.docQueryResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
+							PayloadReply response = msg.getBody();
 
-					}else if(msg.getHeader().getRoutingId() == Header.Routing.DOCREMOVE){
+							String nameSpace = "";
+							
+							if(response.getSpacesCount()>0){
+							if (response.getSpaces(0) != null)
+								nameSpace = response.getSpaces(0).getName();
+							}
+							String docName = response.getDocs(0).getDocName();
+							String[] fnameSplit = docName.split("\\\\");
 
-						String msgKey = createKey(msg.getBody());
-						
-						if(msgKey.equalsIgnoreCase("Invalid")){
-							logger.error("Invalid DocRemoveResponse from node "+owner.nodeId+" document name missing");
-							continue;
+							if (docName == null || docName.length() == 0) {
+								logger.error("Invalid DocQueryResponse from node "
+										+ owner.nodeId + " document name missing");
+								continue;
+							}
+
+							if (nameSpace != null && nameSpace.length() > 0)
+								msgKey = nameSpace;
+
+							msgKey = msgKey + fnameSplit[fnameSplit.length - 1];
+
+							owner.docFindResponseQueue.put(msgKey, msg.getHeader()
+									.getReplyCode().name());
 						}
-
-						owner.docRemoveResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
-
-					}else if(msg.getHeader().getRoutingId() == Header.Routing.REPLICAREMOVE){
-
-						String msgKey = createKey(msg.getBody());
-						
-						if(msgKey.equalsIgnoreCase("Invalid")){
-							logger.error("Invalid ReplicaRemoveResponse from node "+owner.nodeId+" document name missing");
-							continue;
-						}
-
-						owner.replicaRemoveResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
-
-					}else if(msg.getHeader().getRoutingId() == Header.Routing.DOCADDHANDSHAKE){
-
-						String msgKey = createKey(msg.getBody());
-						
-						if(msgKey.equalsIgnoreCase("Invalid")){
-							logger.error("Invalid DOCADDHANDSHAKE Response from node "+owner.nodeId+" document name missing");
-							continue;
-						}
-
-						owner.docAddHSResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
-
-					}else if(msg.getHeader().getRoutingId() == Header.Routing.DOCADD){
-
-						String msgKey = createKey(msg.getBody());
-						
-						if(msgKey.equalsIgnoreCase("Invalid")){
-							logger.error("Invalid DOCADD Response from node "+owner.nodeId+" document name missing");
-							continue;
-						}
-
-						owner.docAddResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
-
-					}else if(msg.getHeader().getRoutingId() == Header.Routing.REPLICAHANDSHAKE){
-
-						String msgKey = createKey(msg.getBody());
-						logger.info(" msgKey for REPLICAHANDSHAKE "+msgKey);						
-						
-						if(msgKey.equalsIgnoreCase("Invalid")){
-							logger.error("Invalid REPLICAHANDSHAKE Response from node "+owner.nodeId+" document name missing");
-							continue;
-						}
-
-						owner.replicaHSResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
-					}else if(msg.getHeader().getRoutingId() == Header.Routing.ADDREPLICA){
-
-						String msgKey = createKey(msg.getBody());
-						logger.info(" msgKey for ADDREPLICA "+msgKey);						
-						
-						if(msgKey.equalsIgnoreCase("Invalid")){
-							logger.error("Invalid ADDREPLICA Response from node "+owner.nodeId+" document name missing");
-							continue;
-						}
-
-						owner.addReplicaResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
-					}if(msg.getHeader().getRoutingId() == Header.Routing.REPLICAQUERY){
-
-						String msgKey = createKey(msg.getBody());
-						logger.info(" msgKey for replicaQuery "+msgKey);						
-						
-						if(msgKey.equalsIgnoreCase("Invalid")){
-							logger.error("Invalid REPLICAQUERY Response from node "+owner.nodeId+" document name missing");
-							continue;
-						}
-
-						owner.queryReplicaResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
 					}
+					
+					else if(msg.getHeader().getRoutingId() == Header.Routing.NAMESPACEQUERY){
 
+						System.out.println("NodeClientResponseHandler: Recieved the response to namespaceQuery from the server and the response is "+msg.getHeader().getReplyCode()+" with Message fom server as "+msg.getHeader().getReplyMsg());
 
+						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
+							logger.info("Namespace removed from node "+ owner.getNodeId());
+
+						}
+
+					}
+					
+					else if(msg.getHeader().getRoutingId() == Header.Routing.NAMESPACELISTQUERY){
+						String namespace = null;
+						System.out.println("NodeClientResponseHandler:");
+						PayloadReply response =  msg.getBody();
+						System.out.println("NodeClientResponseHandler: Recieved the response to namespaceListQuery from the server and the response is "+msg.getHeader().getReplyCode()+" with Message fom server as "+msg.getHeader().getReplyMsg());
+
+						if(msg.getHeader().getReplyCode() == Header.ReplyStatus.SUCCESS){
+							logger.info("inside if ");
+							namespace = response.getSpaces(0).getName();
+							logger.info("namespace " + namespace);
+						//	listFiles = msg.getBody().getDocsList();
+							owner.listFiles.put(namespace, msg.getBody().getDocsList());
+							logger.info("Document list recieved from node "+ owner.getNodeId());
+					}
+					}
+					
 				} catch (InterruptedException ie) {
-					logger.error("InboundWorker has been interrupted "+ie.getMessage());
+					logger.error("InboundWorker has been interrupted "
+							+ ie.getMessage());
 					break;
 				} catch (Exception e) {
-					logger.error("InboundWorker has generic exception ", e.getMessage());
+					logger.error("InboundWorker has generic exception ",
+							e.getMessage());
 					e.printStackTrace();
 				}
 			}
@@ -638,6 +881,7 @@ public class NodeClient {
 				logger.info("connection queue closing");
 			}
 		}
+
 		
 		private String createKey(PayloadReply body){
 			
@@ -661,4 +905,32 @@ public class NodeClient {
 			return msgKey;
 		}
 	}
-}
+
+
+
+		private void writeToTemp(String docName, String nameSpace,
+				long chunkId, long totalChunk, byte[] chunkContent) {
+			String[] fnamesplit = docName.split("\\\\");
+			String fname = fnamesplit[fnamesplit.length-1];
+			File file = new File(fname);
+			File dir = new File("temp" + File.separator + nameSpace);
+			logger.info("Creating directory with name " + nameSpace);
+
+			//String nameDir = "temp" + File.separator + nameSpace;
+
+			try {
+				FileUtils.forceMkdir(dir);
+				logger.info("Creating file with name " + fname
+						+ " and writing the content sent by client to it");
+
+				FileUtils.writeByteArrayToFile(new File(dir + File.separator + fname), chunkContent, true);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			
+		}
+	}
+
+

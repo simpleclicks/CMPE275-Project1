@@ -73,11 +73,12 @@ public class DatabaseStorage {
 			config.setJdbcUrl("jdbc:mysql://127.0.0.1:3306/thunderbolts ");
 			config.setUsername("root");
 			config.setPassword("root");
+
 			config.setMinConnectionsPerPartition(5);
 			config.setMaxConnectionsPerPartition(10);
 			config.setPartitionCount(1);
 			config.setStatementsCacheSize(0);
-			config.setPreparedStatementsCacheSize(0);
+			//config.setPreparedStatementsCacheSize(0);
 			cpool = new BoneCP(config);
 			
 			
