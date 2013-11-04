@@ -124,9 +124,9 @@ public class Server {
 		cf = new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
 		
 		 //internal using TCP - a better option
-		mgmtCF = new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newFixedThreadPool(2));
+		mgmtCF = new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
 		
-		broadcastCF = new NioDatagramChannelFactory(Executors.newCachedThreadPool(), 1);
+		broadcastCF = new NioDatagramChannelFactory(Executors.newCachedThreadPool(), 10);
 
 	}
 
