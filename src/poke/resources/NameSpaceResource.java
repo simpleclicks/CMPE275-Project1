@@ -381,7 +381,6 @@ public class NameSpaceResource implements Resource {
 
 	private Response namespaceListQuery(Header namespaceListQueryHeader, Payload namespaceListQueryBody) {
 		// TODO Auto-generated method stub
-		System.out.println("NameSpaceResource.namespaceListQuery()");
 		Response.Builder namespaceListQueryResponse = Response.newBuilder();
 		PayloadReply.Builder namespaceListQueryRespBody = PayloadReply.newBuilder();
 
@@ -389,6 +388,7 @@ public class NameSpaceResource implements Resource {
 		String space = namespaceListQueryBody.getSpace().getName();
 		namespaceListQueryResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListQueryHeader, ReplyStatus.SUCCESS, NAMESPACEDOESNOTEXIST).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
 
+		System.out.println("namespaceListQuery recieved for namespace"+space);
 		String namespacePath = HOMEDIR+File.separator+space;
 
 		int index = 0;
@@ -417,7 +417,7 @@ public class NameSpaceResource implements Resource {
 				namespaceListQueryRespBody.setSpaces(0, NameSpace.newBuilder().setName(space));
 				namespaceListQueryResponse.setBody(namespaceListQueryRespBody.build());
 				namespaceListQueryResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListQueryHeader, ReplyStatus.SUCCESS, DOCLISTFOUND));
-
+				logger.info("Namespace list sent successfully");
 			}
 		} catch (Exception e) {
 			// TODO: handle exception
