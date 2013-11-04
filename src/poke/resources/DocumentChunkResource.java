@@ -32,7 +32,7 @@ import poke.server.storage.jdbc.DatabaseStorage;
 
 public class DocumentChunkResource implements ChunkedResource {
 	
-	 protected static Logger logger = LoggerFactory.getLogger("DocumentResource");
+	 protected static Logger logger = LoggerFactory.getLogger("DocumentChunkResource");
 
      private static final String HOMEDIR = "home";
 
@@ -46,7 +46,7 @@ public class DocumentChunkResource implements ChunkedResource {
 
  	private static final int MAX_UNCHUNKED_FILE_SIZE = 26214400;
 
-	private static final long MAXWAITFORRESPONSE = 3000;
+	private static final long MAXWAITFORRESPONSE = 8000;
 
 	@Override
 	public List<Response> process(Request request) {
@@ -103,23 +103,25 @@ public class DocumentChunkResource implements ChunkedResource {
 				fileName = fileNameAway;
 			}
 			if (fileExists || awayExists) {
+				logger.info("Document found at " + HeartbeatManager.getInstance().getNodeId());
 				responses = docFindClient(docFindHeader, responses, fileName,
 						docFindResponse, docFindRespPayload, docFindRespHeader,
 						nameSpace);
 
 			} else if(!fileExists && docFindHeader.getOriginator().contains("Client")){
-				//TODO broadcast to all nodes
+				logger.info("Document not found, broadcasting request to all nodes.");
 				NodeResponseQueue.broadcastDocFind(nameSpace, docFindBody.getDoc().getDocName());
                 
                 try {
 
-					logger.info(" DocQuery: sleeping for 3000ms! Waiting for responses from the other nodes for DOCQUERY ");
+					logger.info(" DocFind: sleeping. Waiting for responses from the other nodes for DOCFIND ");
 
 					Thread.sleep(MAXWAITFORRESPONSE);
 					
 					boolean docFindResult = NodeResponseQueue.fetchDocFindResult(nameSpace , docFindBody.getDoc().getDocName());
 
 					if(docFindResult){
+						logger.info("Document found at external node..");
 						String tempfname = "temp" + File.separator
 						+ docFindBody.getSpace().getName() + File.separator
 						+ docFindBody.getDoc().getDocName();
@@ -140,15 +142,15 @@ public class DocumentChunkResource implements ChunkedResource {
 
 					e1.printStackTrace();
 				}
-			} else if(!fileExists && !docFindHeader.getOriginator().contains("Client")){
-				 docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
+			} else if(!fileExists && !awayExists && !docFindHeader.getOriginator().contains("Client")){
+				logger.info("Document not found at node " + HeartbeatManager.getInstance().getNodeId());
+				docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
 
-	             docFindRespHeader.setReplyMsg("Server could not find the file.");
-	             docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not Found").toBuilder().setOriginator(self));
-	             //docFindRespPayload.addSpacesBuilder();
-	              docFindResponse.setBody(docFindRespPayload.build());
-	              
-	             responses.add(docFindResponse.build());
+	            docFindRespHeader.setReplyMsg("Server could not find the file.");
+	            docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not Found").toBuilder().setOriginator(self));
+	            //docFindRespPayload.addSpacesBuilder();
+	            docFindResponse.setBody(docFindRespPayload.build());
+	            responses.add(docFindResponse.build());
 			}
 			
 		} catch (IOException e) {
@@ -177,6 +179,8 @@ public class DocumentChunkResource implements ChunkedResource {
 		java.io.File file = FileUtils.getFile(fileName);
 
 		long fileSize = FileUtils.sizeOf(file);
+		
+		logger.info("Writing the document to the temp folder.");
 
 		logger.info("Size of the file to be sent " + fileSize);
 
@@ -243,7 +247,7 @@ public class DocumentChunkResource implements ChunkedResource {
 							26214400);
 
 					logger.info("Total number of bytes read for chunk "
-							+ chunkId + ": " + bytesRead);
+							+ chunkId + " : " + bytesRead);
 
 					logger.info("Contents of the chunk "+chunkId+" : "+chunckContents);
 					

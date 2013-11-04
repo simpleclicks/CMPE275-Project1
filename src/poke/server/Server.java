@@ -26,6 +26,7 @@ import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.FileUtils;
 import org.jboss.netty.bootstrap.Bootstrap;
 import org.jboss.netty.bootstrap.ConnectionlessBootstrap;
 import org.jboss.netty.bootstrap.ServerBootstrap;
@@ -107,6 +108,10 @@ public class Server {
 		// resource initialization - how message are processed
 		BufferedInputStream br = null;
 		try {
+			FileUtils.forceMkdir(new File("home"));
+			FileUtils.forceMkdir(new File("temp"));
+			FileUtils.forceMkdir(new File("away"));
+			FileUtils.forceMkdir(new File("download"));
 			byte[] raw = new byte[(int) cfg.length()];
 			br = new BufferedInputStream(new FileInputStream(cfg));
 			br.read(raw);
