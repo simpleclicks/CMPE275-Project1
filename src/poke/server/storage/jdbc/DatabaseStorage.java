@@ -489,8 +489,6 @@ public class DatabaseStorage {
 				e.printStackTrace();
 			}
 		}
-		
-		
 	}
 
 	public List<String> getDocuments(String replicatedNode) {
@@ -546,7 +544,7 @@ public class DatabaseStorage {
 		try {
 			
 			conn = cpool.getConnection();
-			String sql = "select * from document where owner = ? and ToBeReplicated = true and isReplicated = false and ReplicationCount < 1";
+			String sql = "select * from document where owner = ? and ToBeReplicated = true and isReplicated = false and ReplicationInProgress = false and ReplicationCount < 1";
 			List<Document> documentList = qr.query(conn, sql, getDocumentsRsh, self);
 			
 			if(documentList == null || documentList.size() == 0) {

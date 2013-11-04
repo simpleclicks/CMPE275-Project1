@@ -26,8 +26,6 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioDatagramChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import poke.server.Server;
-import poke.server.management.HeartbeatData;
 import poke.server.management.HeartbeatManager;
 import eye.Comm.Management;
 import eye.Comm.Network;

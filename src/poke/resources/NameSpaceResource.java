@@ -56,6 +56,7 @@ public class NameSpaceResource implements Resource {
 	private static final String NAMESPACEREMOVED = "Namespace removed successfully";
 	private static final String NAMESPACEDOESNOTEXIST = "Namespace does not exist";
 	private static final String DOCLISTFOUND = "List of document was found";
+	static final int MAX_ATTEMPT = 5;
 
 	private static final File homeDir = new File(HOMEDIR);
 	private static final File visitorDir = new File(VISITORDIR);
@@ -232,10 +233,21 @@ public class NameSpaceResource implements Resource {
 		}
 
 		NodeResponseQueue.broadcastNamespaceQuery(nameSpace);
+		
+		
 		try{
 			logger.info(" Namespace resousrce sleeping for 2000ms! Witing for responses from the other nodes for NAMESPACEQUERY ");
 			
-			Thread.sleep(2000);
+			Thread.sleep(6000);
+			
+			String namespaceRemoveBroadcastResult = NodeResponseQueue.fetchNamespaceRemoveResult(nameSpace);
+			
+			if(namespaceRemoveBroadcastResult.equalsIgnoreCase("SUCCESS")){
+
+                namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
+                return namespaceRemoveResponseBuilder.build();
+
+        }
 		}
 		catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
@@ -322,17 +334,27 @@ public class NameSpaceResource implements Resource {
 		String filename = null;
 		String filePath = null;
 		String fileExt = null;
-
+		int attempt = 0;
 		NodeResponseQueue.broadcastNamespaceListQuery(nameSpace);
 
 
 		try {
+			Thread.sleep(6000);
 
-			logger.info(" Namespace resousrce sleeping for 2000ms! Witing for responses from the other nodes for NAMESPACELISTQUERY ");
-
-			Thread.sleep(2000);
-
+			logger.info(" Namespace resousrce Witing for responses from the other nodes for NAMESPACELISTQUERY ");
+			do{
 			listOne = (List<Document>)NodeResponseQueue.fetchNamespaceList(nameSpace);
+			
+			if(listOne.isEmpty()){
+				attempt++;
+				continue;
+			}else{
+				logger.info("Response from broadcast namespace list queryrecieved");
+				break;
+				
+			}
+			
+			}while(attempt < MAX_ATTEMPT);
 
 			for (Document old : listOne){
 				System.out.println("inside file old for loop");

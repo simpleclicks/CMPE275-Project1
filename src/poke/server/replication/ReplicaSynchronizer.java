@@ -21,7 +21,7 @@ public class ReplicaSynchronizer extends Thread{
 	static final private DatabaseStorage dbAct = DatabaseStorage.getInstance();
 	static final private String self = HeartbeatManager.getInstance().getNodeId();
 	protected static final Logger logger = LoggerFactory.getLogger("ReplicaSynchronizer ");
-	private static final int MAXWAITFORRESPONSE = 6000;
+	private static final int MAXWAITFORRESPONSE = 10000;
 	
 	@Override
 	public void run() {
@@ -36,6 +36,13 @@ public class ReplicaSynchronizer extends Thread{
 			return;
 		
 		}else{
+			
+			try {
+				Thread.sleep(MAXWAITFORRESPONSE*6);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
 			
 			logger.info("Number of replicas to be synced up "+replicatedFiles.size());
 			logger.info(" Initiating synchronization process...");

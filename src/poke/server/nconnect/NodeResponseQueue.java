@@ -46,6 +46,7 @@ public class NodeResponseQueue {
 	static final int RESPONSE_WAIT_MAX_TIME = 5000;
 
 	static final int MAX_CHUNK_SIZE = 26214400;
+	static final int MAX_ATTEMPT = 5;
 	
 
 	static private HashMap<String, String> responseToChunkMap = new HashMap<String, String>();
@@ -391,6 +392,7 @@ inner:			do{
 				return true;
 			}else if(result.equalsIgnoreCase("NA")){
 				logger.warn("No response from node "+nc.getNodeId()+"for replica query of "+trimmedPath+"/"+fileName);
+				attempt++;
 				continue inner;
 			}else if(result.equalsIgnoreCase("Failure")){
 				logger.warn("Replica "+trimmedPath+fileName+" does not exists at "+nc.getNodeId());
@@ -493,6 +495,7 @@ inner:						do{
 									continue outer;
 								else if(replicaHSResp.equalsIgnoreCase("Success")){
 									finalNodeId = nc.getNodeId();
+									dbAct.setReplicationInProgress(path, fileName);
 									finalizedNode = nc;
 									replicaHS = true;
 									break outer;
@@ -551,18 +554,22 @@ inner:						do{
 								else if(replicaHSResp.equalsIgnoreCase("Failure")){
 									logger.error("Failure response received from node "+finalNodeId+" for addReplica of "+actFilePath+" for chunk "+(chunkId+1));
 									logger.error(" Aborting the replication process for "+actFilePath);
+									dbAct.resetReplicationInProgress(path, fileName);
 									break outer;
 								}
 								else if(replicaHSResp.equalsIgnoreCase("Success")){
 									logger.error("Success response received from node "+finalNodeId+" for addReplica of "+actFilePath+" for chunk "+(chunkId+1));
+									dbAct.setReplicationInProgress(path, fileName);
 									if((chunkId+1) == totalChunks){
 										dbAct.updateReplicationCount(path, fileName, finalNodeId, 1);
+										dbAct.resetReplicationInProgress(path, fileName);
 										replicated = true;
 										break outer;
 									}else
 									continue outer;
 								}
 							}while(attempt < RESPONSE_WAIT_MAX_RETRY);
+							fis.close();
 					}
 
 					}catch(IOException ioExcep){
@@ -575,9 +582,10 @@ inner:						do{
 					
 					if(replicated && replicaHS)
 						logger.info("Replication process completed successfully for "+actFilePath+" with node "+finalNodeId);
-					else
+					else{
+						dbAct.resetReplicationInProgress(path, fileName);
 						logger.info("Replication process failed for "+actFilePath+" with node "+finalNodeId);
-
+					}
 				}else{
 
 					logger.warn("No network node ready/available for replication of "+actFilePath+" of size "+size);
@@ -606,8 +614,8 @@ inner:						do{
 
 	}*/
 
-	public static boolean fetchDocFindResult(String nameSpace, String fileName) {
-		boolean queryResult = false;
+	public static String fetchDocFindResult(String nameSpace, String fileName) {
+		String queryResult = null;
 
 		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
 		try{
@@ -623,11 +631,11 @@ inner:						do{
 			if (result.equalsIgnoreCase("Failure")) {
 				logger.info("Document with the given name "
 						+ nameSpace + "/" + fileName +" was not found.");
-				return false;
+				return "Failure";
 			} else if (result.equalsIgnoreCase("Success")){
 				logger.info("Document with the given name "
 						+ nameSpace + "/" + fileName +" was found.");
-				return true;		
+				return "Success";		
 			}
 		}
 		}
@@ -637,27 +645,61 @@ inner:						do{
 		return queryResult;
 	}
 
+	public static String fetchNamespaceRemoveResult( String nameSpace){
+
+		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+		
+		String result = "NA";
+
+		for(NodeClient nc: activeNodeArray){
+
+			result = nc.checkNamespaceRemoveResponse(nameSpace);
+
+			if(result.equalsIgnoreCase("Success")){
+				logger.info("Namespace remove successful for "+nameSpace);
+				return result;
+			}else if(result.equalsIgnoreCase("NA")){
+				logger.warn("No response from node "+nc.getNodeId());
+			}else if(result.equalsIgnoreCase("Failure"))
+				logger.warn("namespaceRemoveResponse: Node "+nc.getNodeId()+" does not have "+nameSpace);
+			}
+
+		return result;
+	}
+	
+	
 	public static List fetchNamespaceList(String namespace){
 		boolean queryResult = true;
 		List<Document> fileList= new ArrayList<Document>();
 		List<Document> newFileList = new ArrayList<Document>();
 		logger.info("In fetchNameSpaceList");
 		NodeClient[] activeNodeArray = getActiveNodeInterface(true);
-
+		int attempt = 0;
 
 		for (NodeClient nc : activeNodeArray) {
 			String result = "NA";
 
 			//  while(result.equalsIgnoreCase("NA")){
+			do{
+			
 			try {
-				fileList = (List<Document>) (nc.sendNamespaceList(namespace));
 				Thread.sleep(8000);
-				newFileList.addAll(fileList);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				logger.error("Thread exception in fetchNamespaceList "+e.getMessage());
 			}
-
+			fileList = (List<Document>) (nc.sendNamespaceList(namespace));
+			if (fileList.isEmpty()){
+				attempt++;
+				continue;
+			}else{
+				
+				newFileList.addAll(fileList);
+				break;
+			}
+			
+			}while(attempt < MAX_ATTEMPT);
+			
 			logger.info("Files returned from fetchNameSpaceList " +newFileList);
 			return newFileList;                
 
