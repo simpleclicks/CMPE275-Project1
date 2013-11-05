@@ -30,8 +30,8 @@ import poke.server.resources.ResourceUtil;
 
 
 public class DocumentChunkResource implements ChunkedResource {
-	
-	 protected static Logger logger = LoggerFactory.getLogger("DocumentChunkResource");
+        
+         protected static Logger logger = LoggerFactory.getLogger("DocumentChunkResource");
 
      private static final String HOMEDIR = "home";
 
@@ -43,121 +43,121 @@ public class DocumentChunkResource implements ChunkedResource {
      
      private static final File visitorDir = new File(VISITORDIR);     
 
- 	private static final int MAX_UNCHUNKED_FILE_SIZE = 26214400;
+         private static final int MAX_UNCHUNKED_FILE_SIZE = 26214400;
 
-	private static final long MAXWAITFORRESPONSE = 8000;
+        private static final long MAXWAITFORRESPONSE = 8000;
 
-	@Override
-	public List<Response> process(Request request) {
+        @Override
+        public List<Response> process(Request request) {
 
-		List<Response> responses = new ArrayList<Response>();
-		int opChoice = 0;
-		Header docOpHeader = request.getHeader();
-		Payload docOpBody = request.getBody();
-		opChoice = docOpHeader.getRoutingId().getNumber();
+                List<Response> responses = new ArrayList<Response>();
+                int opChoice = 0;
+                Header docOpHeader = request.getHeader();
+                Payload docOpBody = request.getBody();
+                opChoice = docOpHeader.getRoutingId().getNumber();
 
-		switch (opChoice) {
-		
-		 case 21:
-				 responses = docFind(docOpHeader, docOpBody); 
-				 break;
+                switch (opChoice) {
+                
+                 case 21:
+                                 responses = docFind(docOpHeader, docOpBody); 
+                                 break;
              
-			default:
-				System.out
-						.println("DocumentChunkResource: No matching doc op id found");
+                        default:
+                                System.out
+                                                .println("DocumentChunkResource: No matching doc op id found");
 
-		}
+                }
 
-		return responses;
-	}
+                return responses;
+        }
 
-	private List<Response> docFind(Header docFindHeader, Payload docFindBody){
-		
-		List<Response> responses = new ArrayList<Response>();
-		String fileName = HOMEDIR + File.separator
-				+ docFindBody.getSpace().getName() + File.separator
-				+ docFindBody.getDoc().getDocName();
-		String fileNameAway = VISITORDIR + File.separator
-				+ docFindBody.getSpace().getName() + File.separator
-				+ docFindBody.getDoc().getDocName();
-		boolean fileExists = false;
-		boolean awayExists= false;
-		Response.Builder docFindResponse = Response.newBuilder();
-		PayloadReply.Builder docFindRespPayload = PayloadReply.newBuilder();
-		Header.Builder docFindRespHeader = Header.newBuilder();
-		String nameSpace = docFindBody.getSpace().getName();
-		String self = HeartbeatManager.getInstance().getNodeId();
-		docFindRespPayload.addDocsBuilder();
-		docFindRespPayload.addSpacesBuilder();
-		
-		docFindRespPayload.setDocs(0, Document.newBuilder().setDocName(fileName));
-		//if(nameSpace == null)
-		docFindRespPayload.setSpaces(0, NameSpace.newBuilder().setName(nameSpace));
-		
-		try {
-			fileExists = FileUtils.directoryContains(homeDir,
-					new File(fileName));
-			awayExists = FileUtils.directoryContains(visitorDir, new File(fileNameAway));
-			if(awayExists){
-				fileName = fileNameAway;
-			}
-			if (fileExists || awayExists) {
-				logger.info("Document found at " + HeartbeatManager.getInstance().getNodeId());
-				responses = docFindClient(docFindHeader, responses, fileName,
-						docFindResponse, docFindRespPayload, docFindRespHeader,
-						nameSpace);
+        private List<Response> docFind(Header docFindHeader, Payload docFindBody){
+                
+                List<Response> responses = new ArrayList<Response>();
+                String fileName = HOMEDIR + File.separator
+                                + docFindBody.getSpace().getName() + File.separator
+                                + docFindBody.getDoc().getDocName();
+                String fileNameAway = VISITORDIR + File.separator
+                                + docFindBody.getSpace().getName() + File.separator
+                                + docFindBody.getDoc().getDocName();
+                boolean fileExists = false;
+                boolean awayExists= false;
+                Response.Builder docFindResponse = Response.newBuilder();
+                PayloadReply.Builder docFindRespPayload = PayloadReply.newBuilder();
+                Header.Builder docFindRespHeader = Header.newBuilder();
+                String nameSpace = docFindBody.getSpace().getName();
+                String self = HeartbeatManager.getInstance().getNodeId();
+                docFindRespPayload.addDocsBuilder();
+                docFindRespPayload.addSpacesBuilder();
+                
+                docFindRespPayload.setDocs(0, Document.newBuilder().setDocName(fileName));
+                //if(nameSpace == null)
+                docFindRespPayload.setSpaces(0, NameSpace.newBuilder().setName(nameSpace));
+                
+                try {
+                        fileExists = FileUtils.directoryContains(homeDir,
+                                        new File(fileName));
+                        awayExists = FileUtils.directoryContains(visitorDir, new File(fileNameAway));
+                        if(awayExists){
+                                fileName = fileNameAway;
+                        }
+                        if (fileExists || awayExists) {
+                                logger.info("Document found at " + HeartbeatManager.getInstance().getNodeId());
+                                responses = docFindClient(docFindHeader, responses, fileName,
+                                                docFindResponse, docFindRespPayload, docFindRespHeader,
+                                                nameSpace);
 
-			} else if(!fileExists && docFindHeader.getOriginator().contains("Client")){
-				logger.info("Document not found, broadcasting request to all nodes.");
-				NodeResponseQueue.broadcastDocFind(nameSpace, docFindBody.getDoc().getDocName());
+                        } else if(!fileExists && docFindHeader.getOriginator().contains("Client")){
+                                logger.info("Document not found, broadcasting request to all nodes.");
+                                NodeResponseQueue.broadcastDocFind(nameSpace, docFindBody.getDoc().getDocName());
                 
                 try {
 
-					logger.info(" DocFind: sleeping. Waiting for responses from the other nodes for DOCFIND ");
+                                        logger.info(" DocFind: sleeping. Waiting for responses from the other nodes for DOCFIND ");
 
-					//Thread.sleep(MAXWAITFORRESPONSE);
-					String docFindResult = null;
-					
-					do{
-						docFindResult = NodeResponseQueue.fetchDocFindResult(nameSpace , docFindBody.getDoc().getDocName());
-						Thread.sleep(2000);
-					}while(docFindResult == null);
+                                        //Thread.sleep(MAXWAITFORRESPONSE);
+                                        String docFindResult = null;
+                                        
+                                        do{
+                                                docFindResult = NodeResponseQueue.fetchDocFindResult(nameSpace , docFindBody.getDoc().getDocName());
+                                                Thread.sleep(2000);
+                                        }while(docFindResult == null);
 
-					if(docFindResult=="Success"){
-						logger.info("Document found at external node..");
-						String tempfname = "temp" + File.separator
-						+ docFindBody.getSpace().getName() + File.separator
-						+ docFindBody.getDoc().getDocName();
-						responses = docFindClient(docFindHeader, responses, tempfname,
-								docFindResponse, docFindRespPayload, docFindRespHeader,
-								nameSpace);
-						//docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, "Document created in temp").toBuilder().setOriginator(self));
+                                        if(docFindResult=="Success"){
+                                                logger.info("Document found at external node..");
+                                                String tempfname = "temp" + File.separator
+                                                + docFindBody.getSpace().getName() + File.separator
+                                                + docFindBody.getDoc().getDocName();
+                                                responses = docFindClient(docFindHeader, responses, tempfname,
+                                                                docFindResponse, docFindRespPayload, docFindRespHeader,
+                                                                nameSpace);
+                                                //docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, "Document created in temp").toBuilder().setOriginator(self));
 
-					}else{
+                                        }else{
 
-						docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not found").toBuilder().setOriginator(self));
-						 docFindResponse.setBody(docFindRespPayload.build());
-			              
-			             responses.add(docFindResponse.build());
-					}
+                                                docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not found").toBuilder().setOriginator(self));
+                                                 docFindResponse.setBody(docFindRespPayload.build());
+                                      
+                                     responses.add(docFindResponse.build());
+                                        }
 
-				} catch (InterruptedException e1) {
+                                } catch (InterruptedException e1) {
 
-					e1.printStackTrace();
-				}
-			} else if(!fileExists && !awayExists && !docFindHeader.getOriginator().contains("Client")){
-				logger.info("Document not found at node " + HeartbeatManager.getInstance().getNodeId());
-				docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
+                                        e1.printStackTrace();
+                                }
+                        } else if(!fileExists && !awayExists && !docFindHeader.getOriginator().contains("Client")){
+                                logger.info("Document not found at node " + HeartbeatManager.getInstance().getNodeId());
+                                docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
 
-	            docFindRespHeader.setReplyMsg("Server could not find the file.");
-	            docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not Found").toBuilder().setOriginator(self));
-	            //docFindRespPayload.addSpacesBuilder();
-	            docFindResponse.setBody(docFindRespPayload.build());
-	            responses.add(docFindResponse.build());
-			}
-			
-		} catch (IOException e) {
-			  logger.info("IO Exception while creating the file and/or writing the content to it "+e.getMessage());
+                    docFindRespHeader.setReplyMsg("Server could not find the file.");
+                    docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not Found").toBuilder().setOriginator(self));
+                    //docFindRespPayload.addSpacesBuilder();
+                    docFindResponse.setBody(docFindRespPayload.build());
+                    responses.add(docFindResponse.build());
+                        }
+                        
+                } catch (IOException e) {
+                          logger.info("IO Exception while creating the file and/or writing the content to it "+e.getMessage());
 
               docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
 
@@ -167,151 +167,145 @@ public class DocumentChunkResource implements ChunkedResource {
               responses.add(docFindResponse.build());
 
               e.printStackTrace();
-		}
+                }
 
-		return responses;
-	}
+                return responses;
+        }
 
-	private List<Response> docFindClient(Header docFindHeader, List<Response> responses,
-			String fileName, Response.Builder docFindResponse,
-			PayloadReply.Builder docFindRespPayload,
-			Header.Builder docFindRespHeader, String nameSpace) {
-		
-		String fileExt = FilenameUtils.getExtension(fileName);
+        private List<Response> docFindClient(Header docFindHeader, List<Response> responses,
+                        String fileName, Response.Builder docFindResponse,
+                        PayloadReply.Builder docFindRespPayload,
+                        Header.Builder docFindRespHeader, String nameSpace) {
+                
+                String fileExt = FilenameUtils.getExtension(fileName);
 
-		java.io.File file = FileUtils.getFile(fileName);
+                java.io.File file = FileUtils.getFile(fileName);
 
-		long fileSize = FileUtils.sizeOf(file);
-		
-		logger.info("Writing the document to the temp folder.");
+                long fileSize = FileUtils.sizeOf(file);
+                
+                logger.info("Writing the document to the temp folder.");
 
-		logger.info("Size of the file to be sent " + fileSize);
+                logger.info("Size of the file to be sent " + fileSize);
 
-		long totalChunk = ((fileSize / MAX_UNCHUNKED_FILE_SIZE)) + 1;
+                long totalChunk = ((fileSize / MAX_UNCHUNKED_FILE_SIZE)) + 1;
 
-		if (fileSize < MAX_UNCHUNKED_FILE_SIZE) {
+                if (fileSize < MAX_UNCHUNKED_FILE_SIZE) {
 
-			logger.info(" DocFind: Sending the complete file in unchunked mode");
+                        logger.info(" DocFind: Sending the complete file in unchunked mode");
 
-			logger.info("Total number of chunks " + totalChunk);
+                        logger.info("Total number of chunks " + totalChunk);
 
-			byte[] fileContents = null;
+                        byte[] fileContents = null;
 
-			try {
+                        try {
 
-				fileContents = FileUtils.readFileToByteArray(file);
+                                fileContents = FileUtils.readFileToByteArray(file);
 
-			} catch (IOException e) {
+                        } catch (IOException e) {
 
-				logger.error("Error while reading the specified file "
-						+ e.getMessage());
-				docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
+                                logger.error("Error while reading the specified file "
+                                                + e.getMessage());
+                                docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
 
-				docFindRespHeader
-						.setReplyMsg("Server Exception while downloading the file found.");
-				docFindResponse.setBody(docFindRespPayload.build());
-				docFindResponse.setHeader(docFindHeader);
-				responses.add(docFindResponse.build());
-				return responses;
-			}
-			
-			docFindRespPayload.addDocsBuilder();
+                                docFindRespHeader
+                                                .setReplyMsg("Server Exception while downloading the file found.");
+                                docFindResponse.setBody(docFindRespPayload.build());
+                                docFindResponse.setHeader(docFindHeader);
+                                responses.add(docFindResponse.build());
+                                return responses;
+                        }
+                        
+                        docFindRespPayload.addDocsBuilder();
 
-			docFindRespPayload.setDocs(0, Document.newBuilder().setDocName(fileName)
-			.setDocExtension(fileExt)
-			.setChunkContent(ByteString.copyFrom(fileContents))
-			.setDocSize(fileSize).setTotalChunk(totalChunk)
-			.setChunkId(1));
+                        docFindRespPayload.setDocs(0, Document.newBuilder().setDocName(fileName)
+                        .setDocExtension(fileExt)
+                        .setChunkContent(ByteString.copyFrom(fileContents))
+                        .setDocSize(fileSize).setTotalChunk(totalChunk)
+                        .setChunkId(1));
 
-			docFindResponse.setBody(docFindRespPayload.build());
-			docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, DOCFOUNDSUCCESS));
-			responses.add(docFindResponse.build());
-			return responses;
+                        docFindResponse.setBody(docFindRespPayload.build());
+                        docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, DOCFOUNDSUCCESS));
+                        responses.add(docFindResponse.build());
+                        return responses;
 
-		} else {
+                } else {
 
-			logger.info(" DocFind: Uploading the file in chunked mode");
+                        logger.info(" DocFind: Uploading the file in chunked mode");
 
-			logger.info("Total number of chunks " + totalChunk);
+                        logger.info("Total number of chunks " + totalChunk);
 
-			try {
+                        try {
 
-				int bytesRead = 0;
+                                int bytesRead = 0;
 
-				int chunkId = 1;
+                                int chunkId = 1;
 
-				FileInputStream chunkeFIS = new FileInputStream(file);
+                                FileInputStream chunkeFIS = new FileInputStream(file);
 
-				do {
-					bytesRead = 26214400;
-					int bytesActuallyRead = 0;
+                                do {
 
-						byte[] chunckContents = new byte[26214400];
-						
-						if(chunkeFIS.available()<26214400){
-							bytesRead = chunkeFIS.available();
-							chunckContents = new byte[chunkeFIS.available()];
-						}
+                                        byte[] chunckContents = new byte[26214400];
 
-						bytesActuallyRead = IOUtils.read(chunkeFIS, chunckContents, 0, bytesRead);
+                                        bytesRead = IOUtils.read(chunkeFIS, chunckContents, 0,
+                                                        26214400);
 
-					logger.info("Total number of bytes read for chunk "
-							+ chunkId + " : " + bytesActuallyRead);
+                                        logger.info("Total number of bytes read for chunk "
+                                                        + chunkId + " : " + bytesRead);
 
-					logger.info("Contents of the chunk "+chunkId+" : "+chunckContents);
-					
-					docFindRespPayload.addDocsBuilder();
+                                        logger.info("Contents of the chunk "+chunkId+" : "+chunckContents);
+                                        
+                                        docFindRespPayload.addDocsBuilder();
 
-					docFindRespPayload.setDocs(0,Document
-							.newBuilder()
-							.setDocName(fileName)
-							.setDocExtension(fileExt)
-							.setDocSize(fileSize).setTotalChunk(totalChunk)
-							.setChunkId(chunkId));
+                                        docFindRespPayload.setDocs(0,Document
+                                                        .newBuilder()
+                                                        .setDocName(fileName)
+                                                        .setDocExtension(fileExt)
+                                                        .setDocSize(fileSize).setTotalChunk(totalChunk)
+                                                        .setChunkId(chunkId));
 
-					docFindResponse.setBody(docFindRespPayload.build());
+                                        docFindResponse.setBody(docFindRespPayload.build());
 
-					docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, DOCFOUNDSUCCESS));
+                                        docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, DOCFOUNDSUCCESS));
 
-					//chunckContents = null;
-					responses.add(docFindResponse.build());
-					System.gc();
+                                        //chunckContents = null;
+                                        responses.add(docFindResponse.build());
+                                        System.gc();
 
-					chunkId++;
+                                        chunkId++;
 
-				} while (chunkeFIS.available() > 0);
+                                } while (chunkeFIS.available() > 0);
 
-				logger.info("Out of chunked write while loop");
+                                logger.info("Out of chunked write while loop");
 
-			} catch (FileNotFoundException e) {
+                        } catch (FileNotFoundException e) {
 
-				logger.info("IO Exception while creating the file and/or writing the content to it "+e.getMessage());
-				
-				  docFindResponse.setBody(docFindRespPayload.build());
-		          docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
+                                logger.info("IO Exception while creating the file and/or writing the content to it "+e.getMessage());
+                                
+                                  docFindResponse.setBody(docFindRespPayload.build());
+                          docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
 
-		          docFindRespHeader.setReplyMsg("Server Exception while downloading the requested file.");
-		          
-		          responses.add(docFindResponse.build());
+                          docFindRespHeader.setReplyMsg("Server Exception while downloading the requested file.");
+                          
+                          responses.add(docFindResponse.build());
 
-		          e.printStackTrace();
+                          e.printStackTrace();
 
-			} catch (IOException e) {
+                        } catch (IOException e) {
 
-				logger.info("IO Exception while creating the file and/or writing the content to it "+e.getMessage());
-				
-				docFindResponse.setBody(docFindRespPayload.build());
+                                logger.info("IO Exception while creating the file and/or writing the content to it "+e.getMessage());
+                                
+                                docFindResponse.setBody(docFindRespPayload.build());
 
-		          docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
+                          docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
 
-		          docFindRespHeader.setReplyMsg("Server Exception while downloading the requested file.");
-		          
-		          responses.add(docFindResponse.build());
+                          docFindRespHeader.setReplyMsg("Server Exception while downloading the requested file.");
+                          
+                          responses.add(docFindResponse.build());
 
-		          e.printStackTrace();
-			}
-			return responses;
-		}
-	}
+                          e.printStackTrace();
+                        }
+                        return responses;
+                }
+        }
 
 }

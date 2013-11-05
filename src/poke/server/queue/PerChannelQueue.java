@@ -341,14 +341,14 @@ public class PerChannelQueue implements ChannelQueue {
 												logger.info("CHUNKED enqueuing response for client request for : " + response.getBody().getDocs(0).getChunkId());
 												Response tbE = respEnqueue.build();
 												sq.enqueueResponse(tbE);
-												
-												Thread.sleep(3000);
+												chunkeFIS.close();
+												Thread.sleep(5000);
 										}
 									}
 									else{
 										sq.enqueueResponse(response);
 									}
-									chunkeFIS.close();
+									
 								}
 								
 							}

@@ -44,411 +44,411 @@ import eye.Comm.Response;
 import eye.Comm.Header.ReplyStatus;
 
 public class NameSpaceResource implements Resource {
-	protected static Logger logger = LoggerFactory.getLogger("NamespaceResource");
-	private static final String HOMEDIR = "home";
+        protected static Logger logger = LoggerFactory.getLogger("NamespaceResource");
+        private static final String HOMEDIR = "home";
 
-	private static final String VISITORDIR = "away";
+        private static final String VISITORDIR = "away";
 
-	private static final String NAMESPACEEXIST = " requested namespacce already exist:";
-	private static final String NAMESPACENOTDIRECTORY = "Requested namespace is not a directory ";
-	private static final String NAMESPACEINEXISTENTMSG = " Requested namespacce does not exist: Please provide valid namespace";
-	private static final String INTERNALSERVERERRORMSG ="Failed to serve the request: Internal Server Error";
-	private static final String NAMESPACEREMOVED = "Namespace removed successfully";
-	private static final String NAMESPACEDOESNOTEXIST = "Namespace does not exist";
-	private static final String DOCLISTFOUND = "List of document was found";
-	static final int MAX_ATTEMPT = 5;
+        private static final String NAMESPACEEXIST = " requested namespacce already exist:";
+        private static final String NAMESPACENOTDIRECTORY = "Requested namespace is not a directory ";
+        private static final String NAMESPACEINEXISTENTMSG = " Requested namespacce does not exist: Please provide valid namespace";
+        private static final String INTERNALSERVERERRORMSG ="Failed to serve the request: Internal Server Error";
+        private static final String NAMESPACEREMOVED = "Namespace removed successfully";
+        private static final String NAMESPACEDOESNOTEXIST = "Namespace does not exist";
+        private static final String DOCLISTFOUND = "List of document was found";
+        static final int MAX_ATTEMPT = 5;
 
-	private static final File homeDir = new File(HOMEDIR);
-	private static final File visitorDir = new File(VISITORDIR);
-
-
-	@Override
-	public Response process(Request request) {
-		// TODO Auto-generated method stub
-
-		int opChoice = 0;
-
-		Response docOpResponse = null;
-
-		Header docOpHeader = request.getHeader();
-
-		Payload docOpBody =  request.getBody();
-
-		opChoice = docOpHeader.getRoutingId().getNumber();
-
-		switch(opChoice){
-		case 10:
-			docOpResponse = namespaceAdd(docOpHeader, docOpBody);
-			break;
-
-		case 11:
-			docOpResponse = namespaceList(docOpHeader, docOpBody);
-			break;
-
-		case 13:
-			docOpResponse = namespaceRemove(docOpHeader, docOpBody);
-			break;	
-
-		case 14:
-			docOpResponse = namespaceQuery(docOpHeader, docOpBody);
-			break;	
-
-		case 15:
-			docOpResponse = namespaceListQuery(docOpHeader, docOpBody);
-			break;	
+        private static final File homeDir = new File(HOMEDIR);
+        private static final File visitorDir = new File(VISITORDIR);
 
 
-		default:
-			System.out.println("NamespaceResource: No matching doc op id found for "+opChoice);
-		}
-		return docOpResponse;
-	}
+        @Override
+        public Response process(Request request) {
+                // TODO Auto-generated method stub
 
-	private Response namespaceAdd(Header namespaceAddHeader, Payload namespaceAddBody) {
-		// Add new namespace
+                int opChoice = 0;
 
-		String nameSpace = namespaceAddBody.getSpace().getName();
-		String namespacePath = HOMEDIR+File.separator+nameSpace;
+                Response docOpResponse = null;
 
-		File namespaceDir = new File(namespacePath);
-		Response.Builder namespaceAddResponse = Response.newBuilder();
-		Header.Builder namespaceAddHeaderBuilder = Header.newBuilder(namespaceAddHeader);
-		boolean checkNamespace = false;
+                Header docOpHeader = request.getHeader();
 
-		try {
-			FileUtils.forceMkdir(homeDir);
-			checkNamespace = FileUtils.directoryContains(homeDir, namespaceDir);
-			if(checkNamespace){
-				logger.info("Namespace already exists");
-				namespaceAddResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceAddHeader, ReplyStatus.FAILURE, NAMESPACEEXIST));
+                Payload docOpBody =  request.getBody();
 
-				return namespaceAddResponse.build();
-			} else {
-				try{
-					FileUtils.forceMkdir(namespaceDir);
-					namespaceAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);
-					namespaceAddHeaderBuilder.setReplyMsg("namespace created  Successfully");
-				} catch (Exception e) {
+                opChoice = docOpHeader.getRoutingId().getNumber();
 
-					logger.warn("Exception while creating namespace "+ nameSpace+ " " + e.getMessage());
+                switch(opChoice){
+                case 10:
+                        docOpResponse = namespaceAdd(docOpHeader, docOpBody);
+                        break;
 
-					namespaceAddHeaderBuilder.setReplyCode(Header.ReplyStatus.FAILURE);
-					namespaceAddHeaderBuilder.setReplyMsg("Server Exception while creating namespace");
-				}
-			}
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-			namespaceAddHeaderBuilder.setReplyCode(Header.ReplyStatus.FAILURE);
-			namespaceAddHeaderBuilder.setReplyMsg("Server Exception while checking for namespace existance");
-		}
+                case 11:
+                        docOpResponse = namespaceList(docOpHeader, docOpBody);
+                        break;
 
-		namespaceAddResponse.setHeader(namespaceAddHeaderBuilder);
-		namespaceAddResponse.setBody(PayloadReply.newBuilder().build());
+                case 13:
+                        docOpResponse = namespaceRemove(docOpHeader, docOpBody);
+                        break;        
 
-		return namespaceAddResponse.build();
+                case 14:
+                        docOpResponse = namespaceQuery(docOpHeader, docOpBody);
+                        break;        
 
-	}
+                case 15:
+                        docOpResponse = namespaceListQuery(docOpHeader, docOpBody);
+                        break;        
 
 
-	private Response namespaceRemove(Header namespaceRemoveHeader, Payload namespaceRemoveBody) {
-		// Remove the namespace
+                default:
+                        System.out.println("NamespaceResource: No matching doc op id found for "+opChoice);
+                }
+                return docOpResponse;
+        }
 
-		String nameSpace = namespaceRemoveBody.getSpace().getName();
+        private Response namespaceAdd(Header namespaceAddHeader, Payload namespaceAddBody) {
+                // Add new namespace
 
-		logger.info("namespace to be deleted: "+nameSpace);
+                String nameSpace = namespaceAddBody.getSpace().getName();
+                String namespacePath = HOMEDIR+File.separator+nameSpace;
 
-		Response.Builder namespaceRemoveResponseBuilder = Response.newBuilder();
+                File namespaceDir = new File(namespacePath);
+                Response.Builder namespaceAddResponse = Response.newBuilder();
+                Header.Builder namespaceAddHeaderBuilder = Header.newBuilder(namespaceAddHeader);
+                boolean checkNamespace = false;
 
-		namespaceRemoveResponseBuilder.setBody(PayloadReply.newBuilder().build());
+                try {
+                        FileUtils.forceMkdir(homeDir);
+                        checkNamespace = FileUtils.directoryContains(homeDir, namespaceDir);
+                        if(checkNamespace){
+                                logger.info("Namespace already exists");
+                                namespaceAddResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceAddHeader, ReplyStatus.FAILURE, NAMESPACEEXIST));
 
-		if(nameSpace != null && nameSpace.length() > 0){
+                                return namespaceAddResponse.build();
+                        } else {
+                                try{
+                                        FileUtils.forceMkdir(namespaceDir);
+                                        namespaceAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);
+                                        namespaceAddHeaderBuilder.setReplyMsg("namespace created  Successfully");
+                                } catch (Exception e) {
 
-			String namespacePath = HOMEDIR+File.separator+nameSpace;
+                                        logger.warn("Exception while creating namespace "+ nameSpace+ " " + e.getMessage());
 
-			File namespaceDir = new File (namespacePath);
+                                        namespaceAddHeaderBuilder.setReplyCode(Header.ReplyStatus.FAILURE);
+                                        namespaceAddHeaderBuilder.setReplyMsg("Server Exception while creating namespace");
+                                }
+                        }
+                } catch (Exception e) {
+                        logger.error(e.getMessage());
+                        namespaceAddHeaderBuilder.setReplyCode(Header.ReplyStatus.FAILURE);
+                        namespaceAddHeaderBuilder.setReplyMsg("Server Exception while checking for namespace existance");
+                }
 
-			try {
+                namespaceAddResponse.setHeader(namespaceAddHeaderBuilder);
+                namespaceAddResponse.setBody(PayloadReply.newBuilder().build());
 
-				boolean checkNamespace = FileUtils.directoryContains(homeDir, namespaceDir);
+                return namespaceAddResponse.build();
 
-				if(checkNamespace){
-
-					if(namespaceDir.isDirectory()){
-						FileUtils.forceDelete(namespaceDir);
-						logger.info("Namespace successfully deleted");
-						namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
-					}
-					else{
-						namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACENOTDIRECTORY+"Supplied namespace is not directory"));
-						//return namespaceRemoveResponseBuilder.build();
-					}
-
-				}else{
-					namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACEINEXISTENTMSG));
-
-					//return namespaceRemoveResponseBuilder.build();
-				}
-				// remove replica namespace
-
-				String namespaceReplPath = VISITORDIR+File.separator+nameSpace;
-
-				File namespaceReplDir = new File (namespaceReplPath);
-
-				boolean checkReplNamespace = FileUtils.directoryContains(visitorDir, namespaceReplDir);
-
-				if(checkReplNamespace){
-
-					if(namespaceReplDir.isDirectory()){
-						FileUtils.forceDelete(namespaceReplDir);
-						logger.info("Namespace successfully deleted");
-						namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
+        }
 
 
-					}
-					else{
-						namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACENOTDIRECTORY+"Supplied namespace is not directory"));
-						//	return namespaceRemoveResponseBuilder.build();
-					}
+        private Response namespaceRemove(Header namespaceRemoveHeader, Payload namespaceRemoveBody) {
+                // Remove the namespace
 
-				}else{
-					namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACEINEXISTENTMSG));
+                String nameSpace = namespaceRemoveBody.getSpace().getName();
 
-					//	return namespaceRemoveResponseBuilder.build();
-				}
-			}
-			catch(Exception e){
+                logger.info("namespace to be deleted: "+nameSpace);
 
-				logger.error("Namespace Response: IO Exception while processing namespace delete request "+e.getMessage());
-				namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+                Response.Builder namespaceRemoveResponseBuilder = Response.newBuilder();
 
-				//	return namespaceRemoveResponseBuilder.build();
+                namespaceRemoveResponseBuilder.setBody(PayloadReply.newBuilder().build());
 
-			}
+                if(nameSpace != null && nameSpace.length() > 0){
 
-		}else{
-			namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+                        String namespacePath = HOMEDIR+File.separator+nameSpace;
 
-			return namespaceRemoveResponseBuilder.build();
+                        File namespaceDir = new File (namespacePath);
 
-		}
+                        try {
 
-		NodeResponseQueue.broadcastNamespaceQuery(nameSpace);
-		
-		
-		try{
-			logger.info(" Namespace resousrce sleeping for 2000ms! Witing for responses from the other nodes for NAMESPACEQUERY ");
-			
-			Thread.sleep(6000);
-			
-			String namespaceRemoveBroadcastResult = NodeResponseQueue.fetchNamespaceRemoveResult(nameSpace);
-			
-			if(namespaceRemoveBroadcastResult.equalsIgnoreCase("SUCCESS")){
+                                boolean checkNamespace = FileUtils.directoryContains(homeDir, namespaceDir);
+
+                                if(checkNamespace){
+
+                                        if(namespaceDir.isDirectory()){
+                                                FileUtils.forceDelete(namespaceDir);
+                                                logger.info("Namespace successfully deleted");
+                                                namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
+                                        }
+                                        else{
+                                                namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACENOTDIRECTORY+"Supplied namespace is not directory"));
+                                                //return namespaceRemoveResponseBuilder.build();
+                                        }
+
+                                }else{
+                                        namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACEINEXISTENTMSG));
+
+                                        //return namespaceRemoveResponseBuilder.build();
+                                }
+                                // remove replica namespace
+
+                                String namespaceReplPath = VISITORDIR+File.separator+nameSpace;
+
+                                File namespaceReplDir = new File (namespaceReplPath);
+
+                                boolean checkReplNamespace = FileUtils.directoryContains(visitorDir, namespaceReplDir);
+
+                                if(checkReplNamespace){
+
+                                        if(namespaceReplDir.isDirectory()){
+                                                FileUtils.forceDelete(namespaceReplDir);
+                                                logger.info("Namespace successfully deleted");
+                                                namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
+
+
+                                        }
+                                        else{
+                                                namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACENOTDIRECTORY+"Supplied namespace is not directory"));
+                                                //        return namespaceRemoveResponseBuilder.build();
+                                        }
+
+                                }else{
+                                        namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, NAMESPACEINEXISTENTMSG));
+
+                                        //        return namespaceRemoveResponseBuilder.build();
+                                }
+                        }
+                        catch(Exception e){
+
+                                logger.error("Namespace Response: IO Exception while processing namespace delete request "+e.getMessage());
+                                namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
+                                //        return namespaceRemoveResponseBuilder.build();
+
+                        }
+
+                }else{
+                        namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
+                        return namespaceRemoveResponseBuilder.build();
+
+                }
+
+                NodeResponseQueue.broadcastNamespaceQuery(nameSpace);
+                
+                
+                try{
+                        logger.info(" Namespace resousrce sleeping for 2000ms! Witing for responses from the other nodes for NAMESPACEQUERY ");
+                        
+                        Thread.sleep(6000);
+                        
+                        String namespaceRemoveBroadcastResult = NodeResponseQueue.fetchNamespaceRemoveResult(nameSpace);
+                        
+                        if(namespaceRemoveBroadcastResult.equalsIgnoreCase("SUCCESS")){
 
                 namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
                 return namespaceRemoveResponseBuilder.build();
 
         }
-		}
-		catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+                }
+                catch (InterruptedException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                        namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
 
-		}
+                }
 
-		//	logger.info("Namespace successfully deleted");
-		//	namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
+                //        logger.info("Namespace successfully deleted");
+                //        namespaceRemoveResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceRemoveHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED));
 
-		return namespaceRemoveResponseBuilder.build();
-	}
+                return namespaceRemoveResponseBuilder.build();
+        }
 
-	private Response namespaceQuery(Header namespaceQueryHeader , Payload namespaceQueryBody){
+        private Response namespaceQuery(Header namespaceQueryHeader , Payload namespaceQueryBody){
 
-		logger.info(" Received namespace query request from "+namespaceQueryHeader.getOriginator());
+                logger.info(" Received namespace query request from "+namespaceQueryHeader.getOriginator());
 
-		Response.Builder namespaceQueryResponseBuilder = Response.newBuilder();
+                Response.Builder namespaceQueryResponseBuilder = Response.newBuilder();
 
-		NameSpace space = namespaceQueryBody.getSpace();
-		namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.SUCCESS, NAMESPACEDOESNOTEXIST).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+                NameSpace space = namespaceQueryBody.getSpace();
+                namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.SUCCESS, NAMESPACEDOESNOTEXIST).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
 
-		String nameSpace =  null;
+                String nameSpace =  null;
 
-		String effHomeNS = HOMEDIR;
+                String effHomeNS = HOMEDIR;
 
-		String effAwayNS = VISITORDIR;
+                String effAwayNS = VISITORDIR;
 
-		if(space !=null){
-			nameSpace  = space.getName();
-			namespaceQueryResponseBuilder.setBody(PayloadReply.newBuilder().addSpaces(space));
-		}
+                if(space !=null){
+                        nameSpace  = space.getName();
+                        namespaceQueryResponseBuilder.setBody(PayloadReply.newBuilder().addSpaces(space));
+                }
 
-		if(nameSpace !=null && nameSpace.length() >0){
-			effHomeNS= effHomeNS+File.separator+nameSpace;
-			effAwayNS = effAwayNS+File.separator+nameSpace;
-		}
-		File parentHomeDir = new File(effHomeNS);
+                if(nameSpace !=null && nameSpace.length() >0){
+                        effHomeNS= effHomeNS+File.separator+nameSpace;
+                        effAwayNS = effAwayNS+File.separator+nameSpace;
+                }
+                File parentHomeDir = new File(effHomeNS);
 
-		File parentAwayDir = new File(effAwayNS);
+                File parentAwayDir = new File(effAwayNS);
 
-		try {
+                try {
 
-			if(parentHomeDir.exists()){
-				FileUtils.forceDelete(parentHomeDir);
-				logger.info("Deleted namespace in Home directory");
-				namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
-			}
-			if(parentAwayDir.exists()){
-				FileUtils.forceDelete(parentAwayDir);
-				logger.info("Deleted namespace in Replica directory");
-				namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
-			}
+                        if(parentHomeDir.exists()){
+                                FileUtils.forceDelete(parentHomeDir);
+                                logger.info("Deleted namespace in Home directory");
+                                namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+                        }
+                        if(parentAwayDir.exists()){
+                                FileUtils.forceDelete(parentAwayDir);
+                                logger.info("Deleted namespace in Replica directory");
+                                namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.SUCCESS, NAMESPACEREMOVED).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+                        }
 
-		} catch (IOException e) {
+                } catch (IOException e) {
 
-			logger.error("NamespaceQuery: IOException while deleting namespace");
-			e.printStackTrace();
-			namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+                        logger.error("NamespaceQuery: IOException while deleting namespace");
+                        e.printStackTrace();
+                        namespaceQueryResponseBuilder.setHeader(ResourceUtil.buildHeaderFrom(namespaceQueryHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
 
-		}
-		return namespaceQueryResponseBuilder.build();
-	}
+                }
+                return namespaceQueryResponseBuilder.build();
+        }
 
-	private Response namespaceList(Header namespaceListHeader, Payload namespaceListBody) {
-		// TODO Auto-generated method stub
+        private Response namespaceList(Header namespaceListHeader, Payload namespaceListBody) {
+                // TODO Auto-generated method stub
 
-		boolean fileExists = false;
-		int index = 0;
-		Response.Builder namespaceListResponse = Response.newBuilder();
-		PayloadReply.Builder namespaceListRespBody = PayloadReply.newBuilder();
-		Header.Builder namespaceListRespHeader = Header.newBuilder();
-		String nameSpace = namespaceListBody.getSpace().getName();
-		List<Document> listOne = new ArrayList<Document>();
-		List<File> listTwo = new ArrayList<File>();
-		List<String> newList = new ArrayList<String>();
-		List<String> listName = new ArrayList<String>();
-		List<String> listFile = new ArrayList<String>();
+                boolean fileExists = false;
+                int index = 0;
+                Response.Builder namespaceListResponse = Response.newBuilder();
+                PayloadReply.Builder namespaceListRespBody = PayloadReply.newBuilder();
+                Header.Builder namespaceListRespHeader = Header.newBuilder();
+                String nameSpace = namespaceListBody.getSpace().getName();
+                List<Document> listOne = new ArrayList<Document>();
+                List<File> listTwo = new ArrayList<File>();
+                List<String> newList = new ArrayList<String>();
+                List<String> listName = new ArrayList<String>();
+                List<String> listFile = new ArrayList<String>();
 
-		String namespacePath = HOMEDIR+File.separator+nameSpace;
+                String namespacePath = HOMEDIR+File.separator+nameSpace;
 
-		File namespaceDir = new File (namespacePath);
-		String filename = null;
-		String filePath = null;
-		String fileExt = null;
-		int attempt = 0;
-		NodeResponseQueue.broadcastNamespaceListQuery(nameSpace);
-
-
-		try {
-			Thread.sleep(6000);
-
-			logger.info(" Namespace resousrce Witing for responses from the other nodes for NAMESPACELISTQUERY ");
-			do{
-			listOne = (List<Document>)NodeResponseQueue.fetchNamespaceList(nameSpace);
-			
-			if(listOne.isEmpty()){
-				attempt++;
-				continue;
-			}else{
-				logger.info("Response from broadcast namespace list queryrecieved");
-				break;
-				
-			}
-			
-			}while(attempt < MAX_ATTEMPT);
-
-			for (Document old : listOne){
-				System.out.println("inside file old for loop");
-				listFile.add(old.getDocName());
-			}
-
-			boolean checkNamespace = FileUtils.directoryContains(homeDir, namespaceDir);
-			if(checkNamespace){
-
-				listTwo = (List<File>) FileUtils.listFiles(namespaceDir, TrueFileFilter.INSTANCE,
-						TrueFileFilter.INSTANCE);
-				for (File old : listTwo){
-					listName.add(old.getName());
-				}
-
-			}
-
-			if (listName.isEmpty() & listFile.isEmpty()){
-				namespaceListResponse.setBody(namespaceListRespBody.build());
-				namespaceListResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListHeader, ReplyStatus.FAILURE, NAMESPACEDOESNOTEXIST));
-			}
-			else {
-				newList.addAll(listName);
-				newList.addAll(listFile);
-				for (String file : newList) {
-					fileExt = FilenameUtils.getExtension(filePath);
-					namespaceListRespBody.addDocsBuilder();
-					namespaceListRespBody.setDocs(index, Document.newBuilder()
-							.setDocName(file));
-					index++;
-				}
-				namespaceListResponse.setBody(namespaceListRespBody.build());
-				namespaceListResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListHeader, ReplyStatus.SUCCESS, DOCLISTFOUND));
-
-			}
-
-		} catch (Exception e) {
-			// TODO: handle exception
-			logger.error("Error while processing request" +e.getMessage());
-			namespaceListResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
-
-		}
-
-		return namespaceListResponse.build();
-	}
-
-	private Response namespaceListQuery(Header namespaceListQueryHeader, Payload namespaceListQueryBody) {
-		// TODO Auto-generated method stub
-		Response.Builder namespaceListQueryResponse = Response.newBuilder();
-		PayloadReply.Builder namespaceListQueryRespBody = PayloadReply.newBuilder();
+                File namespaceDir = new File (namespacePath);
+                String filename = null;
+                String filePath = null;
+                String fileExt = null;
+                int attempt = 0;
+                NodeResponseQueue.broadcastNamespaceListQuery(nameSpace);
 
 
-		String space = namespaceListQueryBody.getSpace().getName();
-		namespaceListQueryResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListQueryHeader, ReplyStatus.SUCCESS, NAMESPACEDOESNOTEXIST).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+                try {
+                        Thread.sleep(6000);
 
-		System.out.println("namespaceListQuery recieved for namespace"+space);
-		String namespacePath = HOMEDIR+File.separator+space;
+                        logger.info(" Namespace resousrce Witing for responses from the other nodes for NAMESPACELISTQUERY ");
+                        do{
+                        listOne = (List<Document>)NodeResponseQueue.fetchNamespaceList(nameSpace);
+                        
+                        if(listOne.isEmpty()){
+                                attempt++;
+                                continue;
+                        }else{
+                                logger.info("Response from broadcast namespace list queryrecieved");
+                                break;
+                                
+                        }
+                        
+                        }while(attempt < MAX_ATTEMPT);
 
-		int index = 0;
-		File namespaceDir = new File (namespacePath);
+                        for (Document old : listOne){
+                                System.out.println("inside file old for loop");
+                                listFile.add(old.getDocName());
+                        }
 
-		String filename = null;
-		String filePath = null;
-		String fileExt = null;
+                        boolean checkNamespace = FileUtils.directoryContains(homeDir, namespaceDir);
+                        if(checkNamespace){
 
-		try {
-			boolean checkNamespace = FileUtils.directoryContains(homeDir, namespaceDir);
-			if(checkNamespace){
-				List<File> files = (List<File>) FileUtils.listFiles(namespaceDir, TrueFileFilter.INSTANCE,
-						TrueFileFilter.INSTANCE);
-				for (File file : files) {
+                                listTwo = (List<File>) FileUtils.listFiles(namespaceDir, TrueFileFilter.INSTANCE,
+                                                TrueFileFilter.INSTANCE);
+                                for (File old : listTwo){
+                                        listName.add(old.getName());
+                                }
 
-					filename = file.getName();
-					filePath = file.getCanonicalPath();
-					fileExt = FilenameUtils.getExtension(filePath);
-					namespaceListQueryRespBody.addDocsBuilder();
-					namespaceListQueryRespBody.setDocs(index, Document.newBuilder()
-							.setDocName(filename).setDocExtension(fileExt));
-					index++;
-				}
-				namespaceListQueryRespBody.addSpacesBuilder();
-				namespaceListQueryRespBody.setSpaces(0, NameSpace.newBuilder().setName(space));
-				namespaceListQueryResponse.setBody(namespaceListQueryRespBody.build());
-				namespaceListQueryResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListQueryHeader, ReplyStatus.SUCCESS, DOCLISTFOUND));
-				logger.info("Namespace list sent successfully");
-			}
-		} catch (Exception e) {
-			// TODO: handle exception
-			logger.error("Error while processing request" +e.getMessage());
-			namespaceListQueryResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListQueryHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+                        }
 
-		}
+                        if (listName.isEmpty() & listFile.isEmpty()){
+                                namespaceListResponse.setBody(namespaceListRespBody.build());
+                                namespaceListResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListHeader, ReplyStatus.FAILURE, NAMESPACEDOESNOTEXIST));
+                        }
+                        else {
+                                newList.addAll(listName);
+                                newList.addAll(listFile);
+                                for (String file : newList) {
+                                        fileExt = FilenameUtils.getExtension(filePath);
+                                        namespaceListRespBody.addDocsBuilder();
+                                        namespaceListRespBody.setDocs(index, Document.newBuilder()
+                                                        .setDocName(file));
+                                        index++;
+                                }
+                                namespaceListResponse.setBody(namespaceListRespBody.build());
+                                namespaceListResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListHeader, ReplyStatus.SUCCESS, DOCLISTFOUND));
 
-		return namespaceListQueryResponse.build();
-	}
+                        }
+
+                } catch (Exception e) {
+                        // TODO: handle exception
+                        logger.error("Error while processing request" +e.getMessage());
+                        namespaceListResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
+                }
+
+                return namespaceListResponse.build();
+        }
+
+        private Response namespaceListQuery(Header namespaceListQueryHeader, Payload namespaceListQueryBody) {
+                // TODO Auto-generated method stub
+                Response.Builder namespaceListQueryResponse = Response.newBuilder();
+                PayloadReply.Builder namespaceListQueryRespBody = PayloadReply.newBuilder();
+
+
+                String space = namespaceListQueryBody.getSpace().getName();
+                namespaceListQueryResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListQueryHeader, ReplyStatus.SUCCESS, NAMESPACEDOESNOTEXIST).toBuilder().setOriginator(HeartbeatManager.getInstance().getNodeId()));
+
+                System.out.println("namespaceListQuery recieved for namespace"+space);
+                String namespacePath = HOMEDIR+File.separator+space;
+
+                int index = 0;
+                File namespaceDir = new File (namespacePath);
+
+                String filename = null;
+                String filePath = null;
+                String fileExt = null;
+
+                try {
+                        boolean checkNamespace = FileUtils.directoryContains(homeDir, namespaceDir);
+                        if(checkNamespace){
+                                List<File> files = (List<File>) FileUtils.listFiles(namespaceDir, TrueFileFilter.INSTANCE,
+                                                TrueFileFilter.INSTANCE);
+                                for (File file : files) {
+
+                                        filename = file.getName();
+                                        filePath = file.getCanonicalPath();
+                                        fileExt = FilenameUtils.getExtension(filePath);
+                                        namespaceListQueryRespBody.addDocsBuilder();
+                                        namespaceListQueryRespBody.setDocs(index, Document.newBuilder()
+                                                        .setDocName(filename).setDocExtension(fileExt));
+                                        index++;
+                                }
+                                namespaceListQueryRespBody.addSpacesBuilder();
+                                namespaceListQueryRespBody.setSpaces(0, NameSpace.newBuilder().setName(space));
+                                namespaceListQueryResponse.setBody(namespaceListQueryRespBody.build());
+                                namespaceListQueryResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListQueryHeader, ReplyStatus.SUCCESS, DOCLISTFOUND));
+                                logger.info("Namespace list sent successfully");
+                        }
+                } catch (Exception e) {
+                        // TODO: handle exception
+                        logger.error("Error while processing request" +e.getMessage());
+                        namespaceListQueryResponse.setHeader(ResourceUtil.buildHeaderFrom(namespaceListQueryHeader, ReplyStatus.FAILURE, INTERNALSERVERERRORMSG));
+
+                }
+
+                return namespaceListQueryResponse.build();
+        }
 
 }
