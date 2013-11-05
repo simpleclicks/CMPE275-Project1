@@ -245,9 +245,9 @@ inner:                                                do{
                 }
         }
         
-        public static void broadcastDocFind(String nameSpace, String fileName) {
+        public static void broadcastDocFind(String nameSpace, String fileName , boolean internal) {
 
-                NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+                NodeClient[] activeNodeArray = getActiveNodeInterface(internal);
 
                 for (NodeClient nc : activeNodeArray) {
 
@@ -614,10 +614,10 @@ inner:                                                do{
 
         }*/
 
-        public static String fetchDocFindResult(String nameSpace, String fileName) {
+        public static String fetchDocFindResult(String nameSpace, String fileName , boolean internal) {
                 String queryResult = null;
 
-                NodeClient[] activeNodeArray = getActiveNodeInterface(true);
+                NodeClient[] activeNodeArray = getActiveNodeInterface(internal);
                 try{
                 for (NodeClient nc : activeNodeArray) {
                         String result = "NA";

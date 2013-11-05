@@ -109,7 +109,7 @@ public class DocumentChunkResource implements ChunkedResource {
 
                         } else if(!fileExists && docFindHeader.getOriginator().contains("Client")){
                                 logger.info("Document not found, broadcasting request to all nodes.");
-                                NodeResponseQueue.broadcastDocFind(nameSpace, docFindBody.getDoc().getDocName());
+                                NodeResponseQueue.broadcastDocFind(nameSpace, docFindBody.getDoc().getDocName(), true);
                 
                 try {
 
@@ -119,7 +119,7 @@ public class DocumentChunkResource implements ChunkedResource {
                                         String docFindResult = null;
                                         
                                         do{
-                                                docFindResult = NodeResponseQueue.fetchDocFindResult(nameSpace , docFindBody.getDoc().getDocName());
+                                                docFindResult = NodeResponseQueue.fetchDocFindResult(nameSpace , docFindBody.getDoc().getDocName(),true);
                                                 Thread.sleep(2000);
                                         }while(docFindResult == null);
 
@@ -134,11 +134,54 @@ public class DocumentChunkResource implements ChunkedResource {
                                                 //docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, "Document created in temp").toBuilder().setOriginator(self));
 
                                         }else{
+                                        	logger.info("Document not found at node " + HeartbeatManager.getInstance().getNodeId());
+                                            logger.info("Docuemnt not found in internal network");
+                                            logger.info("Broadcasting docQuery to external network");
+                                            NodeResponseQueue.broadcastDocQuery(nameSpace, fileName, false);
+                                            logger.info("Sleeping for configured time!!! Waiting for response from External Node for DOCQUERY");
+                                            try {
+            									Thread.sleep(MAXWAITFORRESPONSE);
+            								} catch (InterruptedException e) {
+            									// TODO Auto-generated catch block
+            									e.printStackTrace();
+            								}
+                                            
+                                            boolean docExistsAtExternal = NodeResponseQueue.fetchDocQueryResult(nameSpace, fileName, false);
+                                            if(docExistsAtExternal){
+                                            	logger.info("Document exists at external network...broadcasting docFind to external network");
+                                            	 NodeResponseQueue.broadcastDocFind(nameSpace, fileName, false);
+                                            	 String externalDocFindResponse = NodeResponseQueue.fetchDocFindResult(nameSpace, fileName, false);
+                                            	 if(externalDocFindResponse=="Success"){
+                                                     logger.info("Document found at external node..");
+                                                     String tempfname = "temp" + File.separator
+                                                     + docFindBody.getSpace().getName() + File.separator
+                                                     + docFindBody.getDoc().getDocName();
+                                                     responses = docFindClient(docFindHeader, responses, tempfname,
+                                                                     docFindResponse, docFindRespPayload, docFindRespHeader,
+                                                                     nameSpace);
+                                                     //docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, "Document created in temp").toBuilder().setOriginator(self));
 
-                                                docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not found").toBuilder().setOriginator(self));
+                                             }else{
+
+                                                     docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not found").toBuilder().setOriginator(self));
+                                                      docFindResponse.setBody(docFindRespPayload.build());
+                                           
+                                          responses.add(docFindResponse.build());
+                                             }
+                                            	 
+                                            }
+                                            docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
+
+                                docFindRespHeader.setReplyMsg("Server could not find the file.");
+                                docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not Found").toBuilder().setOriginator(self));
+                                //docFindRespPayload.addSpacesBuilder();
+                                docFindResponse.setBody(docFindRespPayload.build());
+                                responses.add(docFindResponse.build());
+                                        		
+                                                /*docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not found").toBuilder().setOriginator(self));
                                                  docFindResponse.setBody(docFindRespPayload.build());
                                       
-                                     responses.add(docFindResponse.build());
+                                     responses.add(docFindResponse.build());*/
                                         }
 
                                 } catch (InterruptedException e1) {
@@ -147,6 +190,41 @@ public class DocumentChunkResource implements ChunkedResource {
                                 }
                         } else if(!fileExists && !awayExists && !docFindHeader.getOriginator().contains("Client")){
                                 logger.info("Document not found at node " + HeartbeatManager.getInstance().getNodeId());
+                                logger.info("Docuemnt not found in internal network");
+                                logger.info("Broadcasting docQuery to external network");
+                                NodeResponseQueue.broadcastDocQuery(nameSpace, fileName, false);
+                                logger.info("Sleeping for configured time!!! Waiting for response from External Node for DOCQUERY");
+                                try {
+									Thread.sleep(MAXWAITFORRESPONSE);
+								} catch (InterruptedException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+                                
+                                boolean docExistsAtExternal = NodeResponseQueue.fetchDocQueryResult(nameSpace, fileName, false);
+                                if(docExistsAtExternal){
+                                	logger.info("Document exists at external network...broadcasting docFind to external network");
+                                	 NodeResponseQueue.broadcastDocFind(nameSpace, fileName, false);
+                                	 String externalDocFindResponse = NodeResponseQueue.fetchDocFindResult(nameSpace, fileName, false);
+                                	 if(externalDocFindResponse=="Success"){
+                                         logger.info("Document found at external node..");
+                                         String tempfname = "temp" + File.separator
+                                         + docFindBody.getSpace().getName() + File.separator
+                                         + docFindBody.getDoc().getDocName();
+                                         responses = docFindClient(docFindHeader, responses, tempfname,
+                                                         docFindResponse, docFindRespPayload, docFindRespHeader,
+                                                         nameSpace);
+                                         //docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, "Document created in temp").toBuilder().setOriginator(self));
+
+                                 }else{
+
+                                         docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not found").toBuilder().setOriginator(self));
+                                          docFindResponse.setBody(docFindRespPayload.build());
+                               
+                              responses.add(docFindResponse.build());
+                                 }
+                                	 
+                                }
                                 docFindRespHeader.setReplyCode(Header.ReplyStatus.FAILURE);
 
                     docFindRespHeader.setReplyMsg("Server could not find the file.");
