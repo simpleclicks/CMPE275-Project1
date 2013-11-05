@@ -236,6 +236,8 @@ public class ReplicationResource implements Resource {
 			replicaAddHeaderBuilder.setReplyCode(Header.ReplyStatus.FAILURE);
 
 			replicaAddHeaderBuilder.setReplyMsg("Server Exception while uploading a file");
+			
+			replicaAddHeaderBuilder.setOriginator(self);
 
 			e.printStackTrace();
 		}
@@ -244,7 +246,7 @@ public class ReplicationResource implements Resource {
 		
 		toBesent = receivedFile.toBuilder().clearChunkContent().build();
 
-		addReplicaRespBuilder.setHeader(replicaAddHeaderBuilder);
+		addReplicaRespBuilder.setHeader(replicaAddHeaderBuilder.setOriginator(self));
 
 		System.gc();
 

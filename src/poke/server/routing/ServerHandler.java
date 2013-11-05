@@ -99,8 +99,8 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-		logger.error("ServerHandler error, closing channel, reason: " + e.getCause(), e);
-		e.getCause().printStackTrace();
+		logger.info("ServerHandler , closing channel with the client as client went away");
+		//e.getCause().printStackTrace();
 		e.getChannel().close();
 	}
 
