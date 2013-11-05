@@ -313,6 +313,47 @@ public class PerChannelQueue implements ChannelQueue {
 												}
 
 												bytesActuallyRead = IOUtils.read(chunkeFIS, chunckContents, 0, bytesRead);
+											
+											/*int chunkId = (int) response.getBody().getDocs(0).getChunkId();
+											
+											int bytesOffset = 0;
+											
+											if(chunkId == 0){
+												bytesOffset = 0;
+											}
+											else if(chunkId < response.getBody().getDocs(0).getTotalChunk()){
+												
+												bytesOffset = (int) (response.getBody().getDocs(0).getChunkId() - 1);
+										
+												//chunkId = ((int) response.getBody().getDocs(0).getChunkId())+1;
+											}
+											
+											int bytesRead = 0;
+
+											//FileInputStream chunkFIS = new FileInputStream(file);
+											
+											//int bytesRemaining = chunkFIS.available();
+											
+											chunkFIS.skip(bytesOffset* MAX_UNCHUNKED_FILE_SIZE);
+											
+											int bytesRemaining = chunkFIS.available();
+
+												byte[] chunckContents = null; 
+
+												if(bytesRemaining > MAX_UNCHUNKED_FILE_SIZE){
+
+													chunckContents = new byte[MAX_UNCHUNKED_FILE_SIZE];
+
+													bytesRead= IOUtils.read(chunkFIS, chunckContents , 0 , MAX_UNCHUNKED_FILE_SIZE);
+												}
+												else {
+													chunckContents = new byte[bytesRemaining];
+
+													//System.out.println("length of last chunk content "+chunckContents.length);
+
+													bytesRead= IOUtils.read(chunkFIS, chunckContents , 0 , bytesRemaining);
+
+												}*/
 
 												logger.info("CHUNKED Contents of the chunk "+response.getBody().getDocs(0).getChunkId()+" : "+chunckContents);
 												
@@ -341,14 +382,14 @@ public class PerChannelQueue implements ChannelQueue {
 												logger.info("CHUNKED enqueuing response for client request for : " + response.getBody().getDocs(0).getChunkId());
 												Response tbE = respEnqueue.build();
 												sq.enqueueResponse(tbE);
-												chunkeFIS.close();
-												Thread.sleep(5000);
+												
+												Thread.sleep(3000);
 										}
 									}
 									else{
 										sq.enqueueResponse(response);
 									}
-									
+									chunkeFIS.close();
 								}
 								
 							}
