@@ -700,12 +700,12 @@ inner:						do{
 			
 			}while(attempt < MAX_ATTEMPT);
 			
-			logger.info("Files returned from fetchNameSpaceList " +newFileList);
-			return newFileList;                
+			//return newFileList;                
 
 		}
+		logger.info("Files returned from fetchNameSpaceList " +newFileList);
 
-		return fileList;
+		return newFileList;
 	}
 
 }
