@@ -339,7 +339,7 @@ public class NameSpaceResource implements Resource {
 
 
 		try {
-			Thread.sleep(6000);
+			Thread.sleep(18000);
 
 			logger.info(" Namespace resousrce Witing for responses from the other nodes for NAMESPACELISTQUERY ");
 			do{
