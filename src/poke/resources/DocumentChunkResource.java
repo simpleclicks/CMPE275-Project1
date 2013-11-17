@@ -345,7 +345,7 @@ public class DocumentChunkResource implements ChunkedResource {
 
                                         chunkId++;
 
-                                } while (chunkeFIS.available() > 0);
+                                } while (chunkId <= totalChunk);
 
                                 logger.info("Out of chunked write while loop");
 
