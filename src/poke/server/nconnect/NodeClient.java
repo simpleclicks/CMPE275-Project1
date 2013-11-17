@@ -930,9 +930,8 @@ public String checkNamespaceRemoveResponse(String nameSpace){
 
 		private void writeToTemp(String docName, String nameSpace,
 				long chunkId, long totalChunk, byte[] chunkContent) {
-			String[] fnamesplit = docName.split("\\\\");
-			String fname = fnamesplit[fnamesplit.length-1];
-			File file = new File(fname);
+			String fname = FilenameUtils.getBaseName(docName) + "." + FilenameUtils.getExtension(docName);
+			//File file = new File(fname);
 			File dir = new File("temp" + File.separator + nameSpace);
 			logger.info("Creating directory with name " + nameSpace);
 
