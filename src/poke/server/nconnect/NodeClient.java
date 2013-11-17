@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
@@ -850,10 +851,11 @@ public String checkNamespaceRemoveResponse(String nameSpace){
 							if (nameSpace != null && nameSpace.length() > 0)
 								msgKey = nameSpace;
 
-							msgKey = msgKey + fnameSplit[fnameSplit.length - 1];
+							msgKey = msgKey + FilenameUtils.getBaseName(docName) + "." + FilenameUtils.getExtension(docName);
 
 							owner.docFindResponseQueue.put(msgKey, msg.getHeader()
 									.getReplyCode().name());
+							addToQueue = false;
 						}
 					}
 					

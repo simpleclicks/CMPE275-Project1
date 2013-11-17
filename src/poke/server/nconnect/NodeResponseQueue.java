@@ -621,11 +621,12 @@ inner:                                                do{
                 try{
                 for (NodeClient nc : activeNodeArray) {
                         String result = "NA";
-                        
+                        int attempt = 0;
                         do{
                                 result = nc.checkDocFindResponse(nameSpace, fileName);
-                                Thread.sleep(1000);
-                        }while(result.equalsIgnoreCase("NA"));
+                                attempt++;
+                                Thread.sleep(4000);
+                        }while(result.equalsIgnoreCase("NA") || attempt <= 7);
                         
 
                         if (result.equalsIgnoreCase("Failure")) {
@@ -636,7 +637,12 @@ inner:                                                do{
                                 logger.info("Document with the given name "
                                                 + nameSpace + "/" + fileName +" was found.");
                                 return "Success";                
-                        }
+                        }else if (result.equalsIgnoreCase("NA")){
+                            logger.info("Document with the given name "
+                                    + nameSpace + "/" + fileName +" was not found in time.");
+                    return "Failure";                
+            }
+                        
                 }
                 }
                 catch(InterruptedException ex){
@@ -695,7 +701,7 @@ inner:                                                do{
                         }else{
                                 
                                 newFileList.addAll(fileList);
-                                break;
+                              //  break;
                         }
                         
                         }while(attempt < MAX_ATTEMPT);
