@@ -162,7 +162,7 @@ public class ClientConnection {
 		namespaceAddHeader.setOriginator("Namespace Add test");
 
 		Payload.Builder namespaceAddBodyBuilder = Payload.newBuilder();
-		namespaceAddBodyBuilder.setSpace(NameSpace.newBuilder().setName(namespace));
+		namespaceAddBodyBuilder.setSpace(NameSpace.newBuilder().setName(namespace).build());
 
 		Request.Builder namespaceAddReqBuilder = Request.newBuilder();
 		namespaceAddReqBuilder.setHeader(namespaceAddHeader);

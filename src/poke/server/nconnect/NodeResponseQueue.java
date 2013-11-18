@@ -701,17 +701,18 @@ inner:                                                do{
                         }else{
                                 
                                 newFileList.addAll(fileList);
+                                attempt = MAX_ATTEMPT;
                               //  break;
                         }
                         
                         }while(attempt < MAX_ATTEMPT);
                         
                         logger.info("Files returned from fetchNameSpaceList " +newFileList);
-                        return newFileList;                
+                       // return newFileList;                
 
                 }
 
-                return fileList;
+                return newFileList;
         }
 
 }
