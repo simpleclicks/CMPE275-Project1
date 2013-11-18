@@ -279,7 +279,7 @@ public class PerChannelQueue implements ChannelQueue {
 								String fname = responses.get(0).getBody().getDocs(0).getDocName();
 								String namespaceName = responses.get(0).getBody().getSpaces(0).getName();
 								String fileExt = FilenameUtils.getExtension(fname);
-								String respFname = FilenameUtils.getBaseName(fname) + fileExt;
+								String respFname = FilenameUtils.getBaseName(fname) + "." + fileExt;
 
 								java.io.File file = FileUtils.getFile(fname);
 

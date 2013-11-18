@@ -848,14 +848,13 @@ public String checkNamespaceRemoveResponse(String nameSpace){
 								continue;
 							}
 
-							if (nameSpace != null && nameSpace.length() > 0)
+							//if (nameSpace != null && nameSpace.length() > 0)
 								msgKey = nameSpace;
 
 							msgKey = msgKey + FilenameUtils.getBaseName(docName) + "." + FilenameUtils.getExtension(docName);
 
 							owner.docFindResponseQueue.put(msgKey, msg.getHeader()
 									.getReplyCode().name());
-							addToQueue = false;
 						}
 					}
 					
@@ -930,9 +929,8 @@ public String checkNamespaceRemoveResponse(String nameSpace){
 
 		private void writeToTemp(String docName, String nameSpace,
 				long chunkId, long totalChunk, byte[] chunkContent) {
-			String[] fnamesplit = docName.split("\\\\");
-			String fname = fnamesplit[fnamesplit.length-1];
-			File file = new File(fname);
+			String fname = FilenameUtils.getBaseName(docName) + "." + FilenameUtils.getExtension(docName);
+			//File file = new File(fname);
 			File dir = new File("temp" + File.separator + nameSpace);
 			logger.info("Creating directory with name " + nameSpace);
 
@@ -942,7 +940,7 @@ public String checkNamespaceRemoveResponse(String nameSpace){
 				FileUtils.forceMkdir(dir);
 				logger.info("Creating file with name " + fname
 						+ " and writing the content sent by client to it");
-
+				
 				FileUtils.writeByteArrayToFile(new File(dir + File.separator + fname), chunkContent, true);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
