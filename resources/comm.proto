@@ -137,7 +137,7 @@ message Heartbeat {
 message Network {
 	required string nodeId = 1;
 	required Action action = 2;
-	required string originId = 3;
+	optional string originId = 3;
 
 	enum Action {
 		NODEJOIN = 1;

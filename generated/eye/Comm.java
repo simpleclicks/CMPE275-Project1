@@ -9607,7 +9607,7 @@ public final class Comm {
     boolean hasAction();
     eye.Comm.Network.Action getAction();
     
-    // required string originId = 3;
+    // optional string originId = 3;
     boolean hasOriginId();
     String getOriginId();
   }
@@ -9763,7 +9763,7 @@ public final class Comm {
       return action_;
     }
     
-    // required string originId = 3;
+    // optional string originId = 3;
     public static final int ORIGINID_FIELD_NUMBER = 3;
     private java.lang.Object originId_;
     public boolean hasOriginId() {
@@ -9810,10 +9810,6 @@ public final class Comm {
         return false;
       }
       if (!hasAction()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasOriginId()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -10072,10 +10068,6 @@ public final class Comm {
           
           return false;
         }
-        if (!hasOriginId()) {
-          
-          return false;
-        }
         return true;
       }
       
@@ -10189,7 +10181,7 @@ public final class Comm {
         return this;
       }
       
-      // required string originId = 3;
+      // optional string originId = 3;
       private java.lang.Object originId_ = "";
       public boolean hasOriginId() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
@@ -11632,7 +11624,7 @@ public final class Comm {
       "yloadReply\",\n\tHeartbeat\022\016\n\006nodeId\030\001 \002(\t\022" +
       "\017\n\007timeRef\030\002 \002(\003\"\247\001\n\007Network\022\016\n\006nodeId\030\001" +
       " \002(\t\022\037\n\006action\030\002 \002(\0162\017.Network.Action\022\020\n" +
-      "\010originId\030\003 \002(\t\"Y\n\006Action\022\014\n\010NODEJOIN\020\001\022" +
+      "\010originId\030\003 \001(\t\"Y\n\006Action\022\014\n\010NODEJOIN\020\001\022" +
       "\r\n\tNODELEAVE\020\002\022\014\n\010NODEDEAD\020\003\022\007\n\003MAP\0207\022\014\n" +
       "\010ANNOUNCE\0208\022\r\n\010SHUTDOWN\020\347\007\"Z\n\nManagement" +
       "\022\027\n\005graph\030\001 \001(\0132\010.Network\022\030\n\004beat\030\002 \001(\0132" +
