@@ -276,13 +276,15 @@ public class DocumentChunkResource implements ChunkedResource {
 
                         logger.info("Total number of chunks " + totalChunk);
 
+                        FileInputStream chunkeFIS =null;
+                        
                         try {
 
                                 int bytesRead = 0;
 
                                 int chunkId = 1;
 
-                                FileInputStream chunkeFIS = new FileInputStream(file);
+                               chunkeFIS  = new FileInputStream(file);
 
                                 do {
 
@@ -339,6 +341,15 @@ public class DocumentChunkResource implements ChunkedResource {
                           responses.add(docFindResponse.build());
 
                           e.printStackTrace();
+                        }finally{
+                        	
+                        	try {
+                        		if(chunkeFIS !=null)
+								chunkeFIS.close();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
                         }
                         return responses;
                 }

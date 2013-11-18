@@ -251,9 +251,12 @@ public class PerChannelQueue implements ChannelQueue {
 
 					// process request and enqueue response
 					if (msg instanceof Request) {
+						
 						Request req = ((Request) msg);
+						
 						if (req == null)
 							logger.error("req is null");
+				
 						// do we need to route the request?
 
 						// handle it locally

@@ -463,7 +463,7 @@ public class DocumentResource implements Resource {
 
                         docAddHeaderBuilder.setReplyCode(Header.ReplyStatus.SUCCESS);
                         
-                        if(receivedFile.getChunkId() == receivedFile.getTotalChunk()){
+                        if((receivedFile.getChunkId() == receivedFile.getTotalChunk()) && !docAddHeader.hasIsExternal()){
                          
                                 if(effNS.endsWith(File.separator))
                                         dbAct.addDocumentInDatabase(effNS, fileName);

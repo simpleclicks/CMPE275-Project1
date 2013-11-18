@@ -4,8 +4,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+
 import poke.server.management.HeartbeatConnector;
 import poke.server.management.HeartbeatData;
+import poke.server.nconnect.NodeClient;
+import poke.server.nconnect.NodeResponseQueue;
+
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +43,7 @@ public class ConnectToExternalNodes extends Thread{
 
 					System.out.println("Number of lines in conf file "+fileContents.size());
 
-					if(fileContents.size() ==4){
+					if(fileContents.size() ==5){
 
 						String nodeId = fileContents.get(0);
 
@@ -48,20 +52,33 @@ public class ConnectToExternalNodes extends Thread{
 						int port = Integer.valueOf(fileContents.get(2));
 
 						int mgmtPort = Integer.valueOf(fileContents.get(3));
+						
+						String homogeneous = fileContents.get(4);
 
+						if(homogeneous.equalsIgnoreCase("Yes")){
+					
 						HeartbeatData hd = new HeartbeatData(nodeId , host , port , mgmtPort );
 						hd.setExternal(true);
 
 						if(HeartbeatConnector.getInstance().addExternalNode(hd)) {
 
-							System.out.println("Node added Successfully");
+							logger.info("New homogeneous external node with nodeId "+nodeId+" has been added to externalNode map");
+							
 							FileUtils.writeStringToFile(file, "");
 						}
 						else {
 
 							System.out.println("Cannot add node: Host Address already exists");
 						}
+					}else{
+						
+						NodeClient activeNode = new NodeClient(host, port , nodeId); // creates public TCP connection with external node
+						
+						NodeResponseQueue.addExternalNode(nodeId, activeNode);
+						
+						logger.info("New heterogeneous external node with nodeId "+nodeId+" has been added to externalNode map");
 
+					}
 
 					}else{
 						logger.error("Invalid connection information: Verify the info provided");

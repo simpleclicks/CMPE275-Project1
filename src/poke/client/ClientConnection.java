@@ -177,11 +177,7 @@ public class ClientConnection {
 			logger.warn("Failed to put namespace add request in outbound queue for namespace "+ namespace);
 
 		}
-
-
-
-
-	}
+}
 
 
 	public void docAddReq(String nameSpace, String filePath) {
@@ -640,6 +636,4 @@ public class ClientConnection {
 			}
 		}
 	}
-
-
 }

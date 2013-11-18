@@ -4,10 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Random;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.FileUtils;
@@ -19,9 +16,8 @@ import poke.server.management.HeartbeatManager;
 import poke.server.storage.jdbc.DatabaseStorage;
 import eye.Comm.Header;
 import eye.Comm.Payload;
-import eye.Comm.Request;
 import eye.Comm.Document;
-import eye.Comm.Response;
+
 /**
  * @author Kaustubh
  * @version 2.3
@@ -49,7 +45,7 @@ public class NodeResponseQueue {
         static final int MAX_ATTEMPT = 5;
         
 
-        static private HashMap<String, String> responseToChunkMap = new HashMap<String, String>();
+       // static private HashMap<String, String> responseToChunkMap = new HashMap<String, String>();
 
         public static void addActiveNode(String nodeId, NodeClient node) {
 
@@ -66,6 +62,11 @@ public class NodeResponseQueue {
 
                 return activeNodeMap.get(nodeId);
         }
+        
+        public static NodeClient getActiveExternalNode(String nodeId){
+
+            return activeExternalNodeMap.get(nodeId);
+    }
 
         public static NodeClient getExternalNode(String nodeId){
 
@@ -476,7 +477,7 @@ inner:                        do{
                                 String finalNodeId = null;
                                 NodeClient finalizedNode = null;
                                 File unRepFile = new File(actFilePath);
-                                String path =         FilenameUtils.getPath(actFilePath);
+                                String path = FilenameUtils.getPath(actFilePath);
                                 String trimmedPath = path.substring(path.indexOf(File.separator)+1);
                                 String fileName = FilenameUtils.getName(actFilePath);
                                 long size = FileUtils.sizeOf(unRepFile);
@@ -683,7 +684,7 @@ inner:                                                do{
         
         
         public static List fetchNamespaceList(String namespace){
-                boolean queryResult = true;
+               // boolean queryResult = true;
                 List<Document> fileList= new ArrayList<Document>();
                 List<Document> newFileList = new ArrayList<Document>();
                 logger.info("In fetchNameSpaceList");
@@ -691,7 +692,7 @@ inner:                                                do{
                 int attempt = 0;
 
                 for (NodeClient nc : activeNodeArray) {
-                        String result = "NA";
+                      //  String result = "NA";
 
                         //  while(result.equalsIgnoreCase("NA")){
                         do{
