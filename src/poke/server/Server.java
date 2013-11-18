@@ -277,15 +277,15 @@ public class Server {
 			e.printStackTrace();
 		}
 		
-		//BroadcastConnector bconnector = new BroadcastConnector(nodeId, hostAddress, port, mport, bport);
-		//bconnector.initiateBroadcast();
+		BroadcastConnector bconnector = new BroadcastConnector(nodeId, hostAddress, port, mport, bport);
+		bconnector.initiateBroadcast();
 
-		//		logger.info("Broadcasting availability");
+				logger.info("Broadcasting availability");
 		
-		//createBroadcastBoot(bport);
-		//BroadcastQueue.startup(conf.getServer().getProperty("node.id"));
+		createBroadcastBoot(bport);
+		BroadcastQueue.startup(conf.getServer().getProperty("node.id"));
 		
-		//logger.info("Broadcast listener started");
+		logger.info("Broadcast listener started");
 		
 		ConnectToExternalNodes externalNodeThread = new ConnectToExternalNodes();
 		externalNodeThread.start();

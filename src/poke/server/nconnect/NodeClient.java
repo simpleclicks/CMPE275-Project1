@@ -950,5 +950,3 @@ public String checkNamespaceRemoveResponse(String nameSpace){
 			
 		}
 	}
-
-

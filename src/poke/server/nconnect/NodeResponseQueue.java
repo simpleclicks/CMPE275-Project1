@@ -349,7 +349,6 @@ inner:                        do{
                         }
                         String result = nc.checkDocQueryResponse(nameSpace, fileName);
 
-/*<<<<<<< HEAD*/
                         if(result.equalsIgnoreCase("Success")){
                                 logger.info("Document "+nameSpace+"/"+fileName+" exists with "+nc.getNodeId());
                                 return true;
