@@ -188,7 +188,7 @@ public class DocumentChunkResource implements ChunkedResource {
 
                                         e1.printStackTrace();
                                 }
-                        } else if(!fileExists && !awayExists && !docFindHeader.getOriginator().contains("Client")){
+                        } else if(!fileExists && !awayExists && docFindHeader.getOriginator().contains("Client")){
                                 logger.info("Document not found at node " + HeartbeatManager.getInstance().getNodeId());
                                 logger.info("Docuemnt not found in internal network");
                                 logger.info("Broadcasting docQuery to external network");
