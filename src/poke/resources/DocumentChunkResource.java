@@ -124,7 +124,7 @@ public class DocumentChunkResource implements ChunkedResource {
                                         }while(docFindResult == null);
 
                                         if(docFindResult.equalsIgnoreCase("Success")){
-                                                logger.info("Document found at internal network node..");
+                                                logger.info("Document found at external node..");
                                                 String tempfname = "temp" + File.separator
                                                 + docFindBody.getSpace().getName() + File.separator
                                                 + docFindBody.getDoc().getDocName();
@@ -188,6 +188,12 @@ public class DocumentChunkResource implements ChunkedResource {
 
                                         e1.printStackTrace();
                                 }
+                        } else {
+                        	  docFindRespHeader.setReplyMsg("Server could not find the file.");
+                              docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.FAILURE, "Document not Found").toBuilder().setOriginator(self));
+                              //docFindRespPayload.addSpacesBuilder();
+                              docFindResponse.setBody(docFindRespPayload.build());
+                              responses.add(docFindResponse.build());
                         }
                         
                 } catch (IOException e) {
