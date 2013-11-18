@@ -214,7 +214,7 @@ public class HeartbeatConnector extends Thread {
 						//System.out.println("IncomingHB: isconnected and iswritable" + hb.getLastBeat() + ":" + hb.getBeatInterval());
 						hb.incrementFailures();
 						hb.setStatus(BeatStatus.Weak);
-						//hb.isGood();
+//						hb.isGood();
 					} else {
 						//System.out.println("IncomingHB else of isconnected and is writable");
 						hb.setStatus(BeatStatus.Active);

@@ -278,8 +278,8 @@ public class PerChannelQueue implements ChannelQueue {
 							if(responses.get(0).getHeader().getReplyCode() == ReplyStatus.SUCCESS){
 								String fname = responses.get(0).getBody().getDocs(0).getDocName();
 								String namespaceName = responses.get(0).getBody().getSpaces(0).getName();
-								
 								String fileExt = FilenameUtils.getExtension(fname);
+								String respFname = FilenameUtils.getBaseName(fname) + "." + fileExt;
 
 								java.io.File file = FileUtils.getFile(fname);
 
@@ -365,7 +365,7 @@ public class PerChannelQueue implements ChannelQueue {
 												respEnqueuePL.setSpaces(0, NameSpace.newBuilder().setName(namespaceName));
 												respEnqueuePL.setDocs(0,Document
 														.newBuilder()
-														.setDocName(fname)
+														.setDocName(respFname)
 														.setDocExtension(fileExt)
 														.setDocSize(fileSize).setTotalChunk(totalChunk)
 														.setChunkContent(ByteString.copyFrom(chunckContents))

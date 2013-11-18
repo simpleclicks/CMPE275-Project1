@@ -323,13 +323,7 @@ public class DocumentChunkResource implements ChunkedResource {
                                 do {
 
                                         byte[] chunckContents = new byte[26214400];
-
-                                        bytesRead = IOUtils.read(chunkeFIS, chunckContents, 0,
-                                                        26214400);
-
-                                        logger.info("Total number of bytes read for chunk "
-                                                        + chunkId + " : " + bytesRead);
-
+                                     
                                         logger.info("Contents of the chunk "+chunkId+" : "+chunckContents);
                                         
                                         docFindRespPayload.addDocsBuilder();
@@ -351,7 +345,7 @@ public class DocumentChunkResource implements ChunkedResource {
 
                                         chunkId++;
 
-                                } while (chunkeFIS.available() > 0);
+                                } while (chunkId <= totalChunk);
 
                                 logger.info("Out of chunked write while loop");
 
