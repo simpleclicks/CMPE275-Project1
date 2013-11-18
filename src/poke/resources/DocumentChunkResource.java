@@ -264,6 +264,7 @@ public class DocumentChunkResource implements ChunkedResource {
                 logger.info("Writing the document to the temp folder.");
 
                 logger.info("Size of the file to be sent " + fileSize);
+                String self = HeartbeatManager.getInstance().getNodeId();
 
                 long totalChunk = ((fileSize / MAX_UNCHUNKED_FILE_SIZE)) + 1;
 
@@ -302,7 +303,8 @@ public class DocumentChunkResource implements ChunkedResource {
                         .setChunkId(1));
 
                         docFindResponse.setBody(docFindRespPayload.build());
-                        docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, DOCFOUNDSUCCESS));
+                        
+                        docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, DOCFOUNDSUCCESS).toBuilder().setOriginator(self));
                         responses.add(docFindResponse.build());
                         return responses;
 
@@ -337,7 +339,7 @@ public class DocumentChunkResource implements ChunkedResource {
 
                                         docFindResponse.setBody(docFindRespPayload.build());
 
-                                        docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, DOCFOUNDSUCCESS));
+                                        docFindResponse.setHeader(ResourceUtil.buildHeaderFrom(docFindHeader, ReplyStatus.SUCCESS, DOCFOUNDSUCCESS).toBuilder().setOriginator(self));
 
                                         //chunckContents = null;
                                         responses.add(docFindResponse.build());
