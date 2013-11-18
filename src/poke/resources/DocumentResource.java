@@ -593,7 +593,7 @@ public class DocumentResource implements Resource {
                                                 
                                                 logger.info(" docRemove: Sleeping for 3000ms... Witing for responses from other nodes regarding replica removal");
                                                 Thread.sleep(MAXWAITFORRESPONSE);
-                                                replicasDeleted = NodeResponseQueue.fetchReplicaRemoveResult(nameSpece, fileToBeDeleted);
+                                                replicasDeleted = NodeResponseQueue.fetchReplicaRemoveResult(effNS+File.separator, fileToBeDeleted);
                                                 
                                                 if(replicasDeleted)
                                                         break;
@@ -779,7 +779,7 @@ public class DocumentResource implements Resource {
                                                 
                                                 logger.info(" docRemove: Sleeping for 3000ms... Witing for responses from other nodes regarding replica removal");
                                                 Thread.sleep(MAXWAITFORRESPONSE);
-                                                replicasDeleted = NodeResponseQueue.fetchReplicaRemoveResult(nameSpece, fileToBeDeleted);
+                                                replicasDeleted = NodeResponseQueue.fetchReplicaRemoveResult(HOMEDIR+File.separator, fileToBeDeleted);
                                                 
                                                 if(replicasDeleted)
                                                         break;

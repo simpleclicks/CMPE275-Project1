@@ -299,6 +299,8 @@ inner:                                                do{
         }
 
         public static String multicastReplicaRemoveQuery(String nameSpace , String fileName){
+        	
+        		String trimmedPath = nameSpace.substring(nameSpace.indexOf(File.separator)+1);
 
                 String replicatedNode = dbAct.getReplicatedNode(nameSpace, fileName);
 
@@ -311,7 +313,7 @@ inner:                                                do{
                 } else{
 
                         NodeClient replicatedNC = getActiveNode(replicatedNode);
-                        replicatedNC.removeReplica(nameSpace, fileName);
+                        replicatedNC.removeReplica(trimmedPath, fileName);
                         return "wait";
                 }
         }
@@ -428,27 +430,34 @@ inner:                        do{
         public static boolean fetchReplicaRemoveResult(String nameSpace , String fileName){
 
                 String replicatedNode = dbAct.getReplicatedNode(nameSpace, fileName);
+                String trimmedPath = nameSpace.substring(nameSpace.indexOf(File.separator)+1);
+                logger.info(" fetchReplicaRemoveResult: Replica node for "+nameSpace+fileName+"is "+replicatedNode);
                 String result = "";
                 NodeClient replNode =  null;
                 try{
 
                         replNode = getActiveNode(replicatedNode);
-
-                        result = replNode.checkReplicaRemoveResponse(nameSpace, fileName);
+                        
+                        if(replNode == null){
+                        	logger.error(" Node not found in active node map "+replicatedNode);
+                        	return false;
+                        }
+                        result = replNode.checkReplicaRemoveResponse(trimmedPath, fileName);
 
                 }catch(Exception e){
                         logger.error("fetchReplicaRemoveResult: Encountered Exception "+e.getMessage());
                         e.printStackTrace();
+                        return false;
                 }
 
                 if(result.equalsIgnoreCase("Failure")){
                         logger.error("Document Replica remove failed for "+nameSpace+"\\"+fileName);
                         return false;
                 }else if(result.equalsIgnoreCase("NA")){
-                        logger.warn("No response from node "+replNode.getNodeId()+"for document remove of "+nameSpace+"/"+fileName);
+                        logger.warn("No response from node "+replNode.getNodeId()+"for document remove of "+nameSpace+fileName);
                         return false;
                 }else if(result.equalsIgnoreCase("Success"))
-                        logger.info("Document Replica remove successful for "+replNode.getNodeId()+" of "+nameSpace+"/"+fileName);
+                        logger.info("Document Replica remove successful for "+replNode.getNodeId()+" of "+nameSpace+fileName);
                 return true;
         }
 

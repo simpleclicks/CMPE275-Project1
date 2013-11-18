@@ -416,6 +416,8 @@ public class NodeClient {
 		
 		String key = nameSpace+fileName;
 		
+		logger.debug("checkReplicaRemoveResponse: key "+nameSpace+fileName);
+		
 		String noResult = "NA";
 		
 		if(replicaRemoveResponseQueue.containsKey(key)){
@@ -742,6 +744,7 @@ public String checkNamespaceRemoveResponse(String nameSpace){
                                 continue;
                         }
 
+                        logger.info("en-queuing response for REPLICAREMOVE with key "+msgKey);
                         owner.replicaRemoveResponseQueue.put(msgKey, msg.getHeader().getReplyCode().name() );
 
                 }else if(msg.getHeader().getRoutingId() == Header.Routing.DOCADDHANDSHAKE){
